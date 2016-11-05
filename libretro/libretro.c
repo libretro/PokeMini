@@ -12,13 +12,22 @@
 
 #include "libretro.h"
 #include "retro_miscellaneous.h"
+/*
+ bare functions to use
+ int PokeMini_EmulateFrame(void);
+ int PokeMini_Create(int flags, int soundfifo);
+ void PokeMini_Destroy();
+ int PokeMini_NewMIN(uint32_t size);
+ int PokeMini_LoadMINFile(const char *filename);
+ */
+
 
 //pokemini headers
 #include "PokeMini.h"
 #include "Hardware.h"
 #include "Joystick.h"
 #include "UI.h"
-#include "Video_x3.h"
+#include "Video_x4.h"
 #include "PokeMini_BG3.h"
 
 #define MAKEBTNMAP(btn,pkebtn) JoystickButtonsEvent((pkebtn), input_cb(0/*port*/, RETRO_DEVICE_JOYPAD, 0, (btn)) != 0)
@@ -53,6 +62,34 @@ int UIItems_PlatformC(int index, int reason)
 void enablesound(int sound)
 {
    MinxAudio_ChangeEngine(sound);
+}
+
+static uint8_t rominjectbuffer[0x200000];
+static int romsize;
+// Load MIN ROM
+int PokeMini_LoadMINFileXPLATFORM()
+{
+   int size = romsize;
+   
+   // Check if size is valid
+   if ((size <= 0x2100) || (size > 0x200000)) {
+      return 0;
+   }
+   
+   // Free existing color information
+   PokeMini_FreeColorInfo();
+   
+   // Allocate ROM and set cartridge size
+   if (!PokeMini_NewMIN(size)) {
+      return 0;
+   }
+   
+   // Read content
+   memcpy(PM_ROM,rominjectbuffer,size);
+   
+   NewMulticart();
+   
+   return 1;
 }
 
 static retro_log_printf_t log_cb = NULL;
@@ -152,42 +189,34 @@ void retro_init (void)
 {
    struct retro_log_callback log;
    enum retro_pixel_format rgb565;
+   int userdefinedindex = 0;//make user defined later
 
    rgb565 = RETRO_PIXEL_FORMAT_RGB565;
    if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &rgb565) && log_cb)
          log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
    
+   int failed = !PokeMini_Create(0, PMSOUNDBUFF);
+   if(failed)exit(0);
+   failed = !PokeMini_LoadMINFileXPLATFORM();
+   if(failed)exit(0);
    
-   PokeMini_InitDirs(NULL/*argv[0]*/, NULL);
-   CommandLineInit();
-   CommandLineConfFile("pokemini.cfg", NULL, NULL);
-   
-   if (!PokeMini_SetVideo((TPokeMini_VideoSpec *)&PokeMini_Video3x3, 16, CommandLine.lcdfilter, CommandLine.lcdmode)) {
-      log_cb(RETRO_LOG_INFO, "Couldn't set video spec\n");
-      exit(1);
+   //add LCDMODE_COLORS option
+   // Set video spec and check if is supported
+   if (!PokeMini_SetVideo((TPokeMini_VideoSpec *)&PokeMini_Video4x4, 16, 0/*lcdfilter*//*0=none*/, LCDMODE_ANALOG/*lcdmode*/)) {
+      fprintf(stderr, "Couldn't set video spec\n");
+      exit(0);
    }
    
-   UIMenu_SetDisplay(288, 192, PokeMini_RGB16, (uint8_t *)PokeMini_BG3, (uint16_t *)PokeMini_BG3_PalRGB16, (uint32_t *)PokeMini_BG3_PalRGB32);
-   
-   PokeMini_VideoPalette_Init(PokeMini_RGB16, 1);
-   PokeMini_VideoPalette_Index(CommandLine.palette, CommandLine.custompal, CommandLine.lcdcontrast, CommandLine.lcdbright);
+   PokeMini_VideoPalette_Init(PokeMini_RGB16, 1/*enablehighcolor*/);
+   PokeMini_VideoPalette_Index(userdefinedindex, NULL /*CustomMonoPal*/, 0/*int contrastboost*/, 0/*int brightoffset*/);
    PokeMini_ApplyChanges();
    
-   PokeMini_UseDefaultCallbacks();
-   
-   UIMenu_Init();
-   enablesound(1);
+   MinxAudio_ChangeEngine(1);//enable sound
 
 }
 
 void retro_deinit(void)
 {
-   enablesound(0);
-   UIMenu_Destroy();
-   
-   // Save Stuff
-   PokeMini_SaveFromCommandLines(1);
-   
    PokeMini_VideoPalette_Free();
    PokeMini_Destroy();
 }
@@ -199,6 +228,7 @@ void retro_reset (void)
 
 void retro_run (void)
 {
+   int audiosamples;
    static int16_t audiobuffer[44100 + 100];
    
    //bool updated = false;
@@ -208,8 +238,9 @@ void retro_run (void)
    poll_cb();
    handlekeyevents();
    
-   MinxAudio_GetSamplesS16(audiobuffer, 44100);
-   audio_batch_cb(audiobuffer, 44100);
+   audiosamples = MinxAudio_SamplesInBuffer();
+   MinxAudio_GetSamplesS16(audiobuffer, audiosamples);
+   audio_batch_cb(audiobuffer, audiosamples);
    PokeMini_EmulateFrame();
    // Sleep a little in the hope to free a few samples
    //while (MinxAudio_SyncWithAudio()) retro_sleep(1);
@@ -240,17 +271,18 @@ bool retro_unserialize(const void * data, size_t size)
 
 void retro_cheat_reset(void)
 {
-
+   //no cheats on this core
 } 
 
 void retro_cheat_set(unsigned index, bool enabled, const char *code)
 {
-
+   //no cheats on this core
 } 
 
 bool retro_load_game(const struct retro_game_info *game)
 {
-
+   romsize = game->size;
+   memcpy(rominjectbuffer,game->data,romsize);
 }
 
 bool retro_load_game_special(
