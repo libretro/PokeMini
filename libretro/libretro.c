@@ -193,22 +193,17 @@ void retro_reset (void)
 
 void retro_run (void)
 {
-   uint16_t audiosamples;
-   static int16_t audiobuffer[44100 + 100];
-   
-   //bool updated = false;
-   //if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
-   //check_variables();
    
    poll_cb();
    handlekeyevents();
    
    PokeMini_EmulateFrame();
+   
+   uint16_t audiosamples;
+   static int16_t audiobuffer[44100 + 100];
    audiosamples = MinxAudio_SamplesInBuffer();
-   if(audiosamples > 0){
-      MinxAudio_GetSamplesS16(audiobuffer, audiosamples);
-      audio_batch_cb(audiobuffer, audiosamples);
-   }
+   MinxAudio_GetSamplesS16(audiobuffer, audiosamples);
+   audio_batch_cb(audiobuffer, audiosamples);
    
    if (PokeMini_Rumbling) {
       PokeMini_VideoBlit((uint16_t *)screenbuff + ScOffP + PokeMini_GenRumbleOffset(PixPitch), PixPitch);
@@ -249,6 +244,8 @@ bool retro_load_game(const struct retro_game_info *game)
    int passed;
    int userdefinedindex = 0;//make user defined later
    
+   CommandLine.synccycles = 8;
+   
    //add LCDMODE_COLORS option
    // Set video spec and check if is supported
    if (!PokeMini_SetVideo((TPokeMini_VideoSpec *)&PokeMini_Video3x3, 16, 0/*lcdfilter*//*0=none*/, LCDMODE_ANALOG/*lcdmode*/)) {
@@ -256,7 +253,7 @@ bool retro_load_game(const struct retro_game_info *game)
       abort();
    }
    
-   passed = PokeMini_Create(0, PMSOUNDBUFF);//returns 1 on completion,0 on error
+   passed = PokeMini_Create(0/*flags*/, PMSOUNDBUFF);//returns 1 on completion,0 on error
    if(!passed)abort();
    
    PokeMini_VideoPalette_Init(PokeMini_RGB16, 1/*enablehighcolor*/);
@@ -265,7 +262,9 @@ bool retro_load_game(const struct retro_game_info *game)
    
    PokeMini_UseDefaultCallbacks();
    
-   MinxAudio_ChangeEngine(MINX_AUDIO_EMULATED);//enable sound
+   //MinxAudio_ChangeEngine(MINX_AUDIO_EMULATED);//enable sound
+   MinxAudio_ChangeEngine(MINX_AUDIO_GENERATED);//enable sound
+   //MinxAudio_ChangeEngine(MINX_AUDIO_DIRECTPWM);
    
    passed = PokeMini_LoadMINFileXPLATFORM(game->size,(uint8_t*)game->data);//returns 1 on completion,0 on error
    if(!passed)abort();
