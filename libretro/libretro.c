@@ -27,7 +27,8 @@
 #include "Hardware.h"
 #include "Joystick.h"
 #include "UI.h"
-#include "Video_x4.h"
+//#include "Video_x4.h"
+#include "Video_x3.h"
 #include "PokeMini_BG3.h"
 
 #define MAKEBTNMAP(btn,pkebtn) JoystickButtonsEvent((pkebtn), input_cb(0/*port*/, RETRO_DEVICE_JOYPAD, 0, (btn)) != 0)
@@ -36,7 +37,7 @@
 #define SOUNDBUFFER	2048
 #define PMSOUNDBUFF	(SOUNDBUFFER*2)
 
-uint16_t screenbuff [320*240*2];
+uint16_t screenbuff [320*240];
 int PixPitch = 320;//screen->pitch / 2;
 int ScOffP = (24 * 320/*PixPitch*/) + 16;
 
@@ -44,7 +45,7 @@ int ScOffP = (24 * 320/*PixPitch*/) + 16;
 int UIItems_PlatformC(int index, int reason);
 TUIMenu_Item UIItems_Platform[] = {
    PLATFORMDEF_GOBACK,
-   //{ 0,  9, "Define Joystick...", UIItems_PlatformC },
+   { 0,  9, "Define Joystick...", UIItems_PlatformC },
    PLATFORMDEF_SAVEOPTIONS,
    PLATFORMDEF_END(UIItems_PlatformC)
 };
@@ -58,18 +59,10 @@ int UIItems_PlatformC(int index, int reason)
    return 1;
 }
 
-// Enable / Disable sound
-void enablesound(int sound)
-{
-   MinxAudio_ChangeEngine(sound);
-}
-
-static uint8_t rominjectbuffer[0x200000];
-static int romsize;
 // Load MIN ROM
-int PokeMini_LoadMINFileXPLATFORM()
+int PokeMini_LoadMINFileXPLATFORM(size_t size, uint8_t* buffer)
 {
-   int size = romsize;
+   //int size = buffsize;
    
    // Check if size is valid
    if ((size <= 0x2100) || (size > 0x200000)) {
@@ -85,7 +78,7 @@ int PokeMini_LoadMINFileXPLATFORM()
    }
    
    // Read content
-   memcpy(PM_ROM,rominjectbuffer,size);
+   memcpy(PM_ROM,buffer,size);
    
    NewMulticart();
    
@@ -98,6 +91,8 @@ static retro_input_poll_t poll_cb = NULL;
 static retro_input_state_t input_cb = NULL;
 static retro_audio_sample_batch_t audio_batch_cb = NULL;
 static retro_environment_t environ_cb = NULL;
+
+struct retro_log_callback logging;
 
 void handlekeyevents(){
    MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_SELECT,0);
@@ -155,19 +150,15 @@ void retro_set_environment(retro_environment_t cb)
 {
    environ_cb = cb;
    
-   struct retro_log_callback logging;
    if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &logging))
       log_cb = logging.log;
    else
       log_cb = NULL;
-   
-   bool no_rom = true;
-   environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_rom);
 }
 
 void retro_get_system_info(struct retro_system_info *info)
 {
-   info->need_fullpath    = true;
+   info->need_fullpath    = false;
    info->valid_extensions = "min";
    info->library_version  = "v0.60";
    info->library_name     = "PokeMini";
@@ -180,14 +171,13 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    info->geometry.base_height = 240;
    info->geometry.max_width = 320;
    info->geometry.max_height = 240;
-   info->geometry.aspect_ratio = 4.0 / 3.0;
+   info->geometry.aspect_ratio = 4 / 3;
    info->timing.fps = 60;
    info->timing.sample_rate = 44100;
 }
 
 void retro_init (void)
 {
-   struct retro_log_callback log;
    enum retro_pixel_format rgb565;
    int userdefinedindex = 0;//make user defined later
 
@@ -195,23 +185,26 @@ void retro_init (void)
    if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &rgb565) && log_cb)
          log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
    
-   int failed = !PokeMini_Create(0, PMSOUNDBUFF);
-   if(failed)exit(0);
-   failed = !PokeMini_LoadMINFileXPLATFORM();
-   if(failed)exit(0);
+   PokeMini_UseDefaultCallbacks();
+   
+   int passed = PokeMini_Create(0, PMSOUNDBUFF);//returns 1 on completion,0 on error
+   if(!passed)abort();
    
    //add LCDMODE_COLORS option
    // Set video spec and check if is supported
-   if (!PokeMini_SetVideo((TPokeMini_VideoSpec *)&PokeMini_Video4x4, 16, 0/*lcdfilter*//*0=none*/, LCDMODE_ANALOG/*lcdmode*/)) {
-      fprintf(stderr, "Couldn't set video spec\n");
-      exit(0);
+   if (!PokeMini_SetVideo((TPokeMini_VideoSpec *)&PokeMini_Video3x3, 16, 0/*lcdfilter*//*0=none*/, LCDMODE_ANALOG/*lcdmode*/)) {
+      printf("Couldn't set video spec\n");
+      abort();
    }
    
    PokeMini_VideoPalette_Init(PokeMini_RGB16, 1/*enablehighcolor*/);
    PokeMini_VideoPalette_Index(userdefinedindex, NULL /*CustomMonoPal*/, 0/*int contrastboost*/, 0/*int brightoffset*/);
    PokeMini_ApplyChanges();
    
-   MinxAudio_ChangeEngine(1);//enable sound
+   //MinxAudio_ChangeEngine(1);//enable sound
+   MinxAudio_ChangeEngine(0);//no sound for testing
+   
+   printf("Init Worked\n");
 
 }
 
@@ -223,7 +216,7 @@ void retro_deinit(void)
 
 void retro_reset (void)
 {
-
+   PokeMini_Reset(1 /*hardreset*/);
 }
 
 void retro_run (void)
@@ -238,13 +231,10 @@ void retro_run (void)
    poll_cb();
    handlekeyevents();
    
-   audiosamples = MinxAudio_SamplesInBuffer();
-   MinxAudio_GetSamplesS16(audiobuffer, audiosamples);
-   audio_batch_cb(audiobuffer, audiosamples);
    PokeMini_EmulateFrame();
-   // Sleep a little in the hope to free a few samples
-   //while (MinxAudio_SyncWithAudio()) retro_sleep(1);
-
+   //audiosamples = MinxAudio_SamplesInBuffer();
+   //MinxAudio_GetSamplesS16(audiobuffer, audiosamples);
+   //audio_batch_cb(audiobuffer, audiosamples);
    
    if (PokeMini_Rumbling) {
       PokeMini_VideoBlit((uint16_t *)screenbuff + ScOffP + PokeMini_GenRumbleOffset(PixPitch), PixPitch);
@@ -252,6 +242,7 @@ void retro_run (void)
       PokeMini_VideoBlit((uint16_t *)screenbuff + ScOffP, PixPitch);
    }
    
+   video_cb(screenbuff, 320, 240, 320*2/*Pitch*/);
 }
 
 size_t retro_serialize_size (void)
@@ -281,8 +272,14 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
 
 bool retro_load_game(const struct retro_game_info *game)
 {
-   romsize = game->size;
-   memcpy(rominjectbuffer,game->data,romsize);
+   //romsize = game->size;
+   //memcpy(rominjectbuffer,game->data,romsize);
+   
+   int passed = PokeMini_LoadMINFileXPLATFORM(game->size,game->data);//returns 1 on completion,0 on error
+   if(!passed)abort();
+   
+   PokeMini_Reset(1 /*hardreset*/);
+   printf("Load Game Worked\n");
 }
 
 bool retro_load_game_special(
