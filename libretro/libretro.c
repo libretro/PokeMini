@@ -88,7 +88,8 @@ static retro_log_printf_t log_cb = NULL;
 static retro_video_refresh_t video_cb = NULL;
 static retro_input_poll_t poll_cb = NULL;
 static retro_input_state_t input_cb = NULL;
-static retro_audio_sample_batch_t audio_batch_cb = NULL;
+static retro_audio_sample_t audio_cb = NULL;
+//static retro_audio_sample_batch_t audio_batch_cb = NULL;
 static retro_environment_t environ_cb = NULL;
 
 void handlekeyevents(){
@@ -121,9 +122,14 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
    video_cb = cb;
 }
 
+void retro_set_audio_sample(retro_audio_sample_t cb)
+{
+   audio_cb = cb;
+}
+
 void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb)
 {
-   audio_batch_cb = cb;
+   //audio_batch_cb = cb;
 }
 
 void retro_set_input_poll(retro_input_poll_t cb)
@@ -165,7 +171,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    info->geometry.max_width = 320;
    info->geometry.max_height = 240;
    info->geometry.aspect_ratio = 4 / 3;
-   info->timing.fps = 60;
+   info->timing.fps = 72;
    info->timing.sample_rate = 44100;
 }
 
@@ -199,11 +205,20 @@ void retro_run (void)
    
    PokeMini_EmulateFrame();
    
+   /*
    uint16_t audiosamples;
    static int16_t audiobuffer[44100 + 100];
    audiosamples = MinxAudio_SamplesInBuffer();
    MinxAudio_GetSamplesS16(audiobuffer, audiosamples);
    audio_batch_cb(audiobuffer, audiosamples);
+   */
+   
+   static int16_t audiobuffer[612];
+   uint16_t audiosamples = 612;// MinxAudio_SamplesInBuffer();
+   MinxAudio_GetSamplesS16(audiobuffer, audiosamples);
+   int i;
+   for(i=0;i<612;i++)
+      audio_cb(audiobuffer[i],audiobuffer[i]);
    
    if (PokeMini_Rumbling) {
       PokeMini_VideoBlit((uint16_t *)screenbuff + ScOffP + PokeMini_GenRumbleOffset(PixPitch), PixPitch);
@@ -244,7 +259,8 @@ bool retro_load_game(const struct retro_game_info *game)
    int passed;
    int userdefinedindex = 0;//make user defined later
    
-   CommandLine.synccycles = 8;
+   CommandLineInit();
+   CommandLine.joyenabled = 1;
    
    //add LCDMODE_COLORS option
    // Set video spec and check if is supported
@@ -262,9 +278,7 @@ bool retro_load_game(const struct retro_game_info *game)
    
    PokeMini_UseDefaultCallbacks();
    
-   //MinxAudio_ChangeEngine(MINX_AUDIO_EMULATED);//enable sound
    MinxAudio_ChangeEngine(MINX_AUDIO_GENERATED);//enable sound
-   //MinxAudio_ChangeEngine(MINX_AUDIO_DIRECTPWM);
    
    passed = PokeMini_LoadMINFileXPLATFORM(game->size,(uint8_t*)game->data);//returns 1 on completion,0 on error
    if(!passed)abort();
@@ -285,7 +299,6 @@ void retro_unload_game (void){}
 
 
 //useless callbacks
-void retro_set_audio_sample(retro_audio_sample_t cb){}
 
 unsigned retro_api_version(void)
 {
