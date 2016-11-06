@@ -127,11 +127,6 @@ void retro_set_audio_sample(retro_audio_sample_t cb)
    audio_cb = cb;
 }
 
-void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb)
-{
-   //audio_batch_cb = cb;
-}
-
 void retro_set_input_poll(retro_input_poll_t cb)
 {
    poll_cb = cb;
@@ -278,7 +273,7 @@ bool retro_load_game(const struct retro_game_info *game)
    
    PokeMini_UseDefaultCallbacks();
    
-   MinxAudio_ChangeEngine(MINX_AUDIO_GENERATED);//enable sound
+   MinxAudio_ChangeEngine(MINX_AUDIO_DIRECTPWM);//enable sound
    
    passed = PokeMini_LoadMINFileXPLATFORM(game->size,(uint8_t*)game->data);//returns 1 on completion,0 on error
    if(!passed)abort();
@@ -299,6 +294,8 @@ void retro_unload_game (void){}
 
 
 //useless callbacks
+
+void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb){}
 
 unsigned retro_api_version(void)
 {
