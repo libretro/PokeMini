@@ -253,6 +253,9 @@ bool retro_load_game(const struct retro_game_info *game)
 {
    int passed;
    int userdefinedindex = 0;//make user defined later
+
+   if (!game)
+      return false;
    
    CommandLineInit();
    CommandLine.joyenabled = 1;
