@@ -89,7 +89,7 @@ static retro_video_refresh_t video_cb = NULL;
 static retro_input_poll_t poll_cb = NULL;
 static retro_input_state_t input_cb = NULL;
 static retro_audio_sample_t audio_cb = NULL;
-//static retro_audio_sample_batch_t audio_batch_cb = NULL;
+static retro_audio_sample_batch_t audio_batch_cb = NULL;
 static retro_environment_t environ_cb = NULL;
 
 void handlekeyevents(){
@@ -122,6 +122,11 @@ void retro_set_video_refresh(retro_video_refresh_t cb)
 void retro_set_audio_sample(retro_audio_sample_t cb)
 {
    audio_cb = cb;
+}
+
+void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb)
+{
+   audio_batch_cb = cb;
 }
 
 void retro_set_input_poll(retro_input_poll_t cb)
@@ -158,13 +163,13 @@ void retro_get_system_info(struct retro_system_info *info)
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
-   info->geometry.base_width = 320;
-   info->geometry.base_height = 240;
-   info->geometry.max_width = 320;
-   info->geometry.max_height = 240;
-   info->geometry.aspect_ratio = 4 / 3;
-   info->timing.fps = 72;
-   info->timing.sample_rate = 44100;
+   info->geometry.base_width   = 320;
+   info->geometry.base_height  = 240;
+   info->geometry.max_width    = 320;
+   info->geometry.max_height   = 240;
+   info->geometry.aspect_ratio = 4.0 / 3.0;
+   info->timing.fps            = 72.0;
+   info->timing.sample_rate    = 44100.0;
 }
 
 void retro_init (void)
@@ -197,20 +202,18 @@ void retro_run (void)
    
    PokeMini_EmulateFrame();
    
-   /*
-   uint16_t audiosamples;
-   static int16_t audiobuffer[44100 + 100];
-   audiosamples = MinxAudio_SamplesInBuffer();
-   MinxAudio_GetSamplesS16(audiobuffer, audiosamples);
-   audio_batch_cb(audiobuffer, audiosamples);
-   */
-   
    static int16_t audiobuffer[612];
+   static int16_t audiostretched[612 * 2];
    uint16_t audiosamples = 612;// MinxAudio_SamplesInBuffer();
    MinxAudio_GetSamplesS16(audiobuffer, audiosamples);
    int i;
-   for(i=0;i<612;i++)
-      audio_cb(audiobuffer[i],audiobuffer[i]);
+   int offset = 0;
+   for(i = 0;i < 612;i++){
+      audiostretched[offset]     = audiobuffer[i];
+      audiostretched[offset + 1] = audiobuffer[i];
+      offset += 2;
+   }
+   audio_batch_cb(audiostretched, audiosamples);
    
    if (PokeMini_Rumbling) {
       PokeMini_VideoBlit((uint16_t *)screenbuff + ScOffP + PokeMini_GenRumbleOffset(PixPitch), PixPitch);
@@ -294,8 +297,6 @@ void retro_unload_game (void){}
 
 
 //useless callbacks
-
-void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb){}
 
 unsigned retro_api_version(void)
 {
