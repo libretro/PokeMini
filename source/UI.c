@@ -22,7 +22,11 @@
 #ifndef NO_SCANDIRS
 #include <sys/stat.h>
 #include <dirent.h>
+#ifdef _MSC_VER
+#include <direct.h>
+#else
 #include <unistd.h>
+#endif
 #endif
 
 #include "PokeMini.h"
