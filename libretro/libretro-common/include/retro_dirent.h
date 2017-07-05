@@ -1,7 +1,7 @@
 /* Copyright  (C) 2010-2017 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
- * The following license statement only applies to this file (retro_inline.h).
+ * The following license statement only applies to this file (retro_dirent.h).
  * ---------------------------------------------------------------------------------------
  *
  * Permission is hereby granted, free of charge,
@@ -20,20 +20,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __LIBRETRO_SDK_INLINE_H
-#define __LIBRETRO_SDK_INLINE_H
+#ifndef __RETRO_DIRENT_H
+#define __RETRO_DIRENT_H
 
-#ifndef INLINE
+#include <retro_common_api.h>
+#include <retro_miscellaneous.h>
 
-#if defined(_WIN32) || defined(__INTEL_COMPILER)
-#define INLINE __inline
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__>=199901L
-#define INLINE inline
-#elif defined(__GNUC__)
-#define INLINE __inline__
-#else
-#define INLINE
-#endif
+#include <boolean.h>
 
-#endif
+RETRO_BEGIN_DECLS
+
+typedef struct RDIR RDIR;
+
+struct RDIR *retro_opendir(const char *name);
+
+int retro_readdir(struct RDIR *rdir);
+
+bool retro_dirent_error(struct RDIR *rdir);
+
+void retro_dirent_include_hidden(struct RDIR *rdir, bool include_hidden);
+
+const char *retro_dirent_get_name(struct RDIR *rdir);
+
+/**
+ *
+ * retro_dirent_is_dir:
+ * @rdir         : pointer to the directory entry.
+ *
+ * Is the directory listing entry a directory?
+ *
+ * Returns: true if directory listing entry is
+ * a directory, false if not.
+ */
+bool retro_dirent_is_dir(struct RDIR *rdir, const char *path);
+
+void retro_closedir(struct RDIR *rdir);
+
+RETRO_END_DECLS
+
 #endif
