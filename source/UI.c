@@ -21,7 +21,7 @@
 
 #ifndef NO_SCANDIRS
 #include <sys/stat.h>
-#include <dirent.h>
+#include <retro_dirent.h>
 #ifdef _MSC_VER
 #include <direct.h>
 #else
@@ -408,53 +408,57 @@ int UIMenu_ReadDir(char *dirname)
 	}
 	fs_close(d);
 #else
-	struct dirent *dirEntry;
 	struct stat Stat;
-	DIR *dir = opendir(dirname);
+	RDIR *dir = retro_opendir(dirname);
 	if (dir == NULL) {
-		PokeDPrint(POKEMSG_ERR, "opendir('%s') error\n", dirname);
+		PokeDPrint(POKEMSG_ERR, "retro_opendir('%s') error\n", dirname);
 		return 0;
 	}
-	while((dirEntry = readdir(dir)) != NULL) {
-		if (dirEntry->d_name[0] == 0) break;
-		UIMenu_FileListCache[items].stats = 0;
-		strcpy(UIMenu_FileListCache[items].name, dirEntry->d_name);
-		if (strcmp(dirEntry->d_name, ".") == 0) {
-			// Current directory
-			continue;
-		} else {
-			// Current directory, file or directory
-			if (hasslash) sprintf(file, "%s%s", dirname, dirEntry->d_name);
-			else sprintf(file, "%s/%s", dirname, dirEntry->d_name);
-			if (stat(file, &Stat) == -1) {
-				PokeDPrint(POKEMSG_ERR, "stat('%s') error\n", file);
-				continue;
-			} else {
-				isdir = S_ISDIR(Stat.st_mode);
-			}
-			
-		}
-		if (isdir) {
-			// Directory
-			UIMenu_FileListCache[items++].stats = 1;
-			if (items >= UI_MAXCACHE) break;
-		} else {
-			// File
-			if (ExtensionCheck(dirEntry->d_name, ".min")) {
-				UIMenu_FileListCache[items].stats = 2;
-				sprintf(file, "%sc", dirEntry->d_name);
-				if (FileExist(file)) UIMenu_FileListCache[items].color = 1;
-				items++;
+	while((retro_readdir(dir)))
+   {
+      if (!retro_dirent_get_name(dir))
+         break;
+      UIMenu_FileListCache[items].stats = 0;
+      strcpy(UIMenu_FileListCache[items].name, retro_dirent_get_name(dir));
+      // Current directory
+      if (strcmp(retro_dirent_get_name(dir), ".") == 0)
+         continue;
+      else
+      {
+         // Current directory, file or directory
+         if (hasslash) sprintf(file, "%s%s", dirname, retro_dirent_get_name(dir));
+         else sprintf(file, "%s/%s", dirname, retro_dirent_get_name(dir));
+         if (stat(file, &Stat) == -1) {
+            PokeDPrint(POKEMSG_ERR, "stat('%s') error\n", file);
+            continue;
+         } else {
+            isdir = S_ISDIR(Stat.st_mode);
+         }
+
+      }
+      if (isdir)
+      {
+         // Directory
+         UIMenu_FileListCache[items++].stats = 1;
+         if (items >= UI_MAXCACHE) break;
+      } else
+      {
+         // File
+         if (ExtensionCheck(retro_dirent_get_name(dir), ".min")) {
+            UIMenu_FileListCache[items].stats = 2;
+            sprintf(file, "%sc", retro_dirent_get_name(dir));
+            if (FileExist(file)) UIMenu_FileListCache[items].color = 1;
+            items++;
 #ifndef NO_ZIP
-			} else if (ExtensionCheck(dirEntry->d_name, ".zip")) {
-				UIMenu_FileListCache[items].stats = 2;
-				UIMenu_FileListCache[items].color = 2;
-				items++;
+         } else if (ExtensionCheck(retro_dirent_get_name(dir), ".zip")) {
+            UIMenu_FileListCache[items].stats = 2;
+            UIMenu_FileListCache[items].color = 2;
+            items++;
 #endif
-			}
-		}
-	}
-	closedir(dir);
+         }
+      }
+   }
+	retro_closedir(dir);
 #endif
 
 	// Sort the list
