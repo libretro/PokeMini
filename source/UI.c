@@ -411,7 +411,6 @@ int UIMenu_ReadDir(char *dirname)
 	fs_close(d);
 #else
    {
-      struct stat Stat;
       RDIR *dir = retro_opendir(dirname);
       if (dir == NULL) {
          PokeDPrint(POKEMSG_ERR, "retro_opendir('%s') error\n", dirname);
@@ -431,13 +430,13 @@ int UIMenu_ReadDir(char *dirname)
             // Current directory, file or directory
             if (hasslash) sprintf(file, "%s%s", dirname, retro_dirent_get_name(dir));
             else sprintf(file, "%s/%s", dirname, retro_dirent_get_name(dir));
-            if (stat(file, &Stat) == -1) {
+            if (!path_is_valid(file))
+            {
                PokeDPrint(POKEMSG_ERR, "stat('%s') error\n", file);
                continue;
-            } else {
-               isdir = S_ISDIR(Stat.st_mode);
             }
-
+            else
+               isdir = path_is_directory(file);
          }
          if (isdir)
          {
