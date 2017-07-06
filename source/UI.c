@@ -21,13 +21,15 @@
 
 #ifndef NO_SCANDIRS
 #include <sys/stat.h>
-#include <retro_dirent.h>
 #ifdef _MSC_VER
 #include <direct.h>
 #else
 #include <unistd.h>
 #endif
 #endif
+
+#include <file/file_path.h>
+#include <retro_dirent.h>
 
 #include "PokeMini.h"
 #include "Video.h"
@@ -493,13 +495,14 @@ void UIMenu_GotoRelativeDir(char *newdir)
 #ifdef FS_DC
 		chdir(file);
 #else
-		struct stat Stat;
-		if (stat(file, &Stat) == -1) {
+      if (path_is_valid(file))
 			PokeDPrint(POKEMSG_ERR, "stat('%s') error\n", file);
-		} else {
-			if (S_ISDIR(Stat.st_mode)) {
-				if (chdir(file)) PokeDPrint(POKEMSG_ERR, "rel chdir('%s') error\n", file);
-			}
+		else {
+			if (path_is_directory(file))
+         {
+            if (chdir(file))
+               PokeDPrint(POKEMSG_ERR, "rel chdir('%s') error\n", file);
+         }
 		}
 #endif
 	} else {

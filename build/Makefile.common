@@ -39,7 +39,11 @@ SOURCES_C := $(CORE_DIR)/freebios/freebios.c \
 	$(CORE_DIR)/libretro/libretro.c
 
 ifneq ($(STATIC_LINKING),1)
-SOURCES_C += $(CORE_DIR)/libretro/libretro-common/file/retro_dirent.c
+SOURCES_C += $(CORE_DIR)/libretro/libretro-common/file/retro_dirent.c \
+				 $(CORE_DIR)/libretro/libretro-common/file/file_path.c \
+				 $(CORE_DIR)/libretro/libretro-common/compat/compat_posix_string.c \
+				 $(CORE_DIR)/libretro/libretro-common/compat/compat_strl.c \
+				 $(CORE_DIR)/libretro/libretro-common/compat/compat_strcasestr.c
 endif
 
 #i know this is hacky but am not currently intresed in rewriting all the makefiles
