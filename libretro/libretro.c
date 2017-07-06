@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdint.h>
-#ifndef _MSC_VER
-#include <stdbool.h>
+#include <boolean.h>
+#ifdef _MSC_VER
+#include <direct.h>
+#else
 #include <unistd.h>
 #endif
 #include <stdlib.h>
@@ -10,8 +12,8 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-#include "libretro.h"
-#include "retro_miscellaneous.h"
+#include <libretro.h>
+#include <retro_miscellaneous.h>
 /*
  bare functions to use
  int PokeMini_EmulateFrame(void);
