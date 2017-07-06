@@ -16,6 +16,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <compat/posix_string.h>
+
 #include "PokeMini.h"
 #include "Keyboard.h"
 

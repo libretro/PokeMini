@@ -19,6 +19,8 @@
 #include "PMCommon.h"
 #include <ctype.h>
 
+#include <compat/posix_string.h>
+
 // Return true if the string is valid and non-empty
 int StringIsSet(char *str)
 {
