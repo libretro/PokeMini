@@ -51,10 +51,14 @@ TUIMenu_Item UIItems_Platform[] = {
 };
 int UIItems_PlatformC(int index, int reason)
 {
-   if (reason == UIMENU_OK) reason = UIMENU_RIGHT;
-   if (reason == UIMENU_CANCEL) UIMenu_PrevMenu();
-   if (reason == UIMENU_RIGHT) {
-      if (index == 9) JoystickEnterMenu();
+   if (reason == UIMENU_OK)
+      reason = UIMENU_RIGHT;
+   if (reason == UIMENU_CANCEL)
+      UIMenu_PrevMenu();
+   if (reason == UIMENU_RIGHT)
+   {
+      if (index == 9)
+         JoystickEnterMenu();
    }
    return 1;
 }
@@ -62,19 +66,16 @@ int UIItems_PlatformC(int index, int reason)
 // Load MIN ROM
 int PokeMini_LoadMINFileXPLATFORM(size_t size, uint8_t* buffer)
 {
-
    // Check if size is valid
-   if ((size <= 0x2100) || (size > 0x200000)) {
+   if ((size <= 0x2100) || (size > 0x200000))
       return 0;
-   }
    
    // Free existing color information
    PokeMini_FreeColorInfo();
    
    // Allocate ROM and set cartridge size
-   if (!PokeMini_NewMIN(size)) {
+   if (!PokeMini_NewMIN(size))
       return 0;
-   }
    
    // Read content
    memcpy(PM_ROM,buffer,size);
@@ -174,10 +175,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 
 void retro_init (void)
 {
-   enum retro_pixel_format rgb565;
-   
-
-   rgb565 = RETRO_PIXEL_FORMAT_RGB565;
+   enum retro_pixel_format rgb565 = RETRO_PIXEL_FORMAT_RGB565;
    if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &rgb565) && log_cb)
          log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
 
@@ -196,31 +194,31 @@ void retro_reset (void)
 
 void retro_run (void)
 {
-   
-   poll_cb();
-   handlekeyevents();
-   
-   PokeMini_EmulateFrame();
-   
+   int i;
+   int offset = 0;
    static int16_t audiobuffer[612];
    static int16_t audiostretched[612 * 2];
    uint16_t audiosamples = 612;// MinxAudio_SamplesInBuffer();
+
+   poll_cb();
+   handlekeyevents();
+
+   PokeMini_EmulateFrame();
+
    MinxAudio_GetSamplesS16(audiobuffer, audiosamples);
-   int i;
-   int offset = 0;
-   for(i = 0;i < 612;i++){
+   for(i = 0;i < 612;i++)
+   {
       audiostretched[offset]     = audiobuffer[i];
       audiostretched[offset + 1] = audiobuffer[i];
       offset += 2;
    }
    audio_batch_cb(audiostretched, audiosamples);
-   
-   if (PokeMini_Rumbling) {
+
+   if (PokeMini_Rumbling)
       PokeMini_VideoBlit((uint16_t *)screenbuff + ScOffP + PokeMini_GenRumbleOffset(PixPitch), PixPitch);
-   } else {
+   else
       PokeMini_VideoBlit((uint16_t *)screenbuff + ScOffP, PixPitch);
-   }
-   
+
    video_cb(screenbuff, 320, 240, 320*2/*Pitch*/);
 }
 
