@@ -17,6 +17,7 @@
 */
 
 #include "PMCommon.h"
+#include "Missing.h"
 #include <ctype.h>
 
 #include <compat/posix_string.h>
