@@ -37,6 +37,7 @@
 #include "CommandLine.h"
 #include "PokeMini_Font12.h"
 #include "PokeMini_Icons12.h"
+#include "Missing.h"
 
 int UI_FirstLoad = 1;
 int UI_Enabled = 0;

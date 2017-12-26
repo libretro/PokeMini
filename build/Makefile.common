@@ -22,6 +22,7 @@ SOURCES_C := $(CORE_DIR)/freebios/freebios.c \
 	$(CORE_DIR)/source/MinxLCD.c \
 	$(CORE_DIR)/source/MinxPRC.c \
 	$(CORE_DIR)/source/MinxTimers.c \
+	$(CORE_DIR)/source/Missing.c \
 	$(CORE_DIR)/source/Multicart.c \
 	$(CORE_DIR)/source/PMCommon.c \
 	$(CORE_DIR)/source/PokeMini.c \
