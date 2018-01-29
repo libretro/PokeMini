@@ -109,12 +109,18 @@ void handlekeyevents(){
 
 void *retro_get_memory_data(unsigned type)
 {
-   return NULL;
+   if (type == RETRO_MEMORY_SYSTEM_RAM)
+      return PM_RAM;
+   else
+      return NULL;
 }
 
 size_t retro_get_memory_size(unsigned type)
 {
-   return 0;
+   if (type == RETRO_MEMORY_SYSTEM_RAM)
+      return 0x2000;
+   else
+      return 0;
 }
 
 void retro_set_video_refresh(retro_video_refresh_t cb)
