@@ -185,7 +185,7 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 ///////////////////////////////////////////////////////////
 
 // Load MIN ROM
-int PokeMini_LoadMINFileXPLATFORM(size_t size, uint8_t* buffer)
+static int PokeMini_LoadMINFileXPLATFORM(size_t size, uint8_t* buffer)
 {
 	// Check if size is valid
 	if ((size <= 0x2100) || (size > 0x200000))
@@ -444,8 +444,17 @@ bool retro_load_game(const struct retro_game_info *game)
 	if (!passed)
 		abort();
 	
-	// Hard reset (should this be soft...?)
-	PokeMini_Reset(1);
+	// Load EEPROM
+	MinxIO_FormatEEPROM();
+	if (FileExist(CommandLine.eeprom_file))
+	{
+		PokeMini_LoadEEPROMFile(CommandLine.eeprom_file);
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Read EEPROM file: %s\n", CommandLine.eeprom_file);
+	}
+	
+	// Soft reset
+	PokeMini_Reset(0);
 	
 	return true;
 }
@@ -461,7 +470,14 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
 
 void retro_unload_game(void)
 {
-	
+	// Save EEPROM
+	if (PokeMini_EEPROMWritten && StringIsSet(CommandLine.eeprom_file))
+	{
+		PokeMini_EEPROMWritten = 0;
+		PokeMini_SaveEEPROMFile(CommandLine.eeprom_file);
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Wrote EEPROM file: %s\n", CommandLine.eeprom_file);
+	}
 }
 
 // Useless (?) callbacks
