@@ -23,13 +23,15 @@
  int PokeMini_LoadMINFile(const char *filename);
  */
 
-// pokemini headers
+// PokeMini headers
 #include "MinxIO.h"
 #include "PMCommon.h"
 #include "PokeMini.h"
 #include "Hardware.h"
 #include "Joystick.h"
+#include "MinxAudio.h"
 #include "UI.h"
+#include "Video.h"
 #include "Video_x4.h"
 
 #define MAKEBTNMAP(btn,pkebtn) JoystickButtonsEvent((pkebtn), input_cb(0/*port*/, RETRO_DEVICE_JOYPAD, 0, (btn)) != 0)
@@ -47,6 +49,11 @@
 
 uint16_t screenbuff [PM_VIDEO_WIDTH * PM_VIDEO_HEIGHT];
 int PixPitch = PM_VIDEO_WIDTH; // screen->pitch / 2;
+
+// File path utils
+static char g_basename[256];
+static char *g_system_dir;
+static char *g_save_dir;
 
 // Platform menu (REQUIRED >= 0.4.4)
 int UIItems_PlatformC(int index, int reason);
@@ -79,6 +86,102 @@ static retro_audio_sample_batch_t audio_batch_cb = NULL;
 static retro_environment_t environ_cb = NULL;
 
 // Utilities
+///////////////////////////////////////////////////////////
+
+// Taken from nestopia...
+static void extract_basename(char *buf, const char *path, size_t size)
+{
+	const char *base = strrchr(path, '/');
+	if (!base)
+		base = strrchr(path, '\\');
+	if (!base)
+		base = path;
+	
+	if (*base == '\\' || *base == '/')
+		base++;
+	
+	strncpy(buf, base, size - 1);
+	buf[size - 1] = '\0';
+	
+	char *ext = strrchr(buf, '.');
+	if (ext)
+		*ext = '\0';
+}
+
+///////////////////////////////////////////////////////////
+
+// Want this code to be 'minimally invasive'
+// -> Will make use of existing PokeMini command line interface
+//    wherever possible
+static void InitialiseCommandLine(const struct retro_game_info *game)
+{
+	// Mandatory (?)
+	CommandLineInit();
+	
+	// Set fixed overrides (i.e. these values will never change...)
+	CommandLine.forcefreebios = 0; // OFF
+	CommandLine.eeprom_share = 0;  // OFF (there is no practical benefit to a shared eeprom save
+	                               //      - it just gets full and becomes a nuisance...)
+	CommandLine.updatertc = 2;	    // Update RTC (0=Off, 1=State, 2=Host)
+	CommandLine.sound = MINX_AUDIO_DIRECTPWM;
+	CommandLine.joyenabled = 1;    // ON
+	
+	// Set default overrides (these should be settable via core options interface...)
+	CommandLine.piezofilter = 1;  // ON
+	CommandLine.lcdfilter = 1;	   // LCD Filter (0: nofilter, 1: dotmatrix, 2: scanline)
+	CommandLine.lcdmode = 0;      // LCD Mode (0: analog, 1: 3shades, 2: 2shades)
+	CommandLine.lcdcontrast = 64; // LCD contrast
+	CommandLine.lcdbright = 0;    // LCD brightness offset
+	CommandLine.palette = 0;      // Palette Index (1 - 14)
+	// Palette values:
+	//  0: Default
+	//  1: Old
+	//  2: Black & White
+	//  3: Green Palette
+	//  4: Green Vector
+	//  5: Red Palette
+	//  6: Red Vector
+	//  7: Blue LCD
+	//  8: LEDBacklight
+	//  9: Girl Power
+	// 10: Blue Palette
+	// 11: Blue Vector
+	// 12: Sepia
+	// 13: Inv. B&W
+	
+	// Set file paths
+	// > Handle Windows nonsense...
+	char slash;
+#if defined(_WIN32)
+	slash = '\\';
+#else
+	slash = '/';
+#endif
+   // > Prep. work
+	if (!environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &g_system_dir))
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Could not find system directory.\n");
+	}
+	if (!environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &g_save_dir))
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Could not find save directory.\n");
+	}
+   // > ROM path
+	if (game->path != NULL)
+	{
+		// >> Set CommandLine.min_file (probably not needed, but whatever...)
+		sprintf(CommandLine.min_file, "%s", game->path);
+		// >> Set CommandLine.eeprom_file
+		extract_basename(g_basename, game->path, sizeof(g_basename));
+		sprintf(CommandLine.eeprom_file, "%s%c%s.eep", g_save_dir, slash, g_basename);
+	}
+	// > BIOS path
+	// >> Set CommandLine.bios_file
+	sprintf(CommandLine.bios_file, "%s%cbios.min", g_system_dir, slash);
+}
+
 ///////////////////////////////////////////////////////////
 
 // Load MIN ROM
@@ -310,37 +413,40 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
 bool retro_load_game(const struct retro_game_info *game)
 {
 	int passed;
-	int userdefinedindex = 0; //make user defined later
 	
 	if (!game)
 		return false;
 	
-	CommandLineInit();
-	CommandLine.joyenabled = 1;
+	InitialiseCommandLine(game);
 	
 	//add LCDMODE_COLORS option
 	// Set video spec and check if is supported
-	if (!PokeMini_SetVideo((TPokeMini_VideoSpec *)&PokeMini_Video4x4, 16, 0/*lcdfilter*//*0=none*/, LCDMODE_ANALOG/*lcdmode*/))
+	if (!PokeMini_SetVideo((TPokeMini_VideoSpec *)&PokeMini_Video4x4, 16, CommandLine.lcdfilter, CommandLine.lcdmode))
 	{
-		printf("Couldn't set video spec\n");
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Couldn't set video spec.\n");
 		abort();
 	}
 	
-	passed = PokeMini_Create(0/*flags*/, PMSOUNDBUFF);//returns 1 on completion,0 on error
-	if(!passed)abort();
+	passed = PokeMini_Create(0/*flags*/, PMSOUNDBUFF); // returns 1 on completion,0 on error
+	if (!passed)
+		abort();
 	
 	PokeMini_VideoPalette_Init(PokeMini_RGB16, 1/*enablehighcolor*/);
-	PokeMini_VideoPalette_Index(userdefinedindex, NULL /*CustomMonoPal*/, 0/*int contrastboost*/, 0/*int brightoffset*/);
-	PokeMini_ApplyChanges();
+	PokeMini_VideoPalette_Index(CommandLine.palette, NULL, CommandLine.lcdcontrast, CommandLine.lcdbright);
+	PokeMini_ApplyChanges(); // Note: 'CommandLine.piezofilter' value is also read inside here
 	
 	PokeMini_UseDefaultCallbacks();
 	
-	MinxAudio_ChangeEngine(MINX_AUDIO_DIRECTPWM);//enable sound
+	MinxAudio_ChangeEngine(CommandLine.sound); // enable sound
 	
-	passed = PokeMini_LoadMINFileXPLATFORM(game->size,(uint8_t*)game->data);//returns 1 on completion,0 on error
-	if(!passed)abort();
+	passed = PokeMini_LoadMINFileXPLATFORM(game->size, (uint8_t*)game->data); // returns 1 on completion,0 on error
+	if (!passed)
+		abort();
 	
-	PokeMini_Reset(1 /*hardreset*/);
+	// Hard reset (should this be soft...?)
+	PokeMini_Reset(1);
+	
 	return true;
 }
 
