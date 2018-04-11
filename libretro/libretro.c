@@ -88,6 +88,26 @@ static retro_environment_t environ_cb = NULL;
 // Utilities
 ///////////////////////////////////////////////////////////
 
+static void InitialiseInputDescriptors(void)
+{
+	struct retro_input_descriptor desc[] = {
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,   "D-Pad Left" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,     "D-Pad Up" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN,   "D-Pad Down" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT,  "D-Pad Right" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B,      "B" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A,      "A" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L,      "Shake" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,      "C" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT, "Power" },
+		{ 0 },
+	};
+	
+	environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
+}
+
+///////////////////////////////////////////////////////////
+
 static void extract_basename(char *buf, const char *path, size_t size)
 {
 	const char *base = strrchr(path, '/');
@@ -314,15 +334,15 @@ static int PokeMini_LoadMINFileXPLATFORM(size_t size, uint8_t* buffer)
 
 void handlekeyevents()
 {
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_START,9);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_UP,10);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_DOWN,11);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_LEFT,4);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_RIGHT,5);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_A,1);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_B,2);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_L,6);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_R,7);
+	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_SELECT,  9);
+	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_UP,     10);
+	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_DOWN,   11);
+	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_LEFT,    4);
+	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_RIGHT,   5);
+	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_A,       1);
+	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_B,       2);
+	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_L,       6);
+	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_R,       7);
 }
 
 // Core functions
@@ -543,6 +563,7 @@ bool retro_load_game(const struct retro_game_info *game)
 	if (!game)
 		return false;
 	
+	InitialiseInputDescriptors();
 	InitialiseCommandLine(game);
 	
 	//add LCDMODE_COLORS option
