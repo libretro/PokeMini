@@ -85,6 +85,11 @@ static retro_audio_sample_t audio_cb = NULL;
 static retro_audio_sample_batch_t audio_batch_cb = NULL;
 static retro_environment_t environ_cb = NULL;
 
+// Force feedback stuff
+static struct retro_rumble_interface rumble;
+static bool rumble_supported = false;
+static uint16_t rumble_strength = 0;
+
 // Utilities
 ///////////////////////////////////////////////////////////
 
@@ -104,6 +109,24 @@ static void InitialiseInputDescriptors(void)
 	};
 	
 	environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, desc);
+}
+
+///////////////////////////////////////////////////////////
+
+static void InitialiseRumbleInterface(void)
+{
+	if (environ_cb(RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE, &rumble))
+	{
+		rumble_supported = true;
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Rumble environment supported\n");
+	}
+	else
+	{
+		rumble_supported = false;
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Rumble environment not supported\n");
+	}
 }
 
 ///////////////////////////////////////////////////////////
@@ -129,7 +152,7 @@ static void extract_basename(char *buf, const char *path, size_t size)
 
 ///////////////////////////////////////////////////////////
 
-static void SyncCoreOptionsWithCommandLine()
+static void SyncCoreOptionsWithCommandLine(void)
 {
 	struct retro_variable variables = {0};
 	
@@ -250,6 +273,37 @@ static void SyncCoreOptionsWithCommandLine()
 			CommandLine.piezofilter = 0;
 		}
 	}
+	
+	// pokemini_rumblelvl
+	CommandLine.rumblelvl = 3; // (0 - 3; 3 == Default)
+	variables.key = "pokemini_rumblelvl";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		CommandLine.rumblelvl = atoi(variables.value);
+	}
+	
+	// pokemini_controller_rumble
+	// NB: This is not part of the 'CommandLine' interface, but there is
+	// no better place to handle it...
+	bool rumble_enabled = true;
+	variables.key = "pokemini_controller_rumble";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		if (strcmp(variables.value, "disabled") == 0)
+		{
+			rumble_enabled = false;
+		}
+	}
+	
+	// Determine rumble strength
+	if (rumble_enabled)
+	{
+		rumble_strength = 21845 * CommandLine.rumblelvl;
+	}
+	else
+	{
+		rumble_strength = 0;
+	}
 }
 
 ///////////////////////////////////////////////////////////
@@ -332,7 +386,7 @@ static int PokeMini_LoadMINFileXPLATFORM(size_t size, uint8_t* buffer)
 
 ///////////////////////////////////////////////////////////
 
-void handlekeyevents()
+void handlekeyevents(void)
 {
 	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_SELECT,  9);
 	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_UP,     10);
@@ -343,6 +397,28 @@ void handlekeyevents()
 	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_B,       2);
 	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_L,       6);
 	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_R,       7);
+}
+
+///////////////////////////////////////////////////////////
+
+void ActivateControllerRumble(void)
+{
+	if (rumble_supported)
+	{
+		rumble.set_rumble_state(0, RETRO_RUMBLE_WEAK, rumble_strength);
+		rumble.set_rumble_state(0, RETRO_RUMBLE_STRONG, rumble_strength);
+	}
+}
+
+///////////////////////////////////////////////////////////
+
+void DeactivateControllerRumble(void)
+{
+	if (rumble_supported)
+	{
+		rumble.set_rumble_state(0, RETRO_RUMBLE_WEAK, 0);
+		rumble.set_rumble_state(0, RETRO_RUMBLE_STRONG, 0);
+	}
 }
 
 // Core functions
@@ -422,6 +498,8 @@ void retro_set_environment(retro_environment_t cb)
 		{ "pokemini_lcdbright", "LCD Brightness; 0|-80|-60|-40|-20|20|40|60|80" },
 		{ "pokemini_palette", "Palette; Default|Old|Monochrome|Green|Green Vector|Red|Red Vector|Blue LCD|LEDBacklight|Girl Power|Blue|Blue Vector|Sepia|Monochrome Vector" },
 		{ "pokemini_piezofilter", "Piezo Filter; enabled|disabled" },
+		{ "pokemini_rumblelvl", "Rumble Level (Screen + Controller); 3|2|1|0" },
+		{ "pokemini_controller_rumble", "Controller Rumble; enabled|disabled" },
 		{ NULL, NULL },
 	};
 	
@@ -512,9 +590,15 @@ void retro_run (void)
 	audio_batch_cb(audiostretched, audiosamples);
 	
 	if (PokeMini_Rumbling)
+	{
 		PokeMini_VideoBlit((uint16_t *)screenbuff + PokeMini_GenRumbleOffset(PixPitch), PixPitch);
+		ActivateControllerRumble();
+	}
 	else
+	{
 		PokeMini_VideoBlit((uint16_t *)screenbuff, PixPitch);
+		DeactivateControllerRumble();
+	}
 	
 	video_cb(screenbuff, PM_VIDEO_WIDTH, PM_VIDEO_HEIGHT, PM_VIDEO_WIDTH * 2/*Pitch*/);
 }
@@ -564,6 +648,7 @@ bool retro_load_game(const struct retro_game_info *game)
 		return false;
 	
 	InitialiseInputDescriptors();
+	InitialiseRumbleInterface();
 	InitialiseCommandLine(game);
 	
 	//add LCDMODE_COLORS option
