@@ -88,7 +88,6 @@ static retro_environment_t environ_cb = NULL;
 // Utilities
 ///////////////////////////////////////////////////////////
 
-// Taken from nestopia...
 static void extract_basename(char *buf, const char *path, size_t size)
 {
 	const char *base = strrchr(path, '/');
@@ -110,6 +109,131 @@ static void extract_basename(char *buf, const char *path, size_t size)
 
 ///////////////////////////////////////////////////////////
 
+static void SyncCoreOptionsWithCommandLine()
+{
+	struct retro_variable variables = {0};
+	
+	// pokemini_lcdfilter
+	CommandLine.lcdfilter = 1; // LCD Filter (0: nofilter, 1: dotmatrix, 2: scanline)
+	variables.key = "pokemini_lcdfilter";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		if (strcmp(variables.value, "scanline") == 0)
+		{
+			CommandLine.lcdfilter = 2;
+		}
+		else if (strcmp(variables.value, "none") == 0)
+		{
+			CommandLine.lcdfilter = 0;
+		}
+	}
+	
+	// pokemini_lcdmode
+	CommandLine.lcdmode = 0; // LCD Mode (0: analog, 1: 3shades, 2: 2shades)
+	variables.key = "pokemini_lcdmode";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		if (strcmp(variables.value, "3shades") == 0)
+		{
+			CommandLine.lcdmode = 1;
+		}
+		else if (strcmp(variables.value, "2shades") == 0)
+		{
+			CommandLine.lcdmode = 2;
+		}
+	}
+	
+	// pokemini_lcdcontrast
+	CommandLine.lcdcontrast = 64; // LCD contrast
+	variables.key = "pokemini_lcdcontrast";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		// atoi() stinks like week-old garbage, but since we have a fixed set of
+		// strings it should be okay...
+		CommandLine.lcdcontrast = atoi(variables.value);
+	}
+	
+	// pokemini_lcdbright
+	CommandLine.lcdbright = 0; // LCD brightness offset
+	variables.key = "pokemini_lcdbright";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		CommandLine.lcdbright = atoi(variables.value);
+	}
+	
+	// pokemini_palette
+	CommandLine.palette = 0; // Palette Index (0 - 13; 0 == Default)
+	variables.key = "pokemini_palette";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		if (strcmp(variables.value, "Old") == 0)
+		{
+			CommandLine.palette = 1;
+		}
+		else if (strcmp(variables.value, "Monochrome") == 0)
+		{
+			CommandLine.palette = 2;
+		}
+		else if (strcmp(variables.value, "Green") == 0)
+		{
+			CommandLine.palette = 3;
+		}
+		else if (strcmp(variables.value, "Green Vector") == 0)
+		{
+			CommandLine.palette = 4;
+		}
+		else if (strcmp(variables.value, "Red") == 0)
+		{
+			CommandLine.palette = 5;
+		}
+		else if (strcmp(variables.value, "Red Vector") == 0)
+		{
+			CommandLine.palette = 6;
+		}
+		else if (strcmp(variables.value, "Blue LCD") == 0)
+		{
+			CommandLine.palette = 7;
+		}
+		else if (strcmp(variables.value, "LEDBacklight") == 0)
+		{
+			CommandLine.palette = 8;
+		}
+		else if (strcmp(variables.value, "Girl Power") == 0)
+		{
+			CommandLine.palette = 9;
+		}
+		else if (strcmp(variables.value, "Blue") == 0)
+		{
+			CommandLine.palette = 10;
+		}
+		else if (strcmp(variables.value, "Blue Vector") == 0)
+		{
+			CommandLine.palette = 11;
+		}
+		else if (strcmp(variables.value, "Sepia") == 0)
+		{
+			CommandLine.palette = 12;
+		}
+		else if (strcmp(variables.value, "Monochrome Vector") == 0)
+		{
+			CommandLine.palette = 13;
+		}
+	}
+	
+	// pokemini_piezofilter
+	CommandLine.piezofilter = 1; // ON
+	variables.key = "pokemini_piezofilter";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		if (strcmp(variables.value, "disabled") == 0)
+		{
+			CommandLine.piezofilter = 0;
+		}
+	}
+}
+
+///////////////////////////////////////////////////////////
+
 // Want this code to be 'minimally invasive'
 // -> Will make use of existing PokeMini command line interface
 //    wherever possible
@@ -126,28 +250,8 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 	CommandLine.sound = MINX_AUDIO_DIRECTPWM;
 	CommandLine.joyenabled = 1;    // ON
 	
-	// Set default overrides (these should be settable via core options interface...)
-	CommandLine.piezofilter = 1;  // ON
-	CommandLine.lcdfilter = 1;	   // LCD Filter (0: nofilter, 1: dotmatrix, 2: scanline)
-	CommandLine.lcdmode = 0;      // LCD Mode (0: analog, 1: 3shades, 2: 2shades)
-	CommandLine.lcdcontrast = 64; // LCD contrast
-	CommandLine.lcdbright = 0;    // LCD brightness offset
-	CommandLine.palette = 0;      // Palette Index (1 - 14)
-	// Palette values:
-	//  0: Default
-	//  1: Old
-	//  2: Black & White
-	//  3: Green Palette
-	//  4: Green Vector
-	//  5: Red Palette
-	//  6: Red Vector
-	//  7: Blue LCD
-	//  8: LEDBacklight
-	//  9: Girl Power
-	// 10: Blue Palette
-	// 11: Blue Vector
-	// 12: Sepia
-	// 13: Inv. B&W
+	// Set overrides read from core options
+	SyncCoreOptionsWithCommandLine();
 	
 	// Set file paths
 	// > Handle Windows nonsense...
@@ -289,6 +393,19 @@ void retro_set_environment(retro_environment_t cb)
 		log_cb = logging.log;
 	else
 		log_cb = NULL;
+	
+	// Core options
+	struct retro_variable variables[] = {
+		{ "pokemini_lcdfilter", "LCD Filter; dotmatrix|scanline|none" },
+		{ "pokemini_lcdmode", "LCD Mode; analog|3shades|2shades" },
+		{ "pokemini_lcdcontrast", "LCD Contrast; 64|0|16|32|48|80|96" },
+		{ "pokemini_lcdbright", "LCD Brightness; 0|-80|-60|-40|-20|20|40|60|80" },
+		{ "pokemini_palette", "Palette; Default|Old|Monochrome|Green|Green Vector|Red|Red Vector|Blue LCD|LEDBacklight|Girl Power|Blue|Blue Vector|Sepia|Monochrome Vector" },
+		{ "pokemini_piezofilter", "Piezo Filter; enabled|disabled" },
+		{ NULL, NULL },
+	};
+	
+	environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
 }
 
 ///////////////////////////////////////////////////////////
@@ -350,6 +467,15 @@ void retro_run (void)
 	static int16_t audiobuffer[612];
 	static int16_t audiostretched[612 * 2];
 	uint16_t audiosamples = 612;// MinxAudio_SamplesInBuffer();
+	
+	// Check for core options updates
+	bool options_updated = false;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &options_updated) && options_updated)
+   {
+		SyncCoreOptionsWithCommandLine();
+		PokeMini_VideoPalette_Index(CommandLine.palette, NULL, CommandLine.lcdcontrast, CommandLine.lcdbright);
+		PokeMini_ApplyChanges();
+	}
 	
 	poll_cb();
 	handlekeyevents();
@@ -432,7 +558,7 @@ bool retro_load_game(const struct retro_game_info *game)
 	if (!passed)
 		abort();
 	
-	PokeMini_VideoPalette_Init(PokeMini_RGB16, 1/*enablehighcolor*/);
+	PokeMini_VideoPalette_Init(PokeMini_BGR16, 1/*enablehighcolor*/);
 	PokeMini_VideoPalette_Index(CommandLine.palette, NULL, CommandLine.lcdcontrast, CommandLine.lcdbright);
 	PokeMini_ApplyChanges(); // Note: 'CommandLine.piezofilter' value is also read inside here
 	
