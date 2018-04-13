@@ -32,7 +32,12 @@
 #include "MinxAudio.h"
 #include "UI.h"
 #include "Video.h"
+#include "Video_x1.h"
+#include "Video_x2.h"
+#include "Video_x3.h"
 #include "Video_x4.h"
+#include "Video_x5.h"
+#include "Video_x6.h"
 
 #define MAKEBTNMAP(btn,pkebtn) JoystickButtonsEvent((pkebtn), input_cb(0/*port*/, RETRO_DEVICE_JOYPAD, 0, (btn)) != 0)
 
@@ -43,15 +48,21 @@
 // Save state size
 #define PM_SS_SIZE 44142
 
-// Screen dimension definitions
+// Screen parameters
 #define PM_SCEEN_WIDTH  96
 #define PM_SCEEN_HEIGHT 64
-#define PM_VIDEO_SCALE  4
-#define PM_VIDEO_WIDTH  (PM_SCEEN_WIDTH * PM_VIDEO_SCALE)
-#define PM_VIDEO_HEIGHT (PM_SCEEN_HEIGHT * PM_VIDEO_SCALE)
 
-uint16_t screenbuff [PM_VIDEO_WIDTH * PM_VIDEO_HEIGHT];
-int PixPitch = PM_VIDEO_WIDTH; // screen->pitch / 2;
+static uint16_t video_scale = 1;
+static uint16_t video_width = PM_SCEEN_WIDTH;
+static uint16_t video_height = PM_SCEEN_HEIGHT;
+
+static uint16_t *video_buffer = NULL;
+
+// > In the original standalone code, 'pixel pitch' is defined as
+//      (SDL_Surface->pitch / 2)
+//   SDL_Surface->pitch is just the length of a row of pixels in bytes,
+//   so divide by 2 and we get the screen width in pixels...
+static int pix_pitch = PM_SCEEN_WIDTH;
 
 // File path utils
 static char g_basename[256];
@@ -92,6 +103,8 @@ static retro_environment_t environ_cb = NULL;
 static struct retro_rumble_interface rumble;
 static bool rumble_supported = false;
 static uint16_t rumble_strength = 0;
+
+static bool screen_shake_enabled = true;
 
 // Utilities
 ///////////////////////////////////////////////////////////
@@ -285,9 +298,10 @@ static void SyncCoreOptionsWithCommandLine(void)
 		CommandLine.rumblelvl = atoi(variables.value);
 	}
 	
+	// NB: The following parameters are not part of the 'CommandLine'
+	// interface, but there is no better place to handle them...
+	
 	// pokemini_controller_rumble
-	// NB: This is not part of the 'CommandLine' interface, but there is
-	// no better place to handle it...
 	bool rumble_enabled = true;
 	variables.key = "pokemini_controller_rumble";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
@@ -298,7 +312,7 @@ static void SyncCoreOptionsWithCommandLine(void)
 		}
 	}
 	
-	// Determine rumble strength
+	// > Determine rumble strength
 	if (rumble_enabled)
 	{
 		rumble_strength = 21845 * CommandLine.rumblelvl;
@@ -306,6 +320,17 @@ static void SyncCoreOptionsWithCommandLine(void)
 	else
 	{
 		rumble_strength = 0;
+	}
+	
+	// pokemini_screen_shake
+	screen_shake_enabled = true;
+	variables.key = "pokemini_screen_shake";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		if (strcmp(variables.value, "disabled") == 0)
+		{
+			screen_shake_enabled = false;
+		}
 	}
 }
 
@@ -389,7 +414,7 @@ static int PokeMini_LoadMINFileXPLATFORM(size_t size, uint8_t* buffer)
 
 ///////////////////////////////////////////////////////////
 
-void handlekeyevents(void)
+static void handlekeyevents(void)
 {
 	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_SELECT,  9);
 	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_UP,     10);
@@ -404,7 +429,7 @@ void handlekeyevents(void)
 
 ///////////////////////////////////////////////////////////
 
-void ActivateControllerRumble(void)
+static void ActivateControllerRumble(void)
 {
 	if (rumble_supported)
 	{
@@ -415,7 +440,7 @@ void ActivateControllerRumble(void)
 
 ///////////////////////////////////////////////////////////
 
-void DeactivateControllerRumble(void)
+static void DeactivateControllerRumble(void)
 {
 	if (rumble_supported)
 	{
@@ -436,6 +461,138 @@ static void GetTempFileName(char *name)
 #endif
 	
    sprintf(name, "%s%cpokemini_ss.tmp", g_save_dir, slash);
+}
+
+///////////////////////////////////////////////////////////
+
+static void InitialiseVideo(void)
+{
+	// Get video scale
+	video_scale = 4; // Default value: 4x scale
+	                 // - Divides well into 768p and 1080p
+	                 // - Gives internal LCD filter a pleasing appearance
+	struct retro_variable variables = {0};
+	variables.key = "pokemini_video_scale";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		if (strcmp(variables.value, "1x") == 0)
+		{
+			video_scale = 1;
+		}
+		else if (strcmp(variables.value, "2x") == 0)
+		{
+			video_scale = 2;
+		}
+		else if (strcmp(variables.value, "3x") == 0)
+		{
+			video_scale = 3;
+		}
+		else if (strcmp(variables.value, "5x") == 0)
+		{
+			video_scale = 5;
+		}
+		else if (strcmp(variables.value, "6x") == 0)
+		{
+			video_scale = 6;
+		}
+	}
+	
+	// Determine video dimensions
+	video_width = PM_SCEEN_WIDTH * video_scale;
+	video_height = PM_SCEEN_HEIGHT * video_scale;
+	pix_pitch = video_width;
+	
+	// Allocate video buffer
+	if (!video_buffer)
+	{
+		video_buffer = (uint16_t*)calloc(video_width * video_height, sizeof(uint16_t));
+	}
+	
+	// Determine video spec
+	TPokeMini_VideoSpec *video_spec = NULL;
+	switch (video_scale)
+	{
+		case 2:
+			video_spec = (TPokeMini_VideoSpec *)&PokeMini_Video2x2;
+			break;
+		case 3:
+			video_spec = (TPokeMini_VideoSpec *)&PokeMini_Video3x3;
+			break;
+		case 4:
+			video_spec = (TPokeMini_VideoSpec *)&PokeMini_Video4x4;
+			break;
+		case 5:
+			video_spec = (TPokeMini_VideoSpec *)&PokeMini_Video5x5;
+			break;
+		case 6:
+			video_spec = (TPokeMini_VideoSpec *)&PokeMini_Video6x6;
+			break;
+		default: // video_scale == 1
+			video_spec = (TPokeMini_VideoSpec *)&PokeMini_Video1x1;
+			break;
+	}
+	
+	// Set video spec and check if supported
+	if (!PokeMini_SetVideo(video_spec, 16, CommandLine.lcdfilter, CommandLine.lcdmode))
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Couldn't set video spec.\n");
+		abort();
+	}
+}
+
+///////////////////////////////////////////////////////////
+
+// Set specified area of array to zero
+static void ZeroArray(uint16_t array[], int size)
+{
+	int i;
+	for (i = 0; i < size; i++)
+	{
+		array[i] = 0;
+	}
+}
+
+///////////////////////////////////////////////////////////
+
+// Classic 'reverse' function, from 'Programming Pearls' by Jon Bentley
+static void ReverseArray(uint16_t array[], int size)
+{
+	int i, j;
+	for (i = 0, j = size; i < j; i++, j--)
+	{
+		uint16_t tmp = array[i];
+		array[i] = array[j];
+		array[j] = tmp;
+	}
+}
+
+///////////////////////////////////////////////////////////
+
+// Apply screen shake effect
+static void SetPixelOffset(void)
+{
+	if (screen_shake_enabled)
+	{
+		int row_offset = PokeMini_GenRumbleOffset(pix_pitch) * video_scale;
+		int buffer_size = video_width * video_height;
+		
+		// Derived from the classic 'rotate array' technique
+		// from 'Programming Pearls' by Jon Bentley
+		if (row_offset < 0)
+		{
+			row_offset = buffer_size + row_offset;
+			ZeroArray(video_buffer, buffer_size - row_offset - 1);
+			ReverseArray(video_buffer + buffer_size - row_offset, row_offset - 1);
+		}
+		else
+		{
+			ReverseArray(video_buffer, buffer_size - row_offset - 1);
+			ZeroArray(video_buffer + buffer_size - row_offset, row_offset - 1);
+		}
+
+		ReverseArray(video_buffer, buffer_size - 1);
+	}
 }
 
 // Core functions
@@ -509,6 +666,7 @@ void retro_set_environment(retro_environment_t cb)
 	
 	// Core options
 	struct retro_variable variables[] = {
+		{ "pokemini_video_scale", "Video Scale (Restart); 4x|5x|6x|1x|2x|3x" },
 		{ "pokemini_lcdfilter", "LCD Filter; dotmatrix|scanline|none" },
 		{ "pokemini_lcdmode", "LCD Mode; analog|3shades|2shades" },
 		{ "pokemini_lcdcontrast", "LCD Contrast; 64|0|16|32|48|80|96" },
@@ -517,6 +675,7 @@ void retro_set_environment(retro_environment_t cb)
 		{ "pokemini_piezofilter", "Piezo Filter; enabled|disabled" },
 		{ "pokemini_rumblelvl", "Rumble Level (Screen + Controller); 3|2|1|0" },
 		{ "pokemini_controller_rumble", "Controller Rumble; enabled|disabled" },
+		{ "pokemini_screen_shake", "Screen Shake; enabled|disabled" },
 		{ NULL, NULL },
 	};
 	
@@ -539,11 +698,11 @@ void retro_get_system_info(struct retro_system_info *info)
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
-	info->geometry.base_width   = PM_VIDEO_WIDTH;
-	info->geometry.base_height  = PM_VIDEO_HEIGHT;
-	info->geometry.max_width    = PM_VIDEO_WIDTH;
-	info->geometry.max_height   = PM_VIDEO_HEIGHT;
-	info->geometry.aspect_ratio = (float)PM_VIDEO_WIDTH / (float)PM_VIDEO_HEIGHT;
+	info->geometry.base_width   = video_width;
+	info->geometry.base_height  = video_height;
+	info->geometry.max_width    = video_width;
+	info->geometry.max_height   = video_height;
+	info->geometry.aspect_ratio = (float)video_width / (float)video_height;
 	info->timing.fps            = 72.0;
 	info->timing.sample_rate    = 44100.0;
 }
@@ -561,8 +720,7 @@ void retro_init (void)
 
 void retro_deinit(void)
 {
-	PokeMini_VideoPalette_Free();
-	PokeMini_Destroy();
+	// Previous content has been moved to retro_unload_game()
 }
 
 ///////////////////////////////////////////////////////////
@@ -606,18 +764,21 @@ void retro_run (void)
 	}
 	audio_batch_cb(audiostretched, audiosamples);
 	
+	PokeMini_VideoBlit((uint16_t *)video_buffer, pix_pitch);
+	
 	if (PokeMini_Rumbling)
 	{
-		PokeMini_VideoBlit((uint16_t *)screenbuff + PokeMini_GenRumbleOffset(PixPitch), PixPitch);
+		SetPixelOffset();
 		ActivateControllerRumble();
 	}
 	else
 	{
-		PokeMini_VideoBlit((uint16_t *)screenbuff, PixPitch);
 		DeactivateControllerRumble();
 	}
 	
-	video_cb(screenbuff, PM_VIDEO_WIDTH, PM_VIDEO_HEIGHT, PM_VIDEO_WIDTH * 2/*Pitch*/);
+	LCDDirty = 0;
+	
+	video_cb(video_buffer, video_width, video_height, video_width * 2/*Pitch*/);
 }
 
 ///////////////////////////////////////////////////////////
@@ -767,15 +928,7 @@ bool retro_load_game(const struct retro_game_info *game)
 	InitialiseInputDescriptors();
 	InitialiseRumbleInterface();
 	InitialiseCommandLine(game);
-	
-	//add LCDMODE_COLORS option
-	// Set video spec and check if is supported
-	if (!PokeMini_SetVideo((TPokeMini_VideoSpec *)&PokeMini_Video4x4, 16, CommandLine.lcdfilter, CommandLine.lcdmode))
-	{
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Couldn't set video spec.\n");
-		abort();
-	}
+	InitialiseVideo();
 	
 	passed = PokeMini_Create(0/*flags*/, PMSOUNDBUFF); // returns 1 on completion,0 on error
 	if (!passed)
@@ -818,7 +971,7 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
 ///////////////////////////////////////////////////////////
 
 void retro_unload_game(void)
-{
+{	
 	// Save EEPROM
 	if (PokeMini_EEPROMWritten && StringIsSet(CommandLine.eeprom_file))
 	{
@@ -827,6 +980,17 @@ void retro_unload_game(void)
 		if (log_cb)
 			log_cb(RETRO_LOG_INFO, "Wrote EEPROM file: %s\n", CommandLine.eeprom_file);
 	}
+	
+	// Terminate emulator
+	PokeMini_VideoPalette_Free();
+	PokeMini_Destroy();
+	
+	// Deallocate video buffer
+	if (video_buffer)
+	{
+      free(video_buffer);
+	}
+	video_buffer = NULL;
 }
 
 // Useless (?) callbacks
