@@ -104,6 +104,8 @@ static struct retro_rumble_interface rumble;
 static bool rumble_supported = false;
 static uint16_t rumble_strength = 0;
 
+static bool screen_shake_enabled = true;
+
 // Utilities
 ///////////////////////////////////////////////////////////
 
@@ -296,9 +298,10 @@ static void SyncCoreOptionsWithCommandLine(void)
 		CommandLine.rumblelvl = atoi(variables.value);
 	}
 	
+	// NB: The following parameters are not part of the 'CommandLine'
+	// interface, but there is no better place to handle them...
+	
 	// pokemini_controller_rumble
-	// NB: This is not part of the 'CommandLine' interface, but there is
-	// no better place to handle it...
 	bool rumble_enabled = true;
 	variables.key = "pokemini_controller_rumble";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
@@ -309,7 +312,7 @@ static void SyncCoreOptionsWithCommandLine(void)
 		}
 	}
 	
-	// Determine rumble strength
+	// > Determine rumble strength
 	if (rumble_enabled)
 	{
 		rumble_strength = 21845 * CommandLine.rumblelvl;
@@ -317,6 +320,17 @@ static void SyncCoreOptionsWithCommandLine(void)
 	else
 	{
 		rumble_strength = 0;
+	}
+	
+	// pokemini_screen_shake
+	screen_shake_enabled = true;
+	variables.key = "pokemini_screen_shake";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		if (strcmp(variables.value, "disabled") == 0)
+		{
+			screen_shake_enabled = false;
+		}
 	}
 }
 
@@ -558,24 +572,27 @@ static void ReverseArray(uint16_t array[], int size)
 // Apply screen shake effect
 static void SetPixelOffset(void)
 {
-	int row_offset = PokeMini_GenRumbleOffset(pix_pitch) * video_scale;
-	int buffer_size = video_width * video_height;
-	
-	// Derived from the classic 'rotate array' technique
-	// from 'Programming Pearls' by Jon Bentley
-	if (row_offset < 0)
+	if (screen_shake_enabled)
 	{
-		row_offset = buffer_size + row_offset;
-		ZeroArray(video_buffer, buffer_size - row_offset - 1);
-		ReverseArray(video_buffer + buffer_size - row_offset, row_offset - 1);
-	}
-	else
-	{
-		ReverseArray(video_buffer, buffer_size - row_offset - 1);
-		ZeroArray(video_buffer + buffer_size - row_offset, row_offset - 1);
-	}
+		int row_offset = PokeMini_GenRumbleOffset(pix_pitch) * video_scale;
+		int buffer_size = video_width * video_height;
+		
+		// Derived from the classic 'rotate array' technique
+		// from 'Programming Pearls' by Jon Bentley
+		if (row_offset < 0)
+		{
+			row_offset = buffer_size + row_offset;
+			ZeroArray(video_buffer, buffer_size - row_offset - 1);
+			ReverseArray(video_buffer + buffer_size - row_offset, row_offset - 1);
+		}
+		else
+		{
+			ReverseArray(video_buffer, buffer_size - row_offset - 1);
+			ZeroArray(video_buffer + buffer_size - row_offset, row_offset - 1);
+		}
 
-	ReverseArray(video_buffer, buffer_size - 1);
+		ReverseArray(video_buffer, buffer_size - 1);
+	}
 }
 
 // Core functions
@@ -658,6 +675,7 @@ void retro_set_environment(retro_environment_t cb)
 		{ "pokemini_piezofilter", "Piezo Filter; enabled|disabled" },
 		{ "pokemini_rumblelvl", "Rumble Level (Screen + Controller); 3|2|1|0" },
 		{ "pokemini_controller_rumble", "Controller Rumble; enabled|disabled" },
+		{ "pokemini_screen_shake", "Screen Shake; enabled|disabled" },
 		{ NULL, NULL },
 	};
 	
