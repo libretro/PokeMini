@@ -527,6 +527,57 @@ static void InitialiseVideo(void)
 	}
 }
 
+///////////////////////////////////////////////////////////
+
+// Set specified area of array to zero
+static void ZeroArray(uint16_t array[], int size)
+{
+	int i;
+	for (i = 0; i < size; i++)
+	{
+		array[i] = 0;
+	}
+}
+
+///////////////////////////////////////////////////////////
+
+// Classic 'reverse' function, from 'Programming Pearls' by Jon Bentley
+static void ReverseArray(uint16_t array[], int size)
+{
+	int i, j;
+	for (i = 0, j = size; i < j; i++, j--)
+	{
+		uint16_t tmp = array[i];
+		array[i] = array[j];
+		array[j] = tmp;
+	}
+}
+
+///////////////////////////////////////////////////////////
+
+// Apply screen shake effect
+static void SetPixelOffset(void)
+{
+	int row_offset = PokeMini_GenRumbleOffset(pix_pitch) * video_scale;
+	int buffer_size = video_width * video_height;
+	
+	// Derived from the classic 'rotate array' technique
+	// from 'Programming Pearls' by Jon Bentley
+	if (row_offset < 0)
+	{
+		row_offset = buffer_size + row_offset;
+		ZeroArray(video_buffer, buffer_size - row_offset - 1);
+		ReverseArray(video_buffer + buffer_size - row_offset, row_offset - 1);
+	}
+	else
+	{
+		ReverseArray(video_buffer, buffer_size - row_offset - 1);
+		ZeroArray(video_buffer + buffer_size - row_offset, row_offset - 1);
+	}
+
+	ReverseArray(video_buffer, buffer_size - 1);
+}
+
 // Core functions
 ///////////////////////////////////////////////////////////
 
@@ -699,7 +750,7 @@ void retro_run (void)
 	
 	if (PokeMini_Rumbling)
 	{
-		//PokeMini_VideoBlit((uint16_t *)video_buffer + PokeMini_GenRumbleOffset(pix_pitch), pix_pitch);
+		SetPixelOffset();
 		ActivateControllerRumble();
 	}
 	else
