@@ -451,7 +451,7 @@ static void DeactivateControllerRumble(void)
 
 ///////////////////////////////////////////////////////////
 
-static void GetTempFileName(char *name)
+static void GetTempStateFileName(char *name)
 {
 	char slash;
 #if defined(_WIN32)
@@ -804,7 +804,7 @@ bool retro_serialize(void *data, size_t size)
 	
 	// Get temporary file name
 	char temp_file_name[256];
-	GetTempFileName(temp_file_name);
+	GetTempStateFileName(temp_file_name);
 	
 	// Write state into temporary file
 	if (PokeMini_SaveSSFile(temp_file_name, CommandLine.min_file))
@@ -862,7 +862,7 @@ bool retro_unserialize(const void *data, size_t size)
 	
 	// Get temporary file name
 	char temp_file_name[256];
-	GetTempFileName(temp_file_name);
+	GetTempStateFileName(temp_file_name);
 	
 	// Write contents of *data to temporary file...
 	FILE *file = fopen(temp_file_name, "wb");
