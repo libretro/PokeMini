@@ -149,6 +149,7 @@ static void InitialiseRumbleInterface(void)
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
+   char *ext        = NULL;
 	const char *base = strrchr(path, '/');
 	if (!base)
 		base = strrchr(path, '\\');
@@ -161,7 +162,7 @@ static void extract_basename(char *buf, const char *path, size_t size)
 	strncpy(buf, base, size - 1);
 	buf[size - 1] = '\0';
 	
-	char *ext = strrchr(buf, '.');
+	ext = strrchr(buf, '.');
 	if (ext)
 		*ext = '\0';
 }
@@ -170,6 +171,7 @@ static void extract_basename(char *buf, const char *path, size_t size)
 
 static void SyncCoreOptionsWithCommandLine(void)
 {
+   bool rumble_enabled = true;
 	struct retro_variable variables = {0};
 	
 	// pokemini_lcdfilter
@@ -302,7 +304,6 @@ static void SyncCoreOptionsWithCommandLine(void)
 	// interface, but there is no better place to handle them...
 	
 	// pokemini_controller_rumble
-	bool rumble_enabled = true;
 	variables.key = "pokemini_controller_rumble";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
@@ -341,6 +342,8 @@ static void SyncCoreOptionsWithCommandLine(void)
 //    wherever possible
 static void InitialiseCommandLine(const struct retro_game_info *game)
 {
+	char slash;
+
 	// Mandatory (?)
 	CommandLineInit();
 	
@@ -357,7 +360,6 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 	
 	// Set file paths
 	// > Handle Windows nonsense...
-	char slash;
 #if defined(_WIN32)
 	slash = '\\';
 #else
@@ -467,11 +469,13 @@ static void GetTempStateFileName(char *name)
 
 static void InitialiseVideo(void)
 {
+	struct retro_variable variables = {0};
+	TPokeMini_VideoSpec *video_spec = NULL;
+
 	// Get video scale
 	video_scale = 4; // Default value: 4x scale
 	                 // - Divides well into 768p and 1080p
 	                 // - Gives internal LCD filter a pleasing appearance
-	struct retro_variable variables = {0};
 	variables.key = "pokemini_video_scale";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
@@ -509,7 +513,6 @@ static void InitialiseVideo(void)
 	}
 	
 	// Determine video spec
-	TPokeMini_VideoSpec *video_spec = NULL;
 	switch (video_scale)
 	{
 		case 2:
@@ -548,9 +551,7 @@ static void ZeroArray(uint16_t array[], int size)
 {
 	int i;
 	for (i = 0; i < size; i++)
-	{
 		array[i] = 0;
-	}
 }
 
 ///////////////////////////////////////////////////////////
@@ -602,8 +603,7 @@ void *retro_get_memory_data(unsigned type)
 {
 	if (type == RETRO_MEMORY_SYSTEM_RAM)
 		return PM_RAM;
-	else
-		return NULL;
+   return NULL;
 }
 
 ///////////////////////////////////////////////////////////
@@ -612,8 +612,7 @@ size_t retro_get_memory_size(unsigned type)
 {
 	if (type == RETRO_MEMORY_SYSTEM_RAM)
 		return 0x2000;
-	else
-		return 0;
+   return 0;
 }
 
 ///////////////////////////////////////////////////////////
