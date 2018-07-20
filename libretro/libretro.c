@@ -655,15 +655,6 @@ void retro_set_input_state(retro_input_state_t cb)
 void retro_set_environment(retro_environment_t cb)
 {
 	struct retro_log_callback logging;
-	
-	environ_cb = cb;
-	
-	if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &logging))
-		log_cb = logging.log;
-	else
-		log_cb = NULL;
-	
-	// Core options
 	struct retro_variable variables[] = {
 		{ "pokemini_video_scale", "Video Scale (Restart); 4x|5x|6x|1x|2x|3x" },
 		{ "pokemini_lcdfilter", "LCD Filter; dotmatrix|scanline|none" },
@@ -677,6 +668,13 @@ void retro_set_environment(retro_environment_t cb)
 		{ "pokemini_screen_shake", "Screen Shake; enabled|disabled" },
 		{ NULL, NULL },
 	};
+	
+	environ_cb = cb;
+	
+	if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &logging))
+		log_cb = logging.log;
+	else
+		log_cb = NULL;
 	
 	environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
 }
