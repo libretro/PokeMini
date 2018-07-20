@@ -801,6 +801,8 @@ bool retro_serialize(void *data, size_t size)
 	
 	// Get temporary file name
 	char temp_file_name[256];
+	long int file_length;
+	FILE *file;
 	GetTempStateFileName(temp_file_name);
 	
 	// Write state into temporary file
@@ -816,8 +818,7 @@ bool retro_serialize(void *data, size_t size)
 	}
 	
 	// Read contents of temporary file into *data...
-	long int file_length;
-	FILE *file = fopen(temp_file_name, "rb");
+	file = fopen(temp_file_name, "rb");
 	if (file)
 	{
 		fseek(file, 0, SEEK_END);
@@ -859,10 +860,12 @@ bool retro_unserialize(const void *data, size_t size)
 	
 	// Get temporary file name
 	char temp_file_name[256];
+	FILE *file = NULL;
+
 	GetTempStateFileName(temp_file_name);
 	
 	// Write contents of *data to temporary file...
-	FILE *file = fopen(temp_file_name, "wb");
+	file = fopen(temp_file_name, "wb");
 	if (file)
 	{
 		size_t write_length = fwrite((char*)data, sizeof(char), size, file);
