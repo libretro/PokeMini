@@ -21,7 +21,9 @@
 
 #include <stdint.h>
 
-#ifdef _BIG_ENDIAN
+/* For some reason, '_BIG_ENDIAN' is always defined when
+ * building for 3DS with devkitarm... */
+#if defined (_BIG_ENDIAN) && ! defined (_3DS)
 
 typedef union {
 	struct {
