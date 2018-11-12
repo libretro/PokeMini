@@ -253,10 +253,9 @@ else ifeq ($(platform), ctr)
 	AR = $(DEVKITARM)/bin/arm-none-eabi-ar$(EXE_EXT)
 	CFLAGS += -DARM11 -D_3DS
 	CFLAGS += -march=armv6k -mtune=mpcore -mfloat-abi=hard
-	CFLAGS += -Wall -mword-relocations
+	CFLAGS += -Wall -fstrict-aliasing -mword-relocations
 	CFLAGS += -fomit-frame-pointer -ffast-math
-   CFLAGS += -D_3DS
-   STATIC_LINKING=1
+	STATIC_LINKING=1
 	STATIC_LINKING_LINK=1
 
 # Raspberry Pi 2

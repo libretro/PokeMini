@@ -25,7 +25,9 @@
 extern "C" {
 #endif
 
-#ifdef _BIG_ENDIAN
+/* For some reason, '_BIG_ENDIAN' is always defined when
+ * building for 3DS with devkitarm... */
+#if defined (_BIG_ENDIAN) && ! defined (_3DS)
 static __inline uint32_t Endian32(uint32_t val)
 {
 	return (val >> 24) | (val >> 8 & 0x0000FF00) | (val << 8 & 0x00FF0000) | (val << 24);
