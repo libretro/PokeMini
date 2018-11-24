@@ -544,7 +544,7 @@ int PokeMini_CheckSSFile(const char *statefile, char *romfile)
 {
 	FILE *fi;
 	int readbytes;
-	char PMiniStr[128];
+	char PMiniStr[PMTMPV];
 	uint32_t PMiniID;
 
 	// Open file
@@ -566,8 +566,8 @@ int PokeMini_CheckSSFile(const char *statefile, char *romfile)
 		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -3);
 		return 0;
 	}
-	readbytes = fread(PMiniStr, 1, 128, fi);	// Read ROM related to state
-	if (readbytes != 128) {
+	readbytes = fread(PMiniStr, 1, 256, fi);	// Read ROM related to state
+	if (readbytes != 256) {
 		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -4);
 		return 0;
 	}
@@ -583,7 +583,7 @@ int PokeMini_LoadSSFile(const char *statefile)
 {
 	FILE *fi;
 	int readbytes;
-	char PMiniStr[128];
+	char PMiniStr[PMTMPV];
 	uint32_t PMiniID, StatTime, BSize;
 
 	// Open file
@@ -606,8 +606,8 @@ int PokeMini_LoadSSFile(const char *statefile)
 		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -3);
 		return 0;
 	}
-	readbytes = fread(PMiniStr, 1, 128, fi);	// Read ROM related to state (discarded)
-	if (readbytes != 128) {
+	readbytes = fread(PMiniStr, 1, 256, fi);	// Read ROM related to state (discarded)
+	if (readbytes != 256) {
 		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -4);
 		return 0;
 	}
@@ -707,7 +707,7 @@ int PokeMini_LoadSSFile(const char *statefile)
 int PokeMini_SaveSSFile(const char *statefile, const char *romfile)
 {
 	FILE *fo;
-	char PMiniStr[128];
+	char PMiniStr[PMTMPV];
 	uint32_t PMiniID, StatTime, BSize;
 
 	// Open file
@@ -721,9 +721,9 @@ int PokeMini_SaveSSFile(const char *statefile, const char *romfile)
 	fwrite((void *)"PokeMiniStat", 1, 12, fo);	// Write File ID
 	PMiniID = PokeMini_ID;
 	fwrite(&PMiniID, 1, 4, fo);	// Write State ID
-	memset(PMiniStr, 0, 128);
+	memset(PMiniStr, 0, PMTMPV);
 	strcpy(PMiniStr, romfile);
-	fwrite(PMiniStr, 1, 128, fo);	// Write ROM related to state
+	fwrite(PMiniStr, 1, PMTMPV, fo);	// Write ROM related to state
 	StatTime = Endian32((uint32_t)time(NULL));
 	fwrite(&StatTime, 1, 4, fo);	// Write Time
 

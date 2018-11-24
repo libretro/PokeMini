@@ -27,7 +27,7 @@
 
 // File list cache
 typedef struct {
-	char name[128]; // Filename					| Message
+	char name[PMTMPV]; // Filename					| Message
 	char stats;	// 0 = Invalid, 1 = Directory, 2 = File		| Unused
 	char color;	// 0 = Normal, 1 = Color available, 2 = Package	| 0 = Yellow, 1 = Aqua
 } TUIMenu_FileListCache;
