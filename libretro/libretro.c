@@ -70,7 +70,7 @@ static uint16_t *video_buffer = NULL;
 static int pix_pitch = PM_SCEEN_WIDTH;
 
 // File path utils
-static char g_basename[256];
+static char g_basename[PMTMPV];
 static char *g_system_dir;
 static char *g_save_dir;
 
@@ -798,7 +798,7 @@ void retro_run (void)
 
 size_t retro_serialize_size(void)
 {
-	// Save states have a fixed size of 44142 bytes...
+	// Save states have a fixed size...
 	return PM_SS_SIZE;
 }
 
