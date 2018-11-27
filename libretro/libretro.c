@@ -51,7 +51,7 @@ void linearFree(void* mem);
 #define PMSOUNDBUFF	(SOUNDBUFFER*2)
 
 // Save state size
-#define PM_SS_SIZE 44142
+#define PM_SS_SIZE 44014
 
 // Screen parameters
 #define PM_SCEEN_WIDTH  96
@@ -402,8 +402,6 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
    // > ROM path
 	if (game->path != NULL)
 	{
-		// >> Set CommandLine.min_file
-		sprintf(CommandLine.min_file, "%s", game->path);
 		// >> Set CommandLine.eeprom_file
 		extract_basename(g_basename, game->path, sizeof(g_basename));
 		sprintf(CommandLine.eeprom_file, "%s%c%s.eep", g_save_dir, slash, g_basename);
@@ -472,20 +470,6 @@ static void DeactivateControllerRumble(void)
 		rumble.set_rumble_state(0, RETRO_RUMBLE_WEAK, 0);
 		rumble.set_rumble_state(0, RETRO_RUMBLE_STRONG, 0);
 	}
-}
-
-///////////////////////////////////////////////////////////
-
-static void GetTempStateFileName(char *name)
-{
-	char slash;
-#if defined(_WIN32)
-	slash = '\\';
-#else
-	slash = '/';
-#endif
-	
-   sprintf(name, "%s%cpokemini_ss.tmp", g_save_dir, slash);
 }
 
 ///////////////////////////////////////////////////////////
@@ -749,12 +733,9 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 void retro_init (void)
 {
 	enum retro_pixel_format rgb565 = RETRO_PIXEL_FORMAT_RGB565;
-	uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_INCOMPLETE;
 	
 	if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &rgb565) && log_cb)
 		log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
-	
-	environ_cb(RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &serialization_quirks);
 }
 
 ///////////////////////////////////////////////////////////
@@ -825,64 +806,12 @@ size_t retro_serialize_size(void)
 
 bool retro_serialize(void *data, size_t size)
 {
-	// Okay, this is really bad...
-	// I don't know how to portably create a memory stream in C that can be
-	// written to like a FILE (open_memstream() is Linux only...), and I don't
-	// want to have to re-write everything inside PokeMini_SaveSSFile()...
-	// So we're going to do this the crappy way...
-	// - Write state to a temporary file
-	// - Copy contents of temporary file to *data
-	// Maybe someone else can do this properly...
-	
-	// Get temporary file name
-	char temp_file_name[256];
-	long int file_length;
-	FILE *file;
-	GetTempStateFileName(temp_file_name);
-	
-	// Write state into temporary file
-	if (PokeMini_SaveSSFile(temp_file_name, CommandLine.min_file))
-	{
-		if (log_cb) log_cb(RETRO_LOG_INFO, "Wrote temporary state file %s\n", temp_file_name);
-	}
-	else
-	{
-		if (log_cb) log_cb(RETRO_LOG_ERROR, "Failed to write temporary state file.\n");
-		remove(temp_file_name); // Just in case...
+	if (PokeMini_SaveSSStream((uint8_t*)data, size)) {
+		if (log_cb) log_cb(RETRO_LOG_INFO, "State saved successfully.\n");
+	} else {
+		if (log_cb) log_cb(RETRO_LOG_ERROR, "Failed to save state.\n");
 		return false;
 	}
-	
-	// Read contents of temporary file into *data...
-	file = fopen(temp_file_name, "rb");
-	if (file)
-	{
-		fseek(file, 0, SEEK_END);
-		file_length = ftell(file);
-		fseek(file, 0, SEEK_SET);
-		if (size >= file_length)
-		{
-			fread((char*)data, sizeof(char), file_length, file);
-			fclose(file);
-			if (log_cb) log_cb(RETRO_LOG_INFO, "Save state created successfully.\n");
-		}
-		else
-		{
-			if (log_cb) log_cb(RETRO_LOG_ERROR, "Size mismatch between temporary state file and serialisation buffer...\n");
-			fclose(file);
-			remove(temp_file_name);
-			return false;
-		}
-	}
-	else
-	{
-		if (log_cb) log_cb(RETRO_LOG_ERROR, "Failed to open temporary state file for reading.\n");
-		remove(temp_file_name);
-		return false;
-	}
-	
-	// Remove temporary file
-	remove(temp_file_name);
-	
 	return true;
 }
 
@@ -890,50 +819,12 @@ bool retro_serialize(void *data, size_t size)
 
 bool retro_unserialize(const void *data, size_t size)
 {
-	// Same issue here as in retro_serialize()...
-	// Maybe someone else can do this properly...
-	
-	// Get temporary file name
-	char temp_file_name[256];
-	FILE *file = NULL;
-
-	GetTempStateFileName(temp_file_name);
-	
-	// Write contents of *data to temporary file...
-	file = fopen(temp_file_name, "wb");
-	if (file)
-	{
-		size_t write_length = fwrite((char*)data, sizeof(char), size, file);
-		if (write_length != size)
-		{
-			if (log_cb) log_cb(RETRO_LOG_ERROR, "Failed to write temporary state file.\n");
-			fclose(file);
-			remove(temp_file_name);
-			return false;
-		}
-		fclose(file);
-	}
-	else
-	{
-		if (log_cb) log_cb(RETRO_LOG_ERROR, "Failed to open temporary state file.\n");
-		return false;
-	}
-	
-	// Read state from temporary file
-	if (PokeMini_LoadSSFile(temp_file_name))
-	{
+	if (PokeMini_LoadSSStream((uint8_t*)data, size)) {
 		if (log_cb) log_cb(RETRO_LOG_INFO, "Save state loaded successfully.\n");
-	}
-	else
-	{
-		if (log_cb) log_cb(RETRO_LOG_ERROR, "Failed to load temporary state file.\n");
-		remove(temp_file_name);
+	} else {
+		if (log_cb) log_cb(RETRO_LOG_ERROR, "Failed to load save state.\n");
 		return false;
 	}
-	
-	// Remove temporary file
-	remove(temp_file_name);
-	
 	return true;
 }
 

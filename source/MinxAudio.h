@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <streams/memory_stream.h>
 
 typedef struct {
 	// Internal processing
@@ -84,7 +85,11 @@ void MinxAudio_Reset(int hardreset);
 
 int MinxAudio_LoadState(FILE *fi, uint32_t bsize);
 
+int MinxAudio_LoadStateStream(memstream_t *stream, uint32_t bsize);
+
 int MinxAudio_SaveState(FILE *fi);
+
+int MinxAudio_SaveStateStream(memstream_t *stream);
 
 void MinxAudio_ChangeEngine(int engine);
 

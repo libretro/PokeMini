@@ -139,6 +139,48 @@ int MinxTimers_LoadState(FILE *fi, uint32_t bsize)
 	MinxTimers.Tmr3HEna = PMR_TMR3_CTRL_H & 0x04;
 }
 
+int MinxTimers_LoadStateStream(memstream_t *stream, uint32_t bsize)
+{
+	POKELOADSS_START(128);
+	POKELOADSS_STREAM_32(MinxTimers.SecTimerCnt);
+	POKELOADSS_STREAM_32(MinxTimers.TmrSecs);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr1DecA);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr1DecB);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr1CntA);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr1CntB);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr1PreA);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr1PreB);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr2DecA);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr2DecB);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr2CntA);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr2CntB);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr2PreA);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr2PreB);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr3DecA);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr3DecB);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr3CntA);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr3CntB);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr3PreA);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr3PreB);
+	POKELOADSS_STREAM_32(MinxTimers.Tmr8Cnt);
+	POKELOADSS_STREAM_32(MinxTimers.PRCCnt);
+	POKELOADSS_STREAM_16(MinxTimers.Tmr3Cnt16.W);
+	POKELOADSS_STREAM_16(MinxTimers.Timer3Piv);
+	POKELOADSS_STREAM_8(MinxTimers.TmrXEna2);
+	POKELOADSS_STREAM_8(MinxTimers.TmrXEna1);
+	POKELOADSS_STREAM_X(34);
+	POKELOADSS_END(128);
+	MinxTimers.Tmr1WMode = PMR_TMR1_CTRL_L & 0x80;
+	MinxTimers.Tmr1LEna = PMR_TMR1_CTRL_L & 0x04;
+	MinxTimers.Tmr1HEna = PMR_TMR1_CTRL_H & 0x04;
+	MinxTimers.Tmr2WMode = PMR_TMR2_CTRL_L & 0x80;
+	MinxTimers.Tmr2LEna = PMR_TMR2_CTRL_L & 0x04;
+	MinxTimers.Tmr2HEna = PMR_TMR2_CTRL_H & 0x04;
+	MinxTimers.Tmr3WMode = PMR_TMR3_CTRL_L & 0x80;
+	MinxTimers.Tmr3LEna = PMR_TMR3_CTRL_L & 0x04;
+	MinxTimers.Tmr3HEna = PMR_TMR3_CTRL_H & 0x04;
+}
+
 int MinxTimers_SaveState(FILE *fi)
 {
 	POKESAVESS_START(128);
@@ -169,6 +211,39 @@ int MinxTimers_SaveState(FILE *fi)
 	POKESAVESS_8(MinxTimers.TmrXEna2);
 	POKESAVESS_8(MinxTimers.TmrXEna1);
 	POKESAVESS_X(34);
+	POKESAVESS_END(128);
+}
+
+int MinxTimers_SaveStateStream(memstream_t *stream)
+{
+	POKESAVESS_STREAM_START(128);
+	POKESAVESS_STREAM_32(MinxTimers.SecTimerCnt);
+	POKESAVESS_STREAM_32(MinxTimers.TmrSecs);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr1DecA);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr1DecB);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr1CntA);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr1CntB);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr1PreA);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr1PreB);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr2DecA);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr2DecB);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr2CntA);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr2CntB);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr2PreA);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr2PreB);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr3DecA);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr3DecB);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr3CntA);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr3CntB);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr3PreA);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr3PreB);
+	POKESAVESS_STREAM_32(MinxTimers.Tmr8Cnt);
+	POKESAVESS_STREAM_32(MinxTimers.PRCCnt);
+	POKESAVESS_STREAM_16(MinxTimers.Tmr3Cnt16.W);
+	POKESAVESS_STREAM_16(MinxTimers.Timer3Piv);
+	POKESAVESS_STREAM_8(MinxTimers.TmrXEna2);
+	POKESAVESS_STREAM_8(MinxTimers.TmrXEna1);
+	POKESAVESS_STREAM_X(34);
 	POKESAVESS_END(128);
 }
 

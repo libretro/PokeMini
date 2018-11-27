@@ -20,6 +20,7 @@
 #define MINXHW_LCD
 
 #include <stdint.h>
+#include <streams/memory_stream.h>
 
 typedef struct {
 	// Internal processing
@@ -73,7 +74,11 @@ void MinxLCD_Reset(int hardreset);
 
 int MinxLCD_LoadState(FILE *fi, uint32_t bsize);
 
+int MinxLCD_LoadStateStream(memstream_t *stream, uint32_t bsize);
+
 int MinxLCD_SaveState(FILE *fi);
+
+int MinxLCD_SaveStateStream(memstream_t *stream);
 
 uint8_t MinxLCD_ReadReg(int cpu, uint8_t reg);
 
