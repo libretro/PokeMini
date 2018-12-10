@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <streams/memory_stream.h>
 
 // Common functions
 #include "PMCommon.h"
@@ -164,6 +165,30 @@ static inline void MinxPRC_OnWrite(int cpu, uint32_t addr, uint8_t data)
 	rsize += fseek(fi, size, SEEK_CUR) ? 0 : size;\
 }
 
+// -- Stream versions START
+#define POKELOADSS_STREAM_32(var) {\
+	rsize += (uint32_t)memstream_read(stream, (void *)&tmp32, 4);\
+	var = Endian32(tmp32);\
+}
+
+#define POKELOADSS_STREAM_16(var) {\
+	rsize += (uint32_t)memstream_read(stream, (void *)&tmp16, 2);\
+	var = Endian16(tmp16);\
+}
+
+#define POKELOADSS_STREAM_8(var) {\
+	rsize += (uint32_t)memstream_read(stream, (void *)&var, 1);\
+}
+
+#define POKELOADSS_STREAM_A(array, size) {\
+	rsize += (uint32_t)memstream_read(stream, (void *)array, size);\
+}
+
+#define POKELOADSS_STREAM_X(size) {\
+	rsize += memstream_seek(stream, size, SEEK_CUR) ? 0 : size;\
+}
+// -- Stream versions End
+
 #define POKELOADSS_END(size) {\
 	tmp32 = 0; tmp16 = 0;\
 	return (rsize == size) + tmp32 + (uint32_t)tmp16;\
@@ -201,6 +226,40 @@ static inline void MinxPRC_OnWrite(int cpu, uint32_t addr, uint8_t data)
 		wsize += (uint32_t)fwrite((void *)&tmp16, 1, 1, fi);\
 	}\
 }
+
+// -- Stream versions START
+#define POKESAVESS_STREAM_START(size)\
+	uint32_t wsize = 0;\
+	uint32_t tmp32 = Endian32(size);\
+	uint16_t tmp16;\
+	if (memstream_write(stream, (void *)&tmp32, 4) != 4) return 0;\
+	{ tmp32 = 0; tmp16 = 0; }
+
+#define POKESAVESS_STREAM_32(var) {\
+	tmp32 = Endian32((uint32_t)var);\
+	wsize += (uint32_t)memstream_write(stream, (void *)&tmp32, 4);\
+}
+
+#define POKESAVESS_STREAM_16(var) {\
+	tmp16 = Endian16((uint16_t)var);\
+	wsize += (uint32_t)memstream_write(stream, (void *)&tmp16, 2);\
+}
+
+#define POKESAVESS_STREAM_8(var) {\
+	wsize += (uint32_t)memstream_write(stream, (void *)&var, 1);\
+}
+
+#define POKESAVESS_STREAM_A(array, size) {\
+	wsize += (uint32_t)memstream_write(stream, (void *)array, size);\
+}
+
+#define POKESAVESS_STREAM_X(size) {\
+	tmp16 = 0;\
+	for (tmp32=0; tmp32<(uint32_t)size; tmp32++) {\
+		wsize += (uint32_t)memstream_write(stream, (void *)&tmp16, 1);\
+	}\
+}
+// -- Stream versions End
 
 #define POKESAVESS_END(size) {\
 	tmp32 = 0; tmp16 = 0;\
@@ -273,8 +332,14 @@ int PokeMini_CheckSSFile(const char *statefile, char *romfile);
 // Load emulator state
 int PokeMini_LoadSSFile(const char *statefile);
 
+// Load emulator state from memory stream
+int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size);
+
 // Save emulator state
 int PokeMini_SaveSSFile(const char *statefile, const char *romfile);
+
+// Save emulator state to memory stream
+int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size);
 
 // Load MIN ROM (and others)
 int PokeMini_LoadROM(const char *filename);

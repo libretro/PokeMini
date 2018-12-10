@@ -143,6 +143,17 @@ int MinxAudio_LoadState(FILE *fi, uint32_t bsize)
 	POKELOADSS_END(32);
 }
 
+int MinxAudio_LoadStateStream(memstream_t *stream, uint32_t bsize)
+{
+	POKELOADSS_START(32);
+	POKELOADSS_STREAM_32(MinxAudio.AudioCCnt);
+	POKELOADSS_STREAM_32(MinxAudio.AudioSCnt);
+	POKELOADSS_STREAM_16(MinxAudio.Volume);
+	POKELOADSS_STREAM_16(MinxAudio.PWMMul);
+	POKELOADSS_STREAM_X(20);
+	POKELOADSS_END(32);
+}
+
 int MinxAudio_SaveState(FILE *fi)
 {
 	POKESAVESS_START(32);
@@ -151,6 +162,17 @@ int MinxAudio_SaveState(FILE *fi)
 	POKESAVESS_16(MinxAudio.Volume);
 	POKESAVESS_16(MinxAudio.PWMMul);
 	POKESAVESS_X(20);
+	POKESAVESS_END(32);
+}
+
+int MinxAudio_SaveStateStream(memstream_t *stream)
+{
+	POKESAVESS_STREAM_START(32);
+	POKESAVESS_STREAM_32(MinxAudio.AudioCCnt);
+	POKESAVESS_STREAM_32(MinxAudio.AudioSCnt);
+	POKESAVESS_STREAM_16(MinxAudio.Volume);
+	POKESAVESS_STREAM_16(MinxAudio.PWMMul);
+	POKESAVESS_STREAM_X(20);
 	POKESAVESS_END(32);
 }
 

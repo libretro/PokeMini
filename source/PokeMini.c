@@ -566,7 +566,7 @@ int PokeMini_CheckSSFile(const char *statefile, char *romfile)
 		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -3);
 		return 0;
 	}
-	readbytes = fread(PMiniStr, 1, 256, fi);	// Read ROM related to state
+	readbytes = fread(PMiniStr, 1, PMTMPV, fi);	// Read ROM related to state
 	if (readbytes != 256) {
 		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -4);
 		return 0;
@@ -606,7 +606,7 @@ int PokeMini_LoadSSFile(const char *statefile)
 		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -3);
 		return 0;
 	}
-	readbytes = fread(PMiniStr, 1, 256, fi);	// Read ROM related to state (discarded)
+	readbytes = fread(PMiniStr, 1, PMTMPV, fi);	// Read ROM related to state (discarded)
 	if (readbytes != 256) {
 		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -4);
 		return 0;
@@ -703,6 +703,140 @@ int PokeMini_LoadSSFile(const char *statefile)
 	return 1;
 }
 
+// Load emulator state from memory stream
+int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
+{
+	memstream_t *stream;
+	int readbytes;
+	char PMiniStr[PMTMPV];
+	uint32_t PMiniID, StatTime, BSize;
+
+	// Open memory stream
+	memstream_set_buffer(buffer, size);
+	stream = memstream_open(0);
+	if (stream == NULL) {
+		return 0;
+	}
+
+	// Read content
+	PMiniStr[12] = 0;
+	readbytes = memstream_read(stream, PMiniStr, 12);	// Read File ID
+	if ((readbytes != 12) || strcmp(PMiniStr, "PokeMiniStat")) {
+		memstream_close(stream);
+		memstream_set_buffer(NULL, 0);
+		return 0;
+	}
+	readbytes = memstream_read(stream, &PMiniID, 4);	// Read State ID
+	PMiniID = Endian32(PMiniID);
+	if ((readbytes != 4) || (PMiniID != PokeMini_ID)) {
+		memstream_close(stream);
+		memstream_set_buffer(NULL, 0);
+		return 0;
+	}
+	readbytes = memstream_read(stream, &StatTime, 4);	// Read Time
+	StatTime = Endian32(StatTime);
+	if (readbytes != 4) {
+		memstream_close(stream);
+		memstream_set_buffer(NULL, 0);
+		return 0;
+	}
+
+	// Read State Structure
+	PMiniStr[4] = 0;
+	while (memstream_pos(stream) < size) {
+		readbytes = memstream_read(stream, PMiniStr, 4);
+		if (readbytes != 4) {
+			memstream_close(stream);
+			memstream_set_buffer(NULL, 0);
+			return 0;
+		}
+		readbytes = memstream_read(stream, &BSize, 4);
+		BSize = Endian32(BSize);
+		if (readbytes != 4) {
+			memstream_close(stream);
+			memstream_set_buffer(NULL, 0);
+			return 0;
+		}
+		if (!strcmp(PMiniStr, "RAM-")) {		// RAM
+			readbytes = memstream_read(stream, PM_RAM, 0x1000);
+			if ((BSize != 0x1000) || (readbytes != 0x1000)) {
+				memstream_close(stream);
+				memstream_set_buffer(NULL, 0);
+				return 0;
+			}
+		} else if (!strcmp(PMiniStr, "REG-")) {		// Register I/O
+			readbytes = memstream_read(stream, PM_IO, 256);
+			if ((BSize != 256) || (readbytes != 256)) {
+				memstream_close(stream);
+				memstream_set_buffer(NULL, 0);
+				return 0;
+			}
+		} else if (!strcmp(PMiniStr, "CPU-")) {		// CPU
+			if (!MinxCPU_LoadStateStream(stream, BSize)) {
+				memstream_close(stream);
+				memstream_set_buffer(NULL, 0);
+				return 0;
+			}
+		} else if (!strcmp(PMiniStr, "IRQ-")) {		// IRQ
+			if (!MinxIRQ_LoadStateStream(stream, BSize)) {
+				memstream_close(stream);
+				memstream_set_buffer(NULL, 0);
+				return 0;
+			}
+		} else if (!strcmp(PMiniStr, "TMR-")) {		// Timers
+			if (!MinxTimers_LoadStateStream(stream, BSize)) {
+				memstream_close(stream);
+				memstream_set_buffer(NULL, 0);
+				return 0;
+			}
+		} else if (!strcmp(PMiniStr, "PIO-")) {		// Parallel IO
+			if (!MinxIO_LoadStateStream(stream, BSize)) {
+				memstream_close(stream);
+				memstream_set_buffer(NULL, 0);
+				return 0;
+			}
+		} else if (!strcmp(PMiniStr, "PRC-")) {		// PRC
+			if (!MinxPRC_LoadStateStream(stream, BSize)) {
+				memstream_close(stream);
+				memstream_set_buffer(NULL, 0);
+				return 0;
+			}
+		} else if (!strcmp(PMiniStr, "CPM-")) {		// Color PRC
+			if (!MinxColorPRC_LoadStateStream(stream, BSize)) {
+				memstream_close(stream);
+				memstream_set_buffer(NULL, 0);
+				return 0;
+			}
+		} else if (!strcmp(PMiniStr, "LCD-")) {		// LCD
+			if (!MinxLCD_LoadStateStream(stream, BSize)) {
+				memstream_close(stream);
+				memstream_set_buffer(NULL, 0);
+				return 0;
+			}
+		} else if (!strcmp(PMiniStr, "LCD-")) {		// Audio
+			if (!MinxAudio_LoadStateStream(stream, BSize)) {
+				memstream_close(stream);
+				memstream_set_buffer(NULL, 0);
+				return 0;
+			}
+		} else if (!strcmp(PMiniStr, "END-")) {
+			break;
+		}
+	}
+	memstream_close(stream);
+	memstream_set_buffer(NULL, 0);
+
+	// Update RTC if requested
+	if (CommandLine.updatertc == 1) {
+		MinxTimers.SecTimerCnt += (uint32_t)time(NULL) - StatTime;
+	}
+
+	// Syncronize with host time
+	PokeMini_SyncHostTime();
+
+	return 1;
+}
+
 // Save emulator state
 int PokeMini_SaveSSFile(const char *statefile, const char *romfile)
 {
@@ -770,6 +904,73 @@ int PokeMini_SaveSSFile(const char *statefile, const char *romfile)
 
 	// Callback
 	if (PokeMini_OnSaveStateFile) PokeMini_OnSaveStateFile(statefile, 1);
+
+	return 1;
+}
+
+// Save emulator state to memory stream
+int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size)
+{
+	// TODO: Error check bytes written
+	
+	memstream_t *stream;
+	uint32_t PMiniID, StatTime, BSize;
+
+	// Open memory stream
+	memstream_set_buffer(buffer, size);
+	stream = memstream_open(1);
+	if (stream == NULL) {
+		return 0;
+	}
+
+	// Write content
+	memstream_write(stream, (void *)"PokeMiniStat", 12);	// Write File ID
+	PMiniID = PokeMini_ID;
+	memstream_write(stream, &PMiniID, 4);	// Write State ID
+	StatTime = Endian32((uint32_t)time(NULL));
+	memstream_write(stream, &StatTime, 4);	// Write Time
+
+	// Read State Structure
+	// - RAM
+	memstream_write(stream, (void *)"RAM-", 4);
+	BSize = Endian32(0x1000);
+	memstream_write(stream, &BSize, 4);
+	memstream_write(stream, PM_RAM, 0x1000);
+	// - Registers I/O
+	memstream_write(stream, (void *)"REG-", 4);
+	BSize = Endian32(256);
+	memstream_write(stream, &BSize, 4);
+	memstream_write(stream, PM_IO, 256);
+	// - CPU Interface
+	memstream_write(stream, (void *)"CPU-", 4);
+	MinxCPU_SaveStateStream(stream);
+	// - IRQ Interface
+	memstream_write(stream, (void *)"IRQ-", 4);
+	MinxIRQ_SaveStateStream(stream);
+	// - Timers Interface
+	memstream_write(stream, (void *)"TMR-", 4);
+	MinxTimers_SaveStateStream(stream);
+	// - Parallel IO Interface
+	memstream_write(stream, (void *)"PIO-", 4);
+	MinxIO_SaveStateStream(stream);
+	// - PRC Interface
+	memstream_write(stream, (void *)"PRC-", 4);
+	MinxPRC_SaveStateStream(stream);
+	// - Color PRC Interface
+	memstream_write(stream, (void *)"CPM-", 4);
+	MinxColorPRC_SaveStateStream(stream);
+	// - LCD Interface
+	memstream_write(stream, (void *)"LCD-", 4);
+	MinxLCD_SaveStateStream(stream);
+	// - Audio Interface
+	memstream_write(stream, (void *)"AUD-", 4);
+	MinxAudio_SaveStateStream(stream);
+	// - EOF
+	memstream_write(stream, (void *)"END-", 4);
+	BSize = Endian32(0);
+	memstream_write(stream, &BSize, 4);
+	memstream_close(stream);
+	memstream_set_buffer(NULL, 0);
 
 	return 1;
 }

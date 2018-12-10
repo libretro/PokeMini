@@ -20,6 +20,7 @@
 #define MINXHW_IRQ
 
 #include <stdint.h>
+#include <streams/memory_stream.h>
 
 // Master IRQ enable
 extern int MinxIRQ_MasterIRQ;
@@ -33,7 +34,11 @@ void MinxIRQ_Reset(int hardreset);
 
 int MinxIRQ_LoadState(FILE *fi, uint32_t bsize);
 
+int MinxIRQ_LoadStateStream(memstream_t *stream, uint32_t bsize);
+
 int MinxIRQ_SaveState(FILE *fi);
+
+int MinxIRQ_SaveStateStream(memstream_t *stream);
 
 void MinxIRQ_SetIRQ(uint8_t intr);
 

@@ -20,6 +20,7 @@
 #define MINXHW_PRC
 
 #include <stdint.h>
+#include <streams/memory_stream.h>
 
 typedef struct {
 	// Internal processing
@@ -75,7 +76,11 @@ void MinxPRC_Reset(int hardreset);
 
 int MinxPRC_LoadState(FILE *fi, uint32_t bsize);
 
+int MinxPRC_LoadStateStream(memstream_t *stream, uint32_t bsize);
+
 int MinxPRC_SaveState(FILE *fi);
+
+int MinxPRC_SaveStateStream(memstream_t *stream);
 
 void MinxPRC_Sync(void);
 

@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <streams/memory_stream.h>
 
 /* For some reason, '_BIG_ENDIAN' is always defined when
  * building for 3DS with devkitarm... */
@@ -147,7 +148,9 @@ int MinxCPU_Create(void);		// Create MinxCPU
 void MinxCPU_Destroy(void);		// Destroy MinxCPU
 void MinxCPU_Reset(int hardreset);	// Reset CPU
 int MinxCPU_LoadState(FILE *fi, uint32_t bsize); // Load State
+int MinxCPU_LoadStateStream(memstream_t *stream, uint32_t bsize); // Load State from stream
 int MinxCPU_SaveState(FILE *fi);	// Save State
+int MinxCPU_SaveStateStream(memstream_t *stream);	// Save State to stream
 int MinxCPU_Exec(void);			// Execute 1 CPU instruction
 int MinxCPU_CallIRQ(uint8_t IRQ);	// Call an IRQ
 

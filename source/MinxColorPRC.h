@@ -20,6 +20,7 @@
 #define MINXHW_COLORPRC
 
 #include <stdint.h>
+#include <streams/memory_stream.h>
 
 typedef struct {
 	uint16_t UnlockCode;
@@ -59,7 +60,11 @@ void MinxColorPRC_Reset(int hardreset);
 
 int MinxColorPRC_LoadState(FILE *fi, uint32_t bsize);
 
+int MinxColorPRC_LoadStateStream(memstream_t *stream, uint32_t bsize);
+
 int MinxColorPRC_SaveState(FILE *fi);
+
+int MinxColorPRC_SaveStateStream(memstream_t *stream);
 
 uint8_t MinxColorPRC_ReadReg(int cpu, uint8_t reg);
 
