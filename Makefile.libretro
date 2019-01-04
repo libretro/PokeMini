@@ -6,6 +6,7 @@ STATIC_LINKING_LINK=0
 CORE_DIR := .
 BUILD_DIR = build
 OBJOUT = -o 
+LIBS =
 
 ifeq ($(platform),android_arm64-v8a)
 include $(BUILD_DIR)/Makefile.android_arm64-v8a
@@ -448,9 +449,10 @@ else
 	TARGET := $(TARGET_NAME)_libretro.$(EXT)
 	CC = gcc
 	SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=libretro/link.T
-	CFLAGS += -D__WIN32__ -D__WIN32_LIBRETRO__
-
+	CFLAGS += -D__WIN32__
 endif
+
+LIBS += $(LIBM)
 
 ifeq ($(STATIC_LINKING),1)
 SHARED=
@@ -515,7 +517,6 @@ else
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	@echo "** BUILDING $(TARGET) FOR PLATFORM $(platform) **"
 ifeq ($(STATIC_LINKING_LINK),1)
 ifneq (,$(findstring msvc,$(platform)))
 	$(LD) $(LINKOUT)$@ $(OBJECTS)
@@ -523,9 +524,8 @@ else
 	$(AR) rcs $@ $(OBJECTS)
 endif
 else
-	$(CC) $(fpic) $(SHARED) $(INCFLAGS) $(LDFLAGS) $(OBJOUT)$@ $(OBJECTS) $(LIBM)
+	$(CC) $(fpic) $(SHARED) $(INCFLAGS) $(LDFLAGS) $(OBJOUT)$@ $(OBJECTS) $(LIBS)
 endif
-	@echo "** BUILD SUCCESSFUL! GG NO RE **"
 
 %.o: %.c
 	$(CC) $(INCFLAGS) $(CFLAGS) -c $(OBJOUT)$@ $<
