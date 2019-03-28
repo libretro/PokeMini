@@ -1,5 +1,5 @@
 /*
-  PokeMini - Pokémon-Mini Emulator
+  PokeMini - PokÃ©mon-Mini Emulator
   Copyright (C) 2009-2012  JustBurn
 
   This program is free software: you can redistribute it and/or modify
@@ -26,8 +26,8 @@ extern "C" {
 #endif
 
 /* For some reason, '_BIG_ENDIAN' is always defined when
- * building for 3DS with devkitarm... */
-#if defined (_BIG_ENDIAN) && ! defined (_3DS)
+ * building for 3DS/Switch with devkitarm/a64... */
+#if defined (_BIG_ENDIAN) && !defined (_3DS) && !defined(HAVE_LIBNX)
 static __inline uint32_t Endian32(uint32_t val)
 {
 	return (val >> 24) | (val >> 8 & 0x0000FF00) | (val << 8 & 0x00FF0000) | (val << 24);

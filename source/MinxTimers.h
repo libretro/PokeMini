@@ -1,5 +1,5 @@
 /*
-  PokeMini - Pokémon-Mini Emulator
+  PokeMini - PokÃ©mon-Mini Emulator
   Copyright (C) 2009-2015  JustBurn
 
   This program is free software: you can redistribute it and/or modify
@@ -23,8 +23,8 @@
 #include <streams/memory_stream.h>
 
 /* For some reason, '_BIG_ENDIAN' is always defined when
- * building for 3DS with devkitarm... */
-#if defined (_BIG_ENDIAN) && ! defined (_3DS)
+ * building for 3DS/Switch with devkitarm/a64... */
+#if defined (_BIG_ENDIAN) && !defined (_3DS) && !defined(HAVE_LIBNX)
 
 typedef union {
 	struct {
