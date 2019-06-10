@@ -727,14 +727,12 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
 		return 0;
 	}
 	readbytes = memstream_read(stream, &PMiniID, 4);	// Read State ID
-	PMiniID = Endian32(PMiniID);
 	if ((readbytes != 4) || (PMiniID != PokeMini_ID)) {
 		memstream_close(stream);
 		memstream_set_buffer(NULL, 0);
 		return 0;
 	}
 	readbytes = memstream_read(stream, &StatTime, 4);	// Read Time
-	StatTime = Endian32(StatTime);
 	if (readbytes != 4) {
 		memstream_close(stream);
 		memstream_set_buffer(NULL, 0);
@@ -751,7 +749,6 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
 			return 0;
 		}
 		readbytes = memstream_read(stream, &BSize, 4);
-		BSize = Endian32(BSize);
 		if (readbytes != 4) {
 			memstream_close(stream);
 			memstream_set_buffer(NULL, 0);
@@ -927,18 +924,18 @@ int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size)
 	memstream_write(stream, (void *)"PokeMiniStat", 12);	// Write File ID
 	PMiniID = PokeMini_ID;
 	memstream_write(stream, &PMiniID, 4);	// Write State ID
-	StatTime = Endian32((uint32_t)time(NULL));
+	StatTime = (uint32_t)time(NULL);
 	memstream_write(stream, &StatTime, 4);	// Write Time
 
 	// Read State Structure
 	// - RAM
 	memstream_write(stream, (void *)"RAM-", 4);
-	BSize = Endian32(0x1000);
+	BSize = 0x1000;
 	memstream_write(stream, &BSize, 4);
 	memstream_write(stream, PM_RAM, 0x1000);
 	// - Registers I/O
 	memstream_write(stream, (void *)"REG-", 4);
-	BSize = Endian32(256);
+	BSize = 256;
 	memstream_write(stream, &BSize, 4);
 	memstream_write(stream, PM_IO, 256);
 	// - CPU Interface
@@ -967,7 +964,7 @@ int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size)
 	MinxAudio_SaveStateStream(stream);
 	// - EOF
 	memstream_write(stream, (void *)"END-", 4);
-	BSize = Endian32(0);
+	BSize = 0;
 	memstream_write(stream, &BSize, 4);
 	memstream_close(stream);
 	memstream_set_buffer(NULL, 0);
