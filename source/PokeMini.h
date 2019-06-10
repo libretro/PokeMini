@@ -168,12 +168,12 @@ static inline void MinxPRC_OnWrite(int cpu, uint32_t addr, uint8_t data)
 // -- Stream versions START
 #define POKELOADSS_STREAM_32(var) {\
 	rsize += (uint32_t)memstream_read(stream, (void *)&tmp32, 4);\
-	var = Endian32(tmp32);\
+	var = tmp32;\
 }
 
 #define POKELOADSS_STREAM_16(var) {\
 	rsize += (uint32_t)memstream_read(stream, (void *)&tmp16, 2);\
-	var = Endian16(tmp16);\
+	var = tmp16;\
 }
 
 #define POKELOADSS_STREAM_8(var) {\
@@ -230,18 +230,18 @@ static inline void MinxPRC_OnWrite(int cpu, uint32_t addr, uint8_t data)
 // -- Stream versions START
 #define POKESAVESS_STREAM_START(size)\
 	uint32_t wsize = 0;\
-	uint32_t tmp32 = Endian32(size);\
+	uint32_t tmp32 = size;\
 	uint16_t tmp16;\
 	if (memstream_write(stream, (void *)&tmp32, 4) != 4) return 0;\
 	{ tmp32 = 0; tmp16 = 0; }
 
 #define POKESAVESS_STREAM_32(var) {\
-	tmp32 = Endian32((uint32_t)var);\
+	tmp32 = (uint32_t)var;\
 	wsize += (uint32_t)memstream_write(stream, (void *)&tmp32, 4);\
 }
 
 #define POKESAVESS_STREAM_16(var) {\
-	tmp16 = Endian16((uint16_t)var);\
+	tmp16 = (uint16_t)var;\
 	wsize += (uint32_t)memstream_write(stream, (void *)&tmp16, 2);\
 }
 
