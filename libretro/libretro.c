@@ -675,22 +675,78 @@ void retro_set_input_state(retro_input_state_t cb)
 void retro_set_environment(retro_environment_t cb)
 {
 	struct retro_log_callback logging;
-	struct retro_variable variables[] = {
+	
+	struct retro_core_option_definition option_defs[] = {
 #ifdef _3DS
-		{ "pokemini_video_scale", "Video Scale (Restart); 1x|2x|3x" },
+		{
+			"pokemini_video_scale",
+			"Video Scale (Restart)",
+			"1x|2x|3x",
+			"Set internal video scale factor. Increasing the scale factor improves the appearance of the internal 'dotmatrix' LCD filter."
+		},
 #else
-		{ "pokemini_video_scale", "Video Scale (Restart); 4x|5x|6x|1x|2x|3x" },
+		{
+			"pokemini_video_scale",
+			"Video Scale (Restart)",
+			"4x|5x|6x|1x|2x|3x",
+			"Set internal video scale factor. Increasing the scale factor improves the appearance of the internal 'dotmatrix' LCD filter."
+		},
 #endif
-		{ "pokemini_lcdfilter", "LCD Filter; dotmatrix|scanline|none" },
-		{ "pokemini_lcdmode", "LCD Mode; analog|3shades|2shades" },
-		{ "pokemini_lcdcontrast", "LCD Contrast; 64|0|16|32|48|80|96" },
-		{ "pokemini_lcdbright", "LCD Brightness; 0|-80|-60|-40|-20|20|40|60|80" },
-		{ "pokemini_palette", "Palette; Default|Old|Monochrome|Green|Green Vector|Red|Red Vector|Blue LCD|LEDBacklight|Girl Power|Blue|Blue Vector|Sepia|Monochrome Vector" },
-		{ "pokemini_piezofilter", "Piezo Filter; enabled|disabled" },
-		{ "pokemini_rumblelvl", "Rumble Level (Screen + Controller); 3|2|1|0" },
-		{ "pokemini_controller_rumble", "Controller Rumble; enabled|disabled" },
-		{ "pokemini_screen_shake", "Screen Shake; enabled|disabled" },
-		{ NULL, NULL },
+		{
+			"pokemini_lcdfilter",
+			"LCD Filter",
+			"dotmatrix|scanline|none",
+			"Select internal screen filter. 'dotmatrix' produces an LCD effect that mimics real hardware. LCD filters are disabled when 'Video Scale' is set to '1x'."
+		},
+		{
+			"pokemini_lcdmode",
+			"LCD Mode",
+			"analog|3shades|2shades",
+			"Specify the greyscale 'color' reproduction characteristics of the emulated liquid crystal display. 'analog' mimics real hardware. '2shades' removes ghosting, but causes flickering in most games."
+		},
+		{
+			"pokemini_lcdcontrast",
+			"LCD Contrast",
+			"64|0|16|32|48|80|96",
+			"Set contrast level of emulated liquid crystal display."
+		},
+		{
+			"pokemini_lcdbright",
+			"LCD Brightness",
+			"0|-80|-60|-40|-20|20|40|60|80",
+			"Set brightness offset of emulated liquid crystal display."
+		},
+		{
+			"pokemini_palette",
+			"Palette",
+			"Default|Old|Monochrome|Green|Green Vector|Red|Red Vector|Blue LCD|LEDBacklight|Girl Power|Blue|Blue Vector|Sepia|Monochrome Vector",
+			"Specify palette used to 'colorize' the emulated liquid crystal display. 'Default' mimics real hardware. Palettes with a 'Vector' suffix correspond to inverted colors."
+		},
+		{
+			"pokemini_piezofilter",
+			"Piezo Filter",
+			"enabled|disabled",
+			"Use an audio filter to simulate the characteristics of the Pokemon Mini's piezoelectric speaker."
+		},
+		{
+			"pokemini_rumblelvl",
+			"Rumble Level (Screen + Controller)",
+			"3|2|1|0",
+			"Specify the magnitude of the force feedback effect, both virtual and physical."
+		},
+		{
+			"pokemini_controller_rumble",
+			"Controller Rumble",
+			"enabled|disabled",
+			"Enable physical force feedback effect via controller rumble."
+		},
+		{
+			"pokemini_screen_shake",
+			"Screen Shake",
+			"enabled|disabled",
+			"Enable virtual force feedback effect by 'shaking' the screen."
+		},
+		{ NULL, NULL, NULL, NULL },
 	};
 	
 	environ_cb = cb;
@@ -700,7 +756,50 @@ void retro_set_environment(retro_environment_t cb)
 	else
 		log_cb = NULL;
 	
-	environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
+	if (environ_cb(RETRO_ENVIRONMENT_GET_ENHANCED_CORE_OPTIONS, NULL))
+		environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS, option_defs);
+	else
+	{
+		size_t i;
+		size_t size = sizeof(option_defs) / sizeof(option_defs[0]);
+		struct retro_variable variables[sizeof(option_defs) / sizeof(option_defs[0])] = {{0}};
+		char *values_buff[sizeof(option_defs) / sizeof(option_defs[0])] = {0};
+		
+		/* Copy parameters from retro_core_option_definition array */
+		for (i = 0; i < size; i++)
+		{
+			const char *key    = option_defs[i].key;
+			const char *desc   = option_defs[i].desc;
+			const char *values = option_defs[i].values;
+			size_t buf_len     = 3;
+			
+			if (desc && values)
+			{
+				buf_len += strlen(desc) + strlen(values);
+				values_buff[i] = (char*)calloc(buf_len, sizeof(char));
+				
+				strcpy(values_buff[i], desc);
+				strcat(values_buff[i], "; ");
+				strcat(values_buff[i], values);
+			}
+			
+			variables[i].key   = key;
+			variables[i].value = values_buff[i];
+		}
+		
+		/* Set variables */
+		environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
+		
+		/* Clean up */
+		for (i = 0; i < size; i++)
+		{
+			if (values_buff[i])
+			{
+				free(values_buff[i]);
+				values_buff[i] = NULL;
+			}
+		}
+	}
 }
 
 ///////////////////////////////////////////////////////////
