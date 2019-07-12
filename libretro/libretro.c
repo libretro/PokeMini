@@ -517,6 +517,18 @@ static void InitialiseVideo(void)
 		}
 #endif
 	}
+
+	// If video scale is 1x, LCD filter is disabled
+	// > hide pokemini_lcdfilter core option
+	if (video_scale == 1)
+	{
+		struct retro_core_option_display option_display;
+
+		option_display.key     = "pokemini_lcdfilter";
+		option_display.visible = false;
+
+		environ_cb(RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY, &option_display);
+	}
 	
 	// Determine video dimensions
 	video_width = PM_SCEEN_WIDTH * video_scale;
