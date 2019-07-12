@@ -45,7 +45,12 @@ struct retro_core_option_definition option_defs_us[] = {
          { "3x", NULL },
 #endif
          { NULL, NULL },
-      }
+      },
+#ifdef _3DS
+      "1x"
+#else
+      "4x"
+#endif
    },
    {
       "pokemini_lcdfilter",
@@ -56,7 +61,8 @@ struct retro_core_option_definition option_defs_us[] = {
          { "scanline",  "Scanlines" },
          { "none",      "None" },
          { NULL, NULL },
-      }
+      },
+      "dotmatrix"
    },
    {
       "pokemini_lcdmode",
@@ -67,7 +73,8 @@ struct retro_core_option_definition option_defs_us[] = {
          { "3shades", "3 Shades" },
          { "2shades", "2 Shades" },
          { NULL, NULL },
-      }
+      },
+      "analog"
    },
    {
       "pokemini_lcdcontrast",
@@ -82,7 +89,8 @@ struct retro_core_option_definition option_defs_us[] = {
          { "80", NULL },
          { "96", NULL },
          { NULL, NULL },
-      }
+      },
+      "64"
    },
    {
       "pokemini_lcdbright",
@@ -99,7 +107,8 @@ struct retro_core_option_definition option_defs_us[] = {
          { "60",  NULL },
          { "80",  NULL },
          { NULL, NULL },
-      }
+      },
+      "0"
    },
    {
       "pokemini_palette",
@@ -121,7 +130,8 @@ struct retro_core_option_definition option_defs_us[] = {
          { "Sepia",             "Sepia" },
          { "Monochrome Vector", "Inverted Black & White" },
          { NULL, NULL },
-      }
+      },
+      "Default"
    },
    {
       "pokemini_piezofilter",
@@ -131,7 +141,8 @@ struct retro_core_option_definition option_defs_us[] = {
          { "enabled",  NULL },
          { "disabled", NULL },
          { NULL, NULL },
-      }
+      },
+      "enabled"
    },
    {
       "pokemini_rumblelvl",
@@ -143,7 +154,8 @@ struct retro_core_option_definition option_defs_us[] = {
          { "1", NULL },
          { "0", NULL },
          { NULL, NULL },
-      }
+      },
+      "3"
    },
    {
       "pokemini_controller_rumble",
@@ -153,7 +165,8 @@ struct retro_core_option_definition option_defs_us[] = {
          { "enabled",  NULL },
          { "disabled", NULL },
          { NULL, NULL },
-      }
+      },
+      "enabled"
    },
    {
       "pokemini_screen_shake",
@@ -163,9 +176,10 @@ struct retro_core_option_definition option_defs_us[] = {
          { "enabled",  NULL },
          { "disabled", NULL },
          { NULL, NULL },
-      }
+      },
+      "enabled"
    },
-   { NULL, NULL, NULL, {{0}} },
+   { NULL, NULL, NULL, {{0}}, NULL },
 };
 
 /* RETRO_LANGUAGE_JAPANESE */
@@ -179,7 +193,8 @@ struct retro_core_option_definition option_defs_fr[] = {
       "Définir le facteur d'échelle vidéo interne. L'augmentation du facteur d'échelle améliore l'apparence du filtre LCD interne «Matrice de Points».",
       {
          { NULL, NULL }, /* Scale factors do not require translation */
-      }
+      },
+      NULL
    },
    {
       "pokemini_lcdfilter",
@@ -190,7 +205,8 @@ struct retro_core_option_definition option_defs_fr[] = {
          { "scanline",  "Lignes de Balayage" },
          { "none",      "Aucun" },
          { NULL, NULL },
-      }
+      },
+      NULL
    },
    {
       "pokemini_lcdmode",
@@ -201,7 +217,8 @@ struct retro_core_option_definition option_defs_fr[] = {
          { "3shades", "3 Nuances" },
          { "2shades", "2 Nuances" },
          { NULL, NULL },
-      }
+      },
+      NULL
    },
    {
       "pokemini_lcdcontrast",
@@ -209,7 +226,8 @@ struct retro_core_option_definition option_defs_fr[] = {
       "Réglez le niveau de contraste de l’écran à cristaux liquides émulé.",
       {
          { NULL, NULL }, /* Numbers do not require translation */
-      }
+      },
+      NULL
    },
    {
       "pokemini_lcdbright",
@@ -217,7 +235,8 @@ struct retro_core_option_definition option_defs_fr[] = {
       "Définissez le décalage de luminosité de l’affichage à cristaux liquides émulé.",
       {
          { NULL, NULL }, /* Numbers do not require translation */
-      }
+      },
+      NULL
    },
    {
       "pokemini_palette",
@@ -239,7 +258,8 @@ struct retro_core_option_definition option_defs_fr[] = {
          { "Sepia",             "Sépia" },
          { "Monochrome Vector", "Noir et Blanc Inversé" },
          { NULL, NULL },
-      }
+      },
+      NULL
    },
    {
       "pokemini_piezofilter",
@@ -247,7 +267,8 @@ struct retro_core_option_definition option_defs_fr[] = {
       "Utilisez un filtre audio pour simuler les caractéristiques du haut-parleur piézoélectrique du Pokemon Mini.",
       {
          { NULL, NULL }, /* enabled/disabled strings do not require translation */
-      }
+      },
+      NULL
    },
    {
       "pokemini_rumblelvl",
@@ -255,7 +276,8 @@ struct retro_core_option_definition option_defs_fr[] = {
       "Spécifiez l'ampleur de l'effet de retour de force, à la fois virtuel et physique.",
       {
          { NULL, NULL }, /* Numbers do not require translation */
-      }
+      },
+      NULL
    },
    {
       "pokemini_controller_rumble",
@@ -263,7 +285,8 @@ struct retro_core_option_definition option_defs_fr[] = {
       "Activer l'effet de retour de force physique via le roulement du contrôleur.",
       {
          { NULL, NULL }, /* enabled/disabled strings do not require translation */
-      }
+      },
+      NULL
    },
    {
       "pokemini_screen_shake",
@@ -271,7 +294,8 @@ struct retro_core_option_definition option_defs_fr[] = {
       "Activez l'effet de retour de force virtuel en 'secouant' l'écran.",
       {
          { NULL, NULL }, /* enabled/disabled strings do not require translation */
-      }
+      },
+      NULL
    },
    { NULL, NULL, NULL, {{0}} },
 };
