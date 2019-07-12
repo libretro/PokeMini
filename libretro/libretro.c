@@ -13,6 +13,7 @@
 #include <fcntl.h>
 
 #include <libretro.h>
+#include <libretro_core_options.h>
 #include <retro_miscellaneous.h>
 /*
  bare functions to use
@@ -675,23 +676,6 @@ void retro_set_input_state(retro_input_state_t cb)
 void retro_set_environment(retro_environment_t cb)
 {
 	struct retro_log_callback logging;
-	struct retro_variable variables[] = {
-#ifdef _3DS
-		{ "pokemini_video_scale", "Video Scale (Restart); 1x|2x|3x" },
-#else
-		{ "pokemini_video_scale", "Video Scale (Restart); 4x|5x|6x|1x|2x|3x" },
-#endif
-		{ "pokemini_lcdfilter", "LCD Filter; dotmatrix|scanline|none" },
-		{ "pokemini_lcdmode", "LCD Mode; analog|3shades|2shades" },
-		{ "pokemini_lcdcontrast", "LCD Contrast; 64|0|16|32|48|80|96" },
-		{ "pokemini_lcdbright", "LCD Brightness; 0|-80|-60|-40|-20|20|40|60|80" },
-		{ "pokemini_palette", "Palette; Default|Old|Monochrome|Green|Green Vector|Red|Red Vector|Blue LCD|LEDBacklight|Girl Power|Blue|Blue Vector|Sepia|Monochrome Vector" },
-		{ "pokemini_piezofilter", "Piezo Filter; enabled|disabled" },
-		{ "pokemini_rumblelvl", "Rumble Level (Screen + Controller); 3|2|1|0" },
-		{ "pokemini_controller_rumble", "Controller Rumble; enabled|disabled" },
-		{ "pokemini_screen_shake", "Screen Shake; enabled|disabled" },
-		{ NULL, NULL },
-	};
 	
 	environ_cb = cb;
 	
@@ -700,7 +684,7 @@ void retro_set_environment(retro_environment_t cb)
 	else
 		log_cb = NULL;
 	
-	environ_cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
+	libretro_set_core_options(environ_cb);
 }
 
 ///////////////////////////////////////////////////////////
