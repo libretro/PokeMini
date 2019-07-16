@@ -211,7 +211,7 @@ struct retro_core_option_definition option_defs_fr[] = {
    {
       "pokemini_lcdmode",
       "Mode LCD",
-      "Spécifiez les caractéristiques de reproduction 'couleur' ​​en niveaux de gris de l'affichage à cristaux liquides émulé. «Analogique» imite le matériel réel. «2 Nuances» supprime les images fantômes, mais provoque un scintillement dans la plupart des jeux.",
+      "Spécifiez les caractéristiques de reproduction 'couleur' en niveaux de gris de l'affichage à cristaux liquides émulé. «Analogique» imite le matériel réel. «2 Nuances» supprime les images fantômes, mais provoque un scintillement dans la plupart des jeux.",
       {
          { "analog",  "Analogique" },
          { "3shades", "3 Nuances" },
@@ -223,7 +223,7 @@ struct retro_core_option_definition option_defs_fr[] = {
    {
       "pokemini_lcdcontrast",
       "Contraste LCD",
-      "Réglez le niveau de contraste de l’écran à cristaux liquides émulé.",
+      "Réglez le niveau de contraste de l'écran à cristaux liquides émulé.",
       {
          { NULL, NULL }, /* Numbers do not require translation */
       },
@@ -232,7 +232,7 @@ struct retro_core_option_definition option_defs_fr[] = {
    {
       "pokemini_lcdbright",
       "Luminosité de l'écran LCD",
-      "Définissez le décalage de luminosité de l’affichage à cristaux liquides émulé.",
+      "Définissez le décalage de luminosité de l'affichage à cristaux liquides émulé.",
       {
          { NULL, NULL }, /* Numbers do not require translation */
       },
@@ -297,7 +297,7 @@ struct retro_core_option_definition option_defs_fr[] = {
       },
       NULL
    },
-   { NULL, NULL, NULL, {{0}} },
+   { NULL, NULL, NULL, {{0}}, NULL },
 };
 
 /* RETRO_LANGUAGE_SPANISH */
