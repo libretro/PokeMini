@@ -328,6 +328,118 @@ struct retro_core_option_definition option_defs_fr[] = {
 
 /* RETRO_LANGUAGE_TURKISH */
 
+struct retro_core_option_definition option_defs_tr[] = {
+   {
+      "pokemini_video_scale",
+      "Görüntü Ölçekleme (Yeniden Başlatma Gerektirir)",
+      "Dahili video ölçeği faktörünü ayarlayın. Ölçek faktörünün arttırılması, dahili 'Dot Matrix' LCD filtresinin görünümünü iyileştirir.",
+      {
+         { NULL, NULL },
+      },
+      NULL
+   },
+   {
+      "pokemini_lcdfilter",
+      "LCD Filtresi",
+      "Dahili ekran filtresini seçin. 'Dot Matrix', gerçek donanımı taklit eden bir LCD efekti üretir. 'Video Ölçeği' '1x' olarak ayarlandığında LCD filtreleri devre dışı bırakılır.",
+      {
+         { "dotmatrix", "Dot Matrix" },
+         { "scanline",  "Scanlines" },
+         { "none",      "Hiçbiri" },
+         { NULL, NULL },
+      },
+      "dotmatrix"
+   },
+   {
+      "pokemini_lcdmode",
+      "LCD Modu",
+      "Öykünülmüş sıvı kristal ekranın gri tonlamalı 'renk' üreme özelliklerini belirtin. 'Analog' gerçek donanımı taklit eder. '2 Shades' gölgelenmeyi giderir, ancak çoğu oyunda titremeye neden olur.",
+      {
+         { NULL, NULL }, /* Scale factors do not require translation */
+      },
+      NULL
+   },
+   {
+      "pokemini_lcdcontrast",
+      "LCD Kontrast",
+      "Öykünülmüş sıvı kristal ekranın kontrast seviyesini ayarlayın.",
+      {
+         { NULL, NULL },
+      },
+      NULL
+   },
+   {
+      "pokemini_lcdbright",
+      "LCD Parlaklığı",
+      "Öykünülmüş sıvı kristal ekranın parlaklık ofsetini ayarlayın.",
+      {
+         { NULL, NULL },
+      },
+      NULL
+   },
+   {
+      "pokemini_palette",
+      "Palette",
+      "Öykünülmüş sıvı kristal ekranı 'renklendirmek' için kullanılan paleti belirtin. 'Varsayılan' gerçek donanımı taklit eder.",
+      {
+         { "Default",           "Varsayılan" },
+         { "Old",               "Eski" },
+         { "Monochrome",        "Siyah & Beyaz" },
+         { "Green",             "Yeşil" },
+         { "Green Vector",      "Ters Green" },
+         { "Red",               "Kırmızı" },
+         { "Red Vector",        "Ters Red" },
+         { "Blue LCD",          "Mavi LCD" },
+         { "LEDBacklight",      "LED Arka ışığı" },
+         { "Girl Power",        "Kız Gücü" },
+         { "Blue",              "Mavi" },
+         { "Blue Vector",       "Ters Mavi" },
+         { "Sepia",             "Sepya" },
+         { "Monochrome Vector", "Ters Siyah & beyaz" },
+         { NULL, NULL },
+      },
+      "Default"
+   },
+   {
+      "pokemini_piezofilter",
+      "Piezo Filtresi",
+      "Pokemon Mini'nin piezoelektrik hoparlörünün özelliklerini taklit etmek için bir ses filtresi kullanın.",
+      {
+         { NULL, NULL },
+      },
+      NULL
+   },
+   {
+      "pokemini_rumblelvl",
+      "Rumble Level (Ekran + Kontrolör)",
+      "Hem sanal hem de fiziksel olarak hareketli geri bildirim etkisinin kuvvetini belirtin.",
+      {
+         { NULL, NULL },
+      },
+      NULL
+   },
+   {
+      "pokemini_controller_rumble",
+      "Controller Rumble",
+      "Kontrolör ile fiziksel kuvvet geri bildirim efektini etkinleştirin.",
+      {
+         { NULL, NULL },
+      },
+      NULL
+   },
+   {
+      "pokemini_screen_shake",
+      "Ekran Sarsıntısı",
+      "Ekranı 'sallayarak' sanal güç geribildirim efektini etkinleştirin.",
+      {
+         { NULL, NULL },
+      },
+      NULL
+   },
+   { NULL, NULL, NULL, {{0}}, NULL },
+};
+
+
 /*
  ********************************
  * Language Mapping
@@ -353,7 +465,7 @@ struct retro_core_option_definition *option_defs_intl[RETRO_LANGUAGE_LAST] = {
    NULL,           /* RETRO_LANGUAGE_VIETNAMESE */
    NULL,           /* RETRO_LANGUAGE_ARABIC */
    NULL,           /* RETRO_LANGUAGE_GREEK */
-   NULL,           /* RETRO_LANGUAGE_TURKISH */
+   option_defs_tr, /* RETRO_LANGUAGE_TURKISH */
 };
 
 /*
