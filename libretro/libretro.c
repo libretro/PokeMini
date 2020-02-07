@@ -897,8 +897,44 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
 
 ///////////////////////////////////////////////////////////
 
+static void SimulatePowerOff(void)
+{
+	// In order for some games to correctly update
+	// their EEPROM data, the virtual PokemonMini
+	// console must be 'powered off' before unloading
+	// content. This routine simulates a power off event
+	// by holding the power button until the CPU enters
+	// a 'halt' state. Note that we wait for a maximum of
+	// 72 emulated frames (1 virtual second of runtime)
+	// to avoid hanging the emulator in the event of an
+	// unforeseen error
+	const size_t frames_max = 72;
+	size_t frame_counter    = 0;
+
+	while ((MinxCPU.Status != MINX_STATUS_HALT) &&
+			 (frame_counter < frames_max))
+	{
+		// Hold power button
+		JoystickButtonsEvent(9, 1);
+
+		// Emulate frame
+		PokeMini_EmulateFrame();
+
+		frame_counter++;
+	}
+
+	// Log an error if halt state was not achieved
+	if (MinxCPU.Status != MINX_STATUS_HALT)
+		if (log_cb) log_cb(RETRO_LOG_ERROR, "Failed to power off virtual Pokemon Mini console.\n");
+}
+
+///////////////////////////////////////////////////////////
+
 void retro_unload_game(void)
-{	
+{
+	// Power off console
+	SimulatePowerOff();
+	
 	// Save EEPROM
 	if (PokeMini_EEPROMWritten && StringIsSet(CommandLine.eeprom_file))
 	{
