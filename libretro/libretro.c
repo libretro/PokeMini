@@ -349,7 +349,7 @@ static void SyncCoreOptionsWithCommandLine(void)
 static void InitialiseCommandLine(const struct retro_game_info *game)
 {
 	char slash;
-#ifdef _3DS
+#if defined(_3DS)
 	uint8_t device_model = 0xFF;
 #endif
 
@@ -363,7 +363,7 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 	CommandLine.updatertc = 2;	    // Update RTC (0=Off, 1=State, 2=Host)
 	CommandLine.joyenabled = 1;    // ON
 	
-#ifdef _3DS
+#if defined(_3DS)
 	// 3DS has limited performance...
 	// > Lower emualtion accuacy if required (o3DS/o2DS)
 	CFGU_GetSystemModel(&device_model); /* (0 = O3DS, 1 = O3DSXL, 2 = N3DS, 3 = 2DS, 4 = N3DSXL, 5 = N2DSXL) */
@@ -373,6 +373,13 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 		CommandLine.synccycles = 16;
 	}
 	// > Reduce sound quality
+	CommandLine.sound = MINX_AUDIO_GENERATED;
+#elif defined(DINGUX)
+	// Dingux platforms appear to have similar
+	// performance to n3DS when running this core
+	// > Use default 'accurate' emulation,
+	//   but reduce sound quality
+	CommandLine.synccycles = 8;
 	CommandLine.sound = MINX_AUDIO_GENERATED;
 #else
 	CommandLine.synccycles = 8; // Default 'accurate' setting
@@ -481,7 +488,7 @@ static void InitialiseVideo(void)
 	TPokeMini_VideoSpec *video_spec = NULL;
 
 	// Get video scale
-#ifdef _3DS
+#if defined(_3DS)
    video_scale = 1; // 3DS cannot handle normal default 4x scale...
                     // (o3DS maxes out at 2x scale + Normal2x CPU filter,
                     //  which actually looks great and is probably the
@@ -506,7 +513,7 @@ static void InitialiseVideo(void)
 		{
 			video_scale = 3;
 		}
-#ifndef _3DS
+#if !defined(_3DS)
 		else if (strcmp(variables.value, "5x") == 0)
 		{
 			video_scale = 5;
@@ -856,7 +863,7 @@ bool retro_load_game(const struct retro_game_info *game)
 	if (!passed)
 		abort();
 	
-#ifdef _3DS
+#if (defined(_3DS) || defined(DINGUX))
    PokeMini_VideoPalette_Init(PokeMini_BGR16, 0/* disable high colour*/);
 #else
    PokeMini_VideoPalette_Init(PokeMini_BGR16, 1/* enable high colour */);

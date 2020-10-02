@@ -422,7 +422,8 @@ else ifeq ($(platform), gcw0)
 	SHARED := -shared -Wl,--version-script=libretro/link.T
 	fpic := -fPIC
 	CFLAGS += $(PTHREAD_FLAGS)
-	CFLAGS += -ffast-math -march=mips32 -mtune=mips32r2 -mhard-float
+	CFLAGS += -ffast-math -fomit-frame-pointer -march=mips32 -mtune=mips32r2 -mhard-float
+	CFLAGS += -DDINGUX
 
 else ifeq ($(platform), msvc)
 	OBJOUT = -Fo
