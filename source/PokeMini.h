@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <retro_inline.h>
 #include <streams/memory_stream.h>
 
 // Common functions
@@ -97,7 +98,7 @@ extern int (*PokeMini_CustomSaveEEPROM)(const char *filename);
 // PRC Read/Write
 #ifdef PERFORMANCE
 
-static inline uint8_t MinxPRC_OnRead(int cpu, uint32_t addr)
+static INLINE uint8_t MinxPRC_OnRead(int cpu, uint32_t addr)
 {
 	if (addr >= 0x2100) {
 		// ROM Read
@@ -115,7 +116,7 @@ static inline uint8_t MinxPRC_OnRead(int cpu, uint32_t addr)
 	return 0xFF;
 }
 
-static inline void MinxPRC_OnWrite(int cpu, uint32_t addr, uint8_t data)
+static INLINE void MinxPRC_OnWrite(int cpu, uint32_t addr, uint8_t data)
 {
 	if ((addr >= 0x1000) && (addr < 0x2000)) {
 		// RAM Write

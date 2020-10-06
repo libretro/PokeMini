@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include <retro_inline.h>
 #include "PokeMini.h"
 #include "PokeMini_ColorPal.h"
 
@@ -79,7 +79,7 @@ void PokeMini_VideoPalette_Init(int pixellayout, int enablehighcolor)
 	VidEnableHighcolor = enablehighcolor;
 }
 
-static inline int ExpCurve(int value, int strength)
+static INLINE int ExpCurve(int value, int strength)
 {
 	int curve;
 	if (value < 0) value = 0;

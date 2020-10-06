@@ -6,12 +6,6 @@ ifneq (,$(findstring msvc200,$(platform)))
 INCFLAGS += -I$(LIBRETRO_COMM_DIR)/include/compat/msvc
 endif
 
-ifneq (,$(findstring msvc,$(platform)))
-COREDEFINES += -DINLINE=_inline
-else
-COREDEFINES += -DINLINE=inline
-endif
-
 SOURCES_C := $(CORE_DIR)/freebios/freebios.c \
 	$(CORE_DIR)/source/CommandLine.c \
 	$(CORE_DIR)/source/Hardware.c \

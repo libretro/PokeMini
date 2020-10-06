@@ -20,6 +20,7 @@
 #define ENDIANESS
 
 #include <stdint.h>
+#include <retro_inline.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,22 +29,22 @@ extern "C" {
 /* For some reason, '_BIG_ENDIAN' is always defined when
  * building for 3DS/Switch with devkitarm/a64... */
 #if defined (_BIG_ENDIAN) && !defined (_3DS) && !defined(HAVE_LIBNX)
-static __inline uint32_t Endian32(uint32_t val)
+static INLINE uint32_t Endian32(uint32_t val)
 {
-	return (val >> 24) | (val >> 8 & 0x0000FF00) | (val << 8 & 0x00FF0000) | (val << 24);
+   return (val >> 24) | (val >> 8 & 0x0000FF00) | (val << 8 & 0x00FF0000) | (val << 24);
 }
-static __inline uint16_t Endian16(uint16_t val)
+static INLINE uint16_t Endian16(uint16_t val)
 {
-	return (val >> 8) | (val << 8);
+   return (val >> 8) | (val << 8);
 }
 #else
-static __inline uint32_t Endian32(uint32_t val)
-{
-	return val;
+static INLINE uint32_t Endian32(uint32_t val)
+{ 
+   return val;
 }
-static __inline uint16_t Endian16(uint16_t val)
+static INLINE uint16_t Endian16(uint16_t val)
 {
-	return val;
+   return val;
 }
 #endif
 

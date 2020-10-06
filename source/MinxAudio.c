@@ -16,6 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <retro_inline.h>
 #include "PokeMini.h"
 
 TMinxAudio MinxAudio;
@@ -49,10 +50,10 @@ const uint32_t MinxAudio_CountFreq[32] = {
 // FIFO I/O
 //
 
-static inline int MinxAudio_iSamplesInBuffer(void)
+static INLINE int MinxAudio_iSamplesInBuffer(void)
 {
-	if (MinxAudio_WritePtr > MinxAudio_ReadPtr) return MinxAudio_WritePtr - MinxAudio_ReadPtr;
-	else return (MinxAudio_FIFOSize - MinxAudio_ReadPtr) + MinxAudio_WritePtr;
+   if (MinxAudio_WritePtr > MinxAudio_ReadPtr) return MinxAudio_WritePtr - MinxAudio_ReadPtr;
+   else return (MinxAudio_FIFOSize - MinxAudio_ReadPtr) + MinxAudio_WritePtr;
 }
 
 int MinxAudio_TotalSamples(void)
@@ -65,7 +66,7 @@ int MinxAudio_SamplesInBuffer(void)
 	return MinxAudio_iSamplesInBuffer();
 }
 
-static inline void MinxAudio_FIFOWrite(int16_t data)
+static INLINE void MinxAudio_FIFOWrite(int16_t data)
 {
 	if (MinxAudio_iSamplesInBuffer() < MinxAudio_FIFOSize) {
 		MinxAudio_FIFO[MinxAudio_WritePtr] = data;
@@ -73,7 +74,7 @@ static inline void MinxAudio_FIFOWrite(int16_t data)
 	}
 }
 
-static inline int16_t MinxAudio_FIFORead(void)
+static INLINE int16_t MinxAudio_FIFORead(void)
 {
 	int16_t data = 0;
 	if (MinxAudio_iSamplesInBuffer() > 0) {

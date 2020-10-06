@@ -20,6 +20,7 @@
 #define POKEMINI_VIDEO
 
 #include <stdint.h>
+#include <retro_inline.h>
 
 #define GetValL24(a) ((a) & 255)
 #define GetValM24(a) (((a) >> 8) & 255)
@@ -56,21 +57,17 @@ typedef struct {
 	TPokeMini_GetVideo32 Get32;
 } TPokeMini_VideoSpec;
 
-#ifndef inline
-#define inline __inline
-#endif
-
-static inline int Interpolate8(int a, int b, int pos)
+static INLINE int Interpolate8(int a, int b, int pos)
 {
-	return ((255-pos) * a + pos * b) >> 8;
+   return ((255-pos) * a + pos * b) >> 8;
 }
 
-static inline int Interpolate16(int a, int b, int pos)
+static INLINE int Interpolate16(int a, int b, int pos)
 {
-	return ((255-pos) * a + pos * b) >> 16;
+   return ((255-pos) * a + pos * b) >> 16;
 }
 
-static inline uint32_t InterpolateRGB24(uint32_t src, uint32_t des, int dir)
+static INLINE uint32_t InterpolateRGB24(uint32_t src, uint32_t des, int dir)
 {
 	int r = Interpolate8((int)GetValL24(src), (int)GetValL24(des), dir);
 	int g = Interpolate8((int)GetValM24(src), (int)GetValM24(des), dir);
@@ -78,7 +75,7 @@ static inline uint32_t InterpolateRGB24(uint32_t src, uint32_t des, int dir)
 	return RGB24(r, g, b);
 }
 
-static inline uint16_t InterpolateRGB16(uint16_t src, uint16_t des, int dir)
+static INLINE uint16_t InterpolateRGB16(uint16_t src, uint16_t des, int dir)
 {
 	int r = Interpolate8((int)GetValL16(src), (int)GetValL16(des), dir);
 	int g = Interpolate8((int)GetValM16(src), (int)GetValM16(des), dir);
@@ -86,7 +83,7 @@ static inline uint16_t InterpolateRGB16(uint16_t src, uint16_t des, int dir)
 	return RGB16(r, g, b);
 }
 
-static inline uint16_t InterpolateRGB15(uint16_t src, uint16_t des, int dir)
+static INLINE uint16_t InterpolateRGB15(uint16_t src, uint16_t des, int dir)
 {
 	int r = Interpolate8((int)GetValL15(src), (int)GetValL15(des), dir);
 	int g = Interpolate8((int)GetValM15(src), (int)GetValM15(des), dir);

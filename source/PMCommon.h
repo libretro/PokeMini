@@ -25,9 +25,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#ifndef inline
-#define inline __inline
-#endif
+#include <retro_inline.h>
 
 // Temporary variable length
 // Minimum is 128
@@ -49,9 +47,9 @@
 #define PATH_SLASH_WIN   2
 
 // Return a number between min and max
-static inline int BetweenNum(int num, int min, int max)
+static INLINE int BetweenNum(int num, int min, int max)
 {
-	return (num < min) ? min : (num > max) ? max : num;
+   return (num < min) ? min : (num > max) ? max : num;
 }
 
 // Return true if the string is valid and non-empty

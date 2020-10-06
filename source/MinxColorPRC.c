@@ -16,6 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <retro_inline.h>
 #include "PokeMini.h"
 
 TMinxColorPRC MinxColorPRC;
@@ -314,7 +315,7 @@ void MinxColorPRC_WriteLCD(uint16_t addr, uint8_t data)
 
 const uint8_t PRCStaticColorMap[8] = {0x00, 0xF0, 0x00, 0xF0, 0x00, 0xF0, 0x00, 0xF0};
 
-static inline void MinxPRC_DrawSprite8x8_Color8(uint8_t cfg, int X, int Y, int DrawT, int MaskT)
+static INLINE void MinxPRC_DrawSprite8x8_Color8(uint8_t cfg, int X, int Y, int DrawT, int MaskT)
 {
 	uint8_t *ColorMap;
 	int yC, xC, xP, level, out;
@@ -433,7 +434,7 @@ void MinxPRC_Render_Color8(void)
 	}
 }
 
-static inline void MinxPRC_DrawSprite8x8_Color4(uint8_t cfg, int X, int Y, int DrawT, int MaskT)
+static INLINE void MinxPRC_DrawSprite8x8_Color4(uint8_t cfg, int X, int Y, int DrawT, int MaskT)
 {
 	uint8_t *ColorMap;
 	int yC, xC, xP, level, quad, out;

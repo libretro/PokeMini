@@ -19,8 +19,8 @@
 #ifndef MINXCPU_CORE
 #define MINXCPU_CORE
 
-#include <stdio.h>
 #include <stdint.h>
+#include <retro_inline.h>
 
 /* For some reason, '_BIG_ENDIAN' is always defined when
  * building for 3DS/Switch with devkitarm/a64... */
@@ -108,12 +108,8 @@ enum {
 	MINX_DEBUGHALT_RESUME,
 };
 
-#ifndef inline
-#define inline __inline
-#endif
-
 // Signed 8-Bits to 16-Bits converter
-static inline uint16_t S8_TO_16(int8_t a)
+static INLINE uint16_t S8_TO_16(int8_t a)
 {
 	return (a & 0x80) ? (0xFF00 | a) : a;
 }
@@ -159,18 +155,18 @@ int MinxCPU_Exec(void);			// Execute 1 CPU instruction
 int MinxCPU_CallIRQ(uint8_t IRQ);	// Call an IRQ
 
 // Helpers
-static inline uint16_t ReadMem16(uint32_t addr)
+static INLINE uint16_t ReadMem16(uint32_t addr)
 {
 	return MinxCPU_OnRead(1, addr) + (MinxCPU_OnRead(1, addr+1) << 8);
 }
 
-static inline void WriteMem16(uint32_t addr, uint16_t data)
+static INLINE void WriteMem16(uint32_t addr, uint16_t data)
 {
 	MinxCPU_OnWrite(1, addr, (uint8_t)data);
 	MinxCPU_OnWrite(1, addr+1, data >> 8);
 }
 
-static inline uint8_t Fetch8(void)
+static INLINE uint8_t Fetch8(void)
 {
 	if (MinxCPU.PC.W.L & 0x8000) {
 		// Banked area
@@ -182,13 +178,13 @@ static inline uint8_t Fetch8(void)
 	return MinxCPU.IR;
 }
 
-static inline uint16_t Fetch16(void)
+static INLINE uint16_t Fetch16(void)
 {
 	uint8_t LB = Fetch8();
 	return (Fetch8() << 8) | LB;
 }
 
-static inline void Set_U(uint8_t val)
+static INLINE void Set_U(uint8_t val)
 {
 	if (val != MinxCPU.U2) MinxCPU.Shift_U = 2;
 	MinxCPU.U1 = val;
@@ -205,7 +201,7 @@ int MinxCPU_ExecSPCF(void);
 
 // Instructions Macros
 
-static inline uint8_t ADD8(uint8_t A, uint8_t B)
+static INLINE uint8_t ADD8(uint8_t A, uint8_t B)
 {
 	register uint8_t RES;
 	MinxCPU.F &= MINX_FLAG_SAVE_NUL;
@@ -250,7 +246,7 @@ static inline uint8_t ADD8(uint8_t A, uint8_t B)
 	}
 }
 
-static inline uint16_t ADD16(uint16_t A, uint16_t B)
+static INLINE uint16_t ADD16(uint16_t A, uint16_t B)
 {
 	register uint16_t RES;
 	RES = A + B;
@@ -263,7 +259,7 @@ static inline uint16_t ADD16(uint16_t A, uint16_t B)
 	return (uint16_t)RES;
 }
 
-static inline uint8_t ADC8(uint8_t A, uint8_t B)
+static INLINE uint8_t ADC8(uint8_t A, uint8_t B)
 {
 	register uint8_t RES;
 	register uint8_t CARRY = (MinxCPU.F & MINX_FLAG_CARRY) ? 1 : 0;
@@ -309,7 +305,7 @@ static inline uint8_t ADC8(uint8_t A, uint8_t B)
 	}
 }
 
-static inline uint16_t ADC16(uint16_t A, uint16_t B)
+static INLINE uint16_t ADC16(uint16_t A, uint16_t B)
 {
 	register uint16_t RES;
 	RES = A + B + ((MinxCPU.F & MINX_FLAG_CARRY) ? 1 : 0);
@@ -322,7 +318,7 @@ static inline uint16_t ADC16(uint16_t A, uint16_t B)
 	return (uint16_t)RES;
 }
 
-static inline uint8_t SUB8(uint8_t A, uint8_t B)
+static INLINE uint8_t SUB8(uint8_t A, uint8_t B)
 {
 	register uint8_t RES;
 	MinxCPU.F &= MINX_FLAG_SAVE_NUL;
@@ -367,7 +363,7 @@ static inline uint8_t SUB8(uint8_t A, uint8_t B)
 	}
 }
 
-static inline uint16_t SUB16(uint16_t A, uint16_t B)
+static INLINE uint16_t SUB16(uint16_t A, uint16_t B)
 {
 	register uint16_t RES;
 	RES = A - B;
@@ -380,7 +376,7 @@ static inline uint16_t SUB16(uint16_t A, uint16_t B)
 	return (uint16_t)RES;
 }
 
-static inline uint8_t SBC8(uint8_t A, uint8_t B)
+static INLINE uint8_t SBC8(uint8_t A, uint8_t B)
 {
 	register uint8_t RES;
 	register uint8_t CARRY = (MinxCPU.F & MINX_FLAG_CARRY) ? 1 : 0;
@@ -426,7 +422,7 @@ static inline uint8_t SBC8(uint8_t A, uint8_t B)
 	}
 }
 
-static inline uint16_t SBC16(uint16_t A, uint16_t B)
+static INLINE uint16_t SBC16(uint16_t A, uint16_t B)
 {
 	register uint16_t RES;
 	RES = A - B - ((MinxCPU.F & MINX_FLAG_CARRY) ? 1 : 0);
@@ -439,7 +435,7 @@ static inline uint16_t SBC16(uint16_t A, uint16_t B)
 	return (uint16_t)RES;
 }
 
-static inline uint8_t AND8(uint8_t A, uint8_t B)
+static INLINE uint8_t AND8(uint8_t A, uint8_t B)
 {
 	A &= B;
 	MinxCPU.F &= MINX_FLAG_SAVE_CO;
@@ -449,7 +445,7 @@ static inline uint8_t AND8(uint8_t A, uint8_t B)
 	return A;
 }
 
-static inline uint8_t OR8(uint8_t A, uint8_t B)
+static INLINE uint8_t OR8(uint8_t A, uint8_t B)
 {
 	A |= B;
 	MinxCPU.F &= MINX_FLAG_SAVE_CO;
@@ -459,7 +455,7 @@ static inline uint8_t OR8(uint8_t A, uint8_t B)
 	return A;
 }
 
-static inline uint8_t XOR8(uint8_t A, uint8_t B)
+static INLINE uint8_t XOR8(uint8_t A, uint8_t B)
 {
 	A ^= B;
 	MinxCPU.F &= MINX_FLAG_SAVE_CO;
@@ -469,7 +465,7 @@ static inline uint8_t XOR8(uint8_t A, uint8_t B)
 	return A;
 }
 
-static inline uint8_t INC8(uint8_t A)
+static INLINE uint8_t INC8(uint8_t A)
 {
 	A++;
 	MinxCPU.F &= MINX_FLAG_SAVE_COS;
@@ -477,7 +473,7 @@ static inline uint8_t INC8(uint8_t A)
 	return A;
 }
 
-static inline uint16_t INC16(uint16_t A)
+static INLINE uint16_t INC16(uint16_t A)
 {
 	A++;
 	MinxCPU.F &= MINX_FLAG_SAVE_COS;
@@ -485,7 +481,7 @@ static inline uint16_t INC16(uint16_t A)
 	return A;
 }
 
-static inline uint8_t DEC8(uint8_t A)
+static INLINE uint8_t DEC8(uint8_t A)
 {
 	A--;
 	MinxCPU.F &= MINX_FLAG_SAVE_COS;
@@ -493,7 +489,7 @@ static inline uint8_t DEC8(uint8_t A)
 	return A;
 }
 
-static inline uint16_t DEC16(uint16_t A)
+static INLINE uint16_t DEC16(uint16_t A)
 {
 	A--;
 	MinxCPU.F &= MINX_FLAG_SAVE_COS;
@@ -501,13 +497,13 @@ static inline uint16_t DEC16(uint16_t A)
 	return A;
 }
 
-static inline void PUSH(uint8_t A)
+static INLINE void PUSH(uint8_t A)
 {
 	MinxCPU.SP.W.L--;
 	MinxCPU_OnWrite(1, MinxCPU.SP.D, A);
 }
 
-static inline uint8_t POP(void)
+static INLINE uint8_t POP(void)
 {
 	register uint8_t data;
 	data = MinxCPU_OnRead(1, MinxCPU.SP.D);
@@ -515,7 +511,7 @@ static inline uint8_t POP(void)
 	return data;
 }
 
-static inline void CALLS(uint16_t OFFSET)
+static INLINE void CALLS(uint16_t OFFSET)
 {
 	PUSH(MinxCPU.PC.B.I);
 	PUSH(MinxCPU.PC.B.H);
@@ -525,14 +521,14 @@ static inline void CALLS(uint16_t OFFSET)
 	MinxCPU.PC.W.L = MinxCPU.PC.W.L + OFFSET - 1;
 }
 
-static inline void JMPS(uint16_t OFFSET)
+static INLINE void JMPS(uint16_t OFFSET)
 {
 	MinxCPU.PC.B.I = MinxCPU.U1;
 	MinxCPU.U2 = MinxCPU.U1;
 	MinxCPU.PC.W.L = MinxCPU.PC.W.L + OFFSET - 1;
 }
 
-static inline void CALLU(uint16_t ADDR)
+static INLINE void CALLU(uint16_t ADDR)
 {
 	PUSH(MinxCPU.PC.B.I);
 	PUSH(MinxCPU.PC.B.H);
@@ -542,14 +538,14 @@ static inline void CALLU(uint16_t ADDR)
 	MinxCPU.PC.W.L = ADDR;
 }
 
-static inline void JMPU(uint16_t ADDR)
+static INLINE void JMPU(uint16_t ADDR)
 {
 	MinxCPU.PC.B.I = MinxCPU.U1;
 	MinxCPU.U2 = MinxCPU.U1;
 	MinxCPU.PC.W.L = ADDR;
 }
 
-static inline void JDBNZ(uint16_t OFFSET)
+static INLINE void JDBNZ(uint16_t OFFSET)
 {
 	MinxCPU.BA.B.H = DEC8(MinxCPU.BA.B.H);
 	if (MinxCPU.BA.B.H != 0) {
@@ -557,12 +553,12 @@ static inline void JDBNZ(uint16_t OFFSET)
 	}
 }
 
-static inline uint8_t SWAP(uint8_t A)
+static INLINE uint8_t SWAP(uint8_t A)
 {
 	return (A << 4) | (A >> 4);
 }
 
-static inline void RET(void)
+static INLINE void RET(void)
 {
 	MinxCPU.PC.B.L = POP();
 	MinxCPU.PC.B.H = POP();
@@ -570,7 +566,7 @@ static inline void RET(void)
 	Set_U(MinxCPU.PC.B.I);
 }
 
-static inline void RETI(void)
+static INLINE void RETI(void)
 {
 	MinxCPU.F = POP();
 	MinxCPU.PC.B.L = POP();
@@ -580,7 +576,7 @@ static inline void RETI(void)
 	MinxCPU_OnIRQHandle(MinxCPU.F, MinxCPU.Shift_U);
 }
 
-static inline void CALLX(uint16_t ADDR)
+static INLINE void CALLX(uint16_t ADDR)
 {
 	PUSH(MinxCPU.PC.B.I);
 	PUSH(MinxCPU.PC.B.H);
@@ -590,7 +586,7 @@ static inline void CALLX(uint16_t ADDR)
 	MinxCPU.PC.W.L = ReadMem16((MinxCPU.HL.B.I << 16) + ADDR);
 }
 
-static inline void CALLI(uint16_t ADDR)
+static INLINE void CALLI(uint16_t ADDR)
 {
 	PUSH(MinxCPU.PC.B.I);
 	PUSH(MinxCPU.PC.B.H);
@@ -603,7 +599,7 @@ static inline void CALLI(uint16_t ADDR)
 	MinxCPU_OnIRQHandle(MinxCPU.F, MinxCPU.Shift_U);
 }
 
-static inline void JMPI(uint16_t ADDR)
+static INLINE void JMPI(uint16_t ADDR)
 {
 	PUSH(MinxCPU.F);
 	MinxCPU.F |= 0xC0;
@@ -613,7 +609,7 @@ static inline void JMPI(uint16_t ADDR)
 	MinxCPU_OnIRQHandle(MinxCPU.F, MinxCPU.Shift_U);
 }
 
-static inline uint8_t SAL(uint8_t A)
+static INLINE uint8_t SAL(uint8_t A)
 {
 	MinxCPU.F &= MINX_FLAG_SAVE_NUL;
 	if (A & 0x80) MinxCPU.F |= MINX_FLAG_CARRY;
@@ -625,7 +621,7 @@ static inline uint8_t SAL(uint8_t A)
 	return A;
 }
 
-static inline uint8_t SHL(uint8_t A)
+static INLINE uint8_t SHL(uint8_t A)
 {
 	MinxCPU.F &= MINX_FLAG_SAVE_O;
 	if (A & 0x80) MinxCPU.F |= MINX_FLAG_CARRY;
@@ -636,7 +632,7 @@ static inline uint8_t SHL(uint8_t A)
 	return A;
 }
 
-static inline uint8_t SAR(uint8_t A)
+static INLINE uint8_t SAR(uint8_t A)
 {
 	MinxCPU.F &= MINX_FLAG_SAVE_NUL;
 	if (A & 0x01) MinxCPU.F |= MINX_FLAG_CARRY;
@@ -647,7 +643,7 @@ static inline uint8_t SAR(uint8_t A)
 	return A;
 }
 
-static inline uint8_t SHR(uint8_t A)
+static INLINE uint8_t SHR(uint8_t A)
 {
 	MinxCPU.F &= MINX_FLAG_SAVE_O;
 	if (A & 0x01) MinxCPU.F |= MINX_FLAG_CARRY;
@@ -658,7 +654,7 @@ static inline uint8_t SHR(uint8_t A)
 	return A;
 }
 
-static inline uint8_t ROLC(uint8_t A)
+static INLINE uint8_t ROLC(uint8_t A)
 {
 	register uint8_t CARRY = (MinxCPU.F & MINX_FLAG_CARRY) ? 1 : 0;
 	MinxCPU.F &= MINX_FLAG_SAVE_O;
@@ -670,7 +666,7 @@ static inline uint8_t ROLC(uint8_t A)
 	return A;
 }
 
-static inline uint8_t ROL(uint8_t A)
+static INLINE uint8_t ROL(uint8_t A)
 {
 	MinxCPU.F &= MINX_FLAG_SAVE_O;
 	if (A & 0x80) MinxCPU.F |= MINX_FLAG_CARRY;
@@ -681,7 +677,7 @@ static inline uint8_t ROL(uint8_t A)
 	return A;
 }
 
-static inline uint8_t RORC(uint8_t A)
+static INLINE uint8_t RORC(uint8_t A)
 {
 	register uint8_t CARRY = (MinxCPU.F & MINX_FLAG_CARRY) ? 0x80 : 0x00;
 	MinxCPU.F &= MINX_FLAG_SAVE_O;
@@ -693,7 +689,7 @@ static inline uint8_t RORC(uint8_t A)
 	return A;
 }
 
-static inline uint8_t ROR(uint8_t A)
+static INLINE uint8_t ROR(uint8_t A)
 {
 	MinxCPU.F &= MINX_FLAG_SAVE_O;
 	if (A & 0x01) MinxCPU.F |= MINX_FLAG_CARRY;
@@ -704,7 +700,7 @@ static inline uint8_t ROR(uint8_t A)
 	return A;
 }
 
-static inline uint8_t NOT(uint8_t A)
+static INLINE uint8_t NOT(uint8_t A)
 {
 	MinxCPU.F &= MINX_FLAG_SAVE_CO;
 	A = A ^ 0xFF;
@@ -714,7 +710,7 @@ static inline uint8_t NOT(uint8_t A)
 	return A;	
 }
 
-static inline uint8_t NEG(uint8_t A)
+static INLINE uint8_t NEG(uint8_t A)
 {
 	MinxCPU.F &= MINX_FLAG_SAVE_NUL;
 	A = -A;
@@ -725,19 +721,19 @@ static inline uint8_t NEG(uint8_t A)
 	return A;
 }
 
-static inline void HALT(void)
+static INLINE void HALT(void)
 {
 	MinxCPU.Status = MINX_STATUS_HALT;
 	MinxCPU_OnSleep(MINX_SLEEP_HALT);
 }
 
-static inline void STOP(void)
+static INLINE void STOP(void)
 {
 	MinxCPU.Status = MINX_STATUS_STOP;
 	MinxCPU_OnSleep(MINX_SLEEP_STOP);
 }
 
-static inline void MUL(void)
+static INLINE void MUL(void)
 {
 	MinxCPU.F &= MINX_FLAG_SAVE_NUL;
 	MinxCPU.HL.W.L = (uint16_t)MinxCPU.HL.B.L * (uint16_t)MinxCPU.BA.B.L;
@@ -746,7 +742,7 @@ static inline void MUL(void)
 		((MinxCPU.HL.W.L & 0x8000) ? MINX_FLAG_SIGN : 0);
 }
 
-static inline void DIV(void)
+static INLINE void DIV(void)
 {
 	uint16_t RES;
 	MinxCPU.F &= MINX_FLAG_SAVE_NUL;

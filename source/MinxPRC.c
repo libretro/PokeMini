@@ -16,6 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <retro_inline.h>
 #include "PokeMini.h"
 
 TMinxPRC MinxPRC;
@@ -297,7 +298,7 @@ void MinxPRC_WriteReg(uint8_t reg, uint8_t val)
 // Default PRC Rendering
 //
 
-static inline void MinxPRC_DrawSprite8x8_Mono(uint8_t cfg, int X, int Y, int DrawT, int MaskT)
+static INLINE void MinxPRC_DrawSprite8x8_Mono(uint8_t cfg, int X, int Y, int DrawT, int MaskT)
 {
 	int xC, xP, vaddr;
 	uint8_t vdata, sdata, smask;
