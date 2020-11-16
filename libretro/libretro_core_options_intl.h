@@ -126,29 +126,20 @@ struct retro_core_option_definition option_defs_fr[] = {
       NULL
    },
    {
-      "pokemini_rumblelvl",
-      "Niveau de Rumble (écran + contrôleur)",
-      "Spécifiez l'ampleur de l'effet de retour de force, à la fois virtuel et physique.",
+      "pokemini_screen_shake_lv",
+      "Niveau de tremblement de l'écran.",
+      "Activez l'effet de retour de force virtuel en 'secouant' l'écran.",
       {
          { NULL, NULL }, /* Numbers do not require translation */
       },
       NULL
    },
    {
-      "pokemini_controller_rumble",
-      "Contrôleur Rumble",
+      "pokemini_rumble_lv",
+      "Niveau de rumble du contrôleur.",
       "Activer l'effet de retour de force physique via le roulement du contrôleur.",
       {
-         { NULL, NULL }, /* enabled/disabled strings do not require translation */
-      },
-      NULL
-   },
-   {
-      "pokemini_screen_shake",
-      "Secousse de l'écran",
-      "Activez l'effet de retour de force virtuel en 'secouant' l'écran.",
-      {
-         { NULL, NULL }, /* enabled/disabled strings do not require translation */
+         { NULL, NULL }, /* Numbers do not require translation */
       },
       NULL
    },
@@ -269,27 +260,18 @@ struct retro_core_option_definition option_defs_tr[] = {
       NULL
    },
    {
-      "pokemini_rumblelvl",
-      "Rumble Level (Ekran + Kontrolör)",
-      "Hem sanal hem de fiziksel olarak hareketli geri bildirim etkisinin kuvvetini belirtin.",
-      {
-         { NULL, NULL },
-      },
-      NULL
-   },
-   {
-      "pokemini_controller_rumble",
-      "Controller Rumble",
-      "Kontrolör ile fiziksel kuvvet geri bildirim efektini etkinleştirin.",
-      {
-         { NULL, NULL },
-      },
-      NULL
-   },
-   {
-      "pokemini_screen_shake",
-      "Ekran Sarsıntısı",
+      "pokemini_screen_shake_lv",
+      "Ekran Sarsıntı Seviyesi",
       "Ekranı 'sallayarak' sanal güç geribildirim efektini etkinleştirin.",
+      {
+         { NULL, NULL },
+      },
+      NULL
+   },
+   {
+      "pokemini_rumble_lv",
+      "Denetleyici Rumble Seviyesi",
+      "Kontrolör ile fiziksel kuvvet geri bildirim efektini etkinleştirin.",
       {
          { NULL, NULL },
       },

@@ -45,8 +45,6 @@ void* linearMemAlign(size_t size, size_t alignment);
 void linearFree(void* mem);
 #endif
 
-#define MAKEBTNMAP(btn,pkebtn) JoystickButtonsEvent((pkebtn), input_cb(0/*port*/, RETRO_DEVICE_JOYPAD, 0, (btn)) != 0)
-
 // Sound buffer size
 #define SOUNDBUFFER	2048
 #define PMSOUNDBUFF	(SOUNDBUFFER*2)
@@ -79,7 +77,7 @@ static char *g_save_dir;
 int UIItems_PlatformC(int index, int reason);
 TUIMenu_Item UIItems_Platform[] = {
    PLATFORMDEF_GOBACK,
-   { 0,  9, "Define Joystick...", UIItems_PlatformC },
+   { 0,  9, "Define Joystick...", UIItems_PlatformC, NULL },
    PLATFORMDEF_SAVEOPTIONS,
    PLATFORMDEF_END(UIItems_PlatformC)
 };
@@ -105,12 +103,22 @@ static retro_audio_sample_t audio_cb = NULL;
 static retro_audio_sample_batch_t audio_batch_cb = NULL;
 static retro_environment_t environ_cb = NULL;
 
-// Force feedback stuff
-static struct retro_rumble_interface rumble;
-static bool rumble_supported = false;
-static uint16_t rumble_strength = 0;
+static bool libretro_supports_bitmasks = false;
 
-static bool screen_shake_enabled = true;
+// Force feedback parameters
+static struct retro_rumble_interface rumble = {0};
+static uint16_t rumble_strength      = 0;
+static uint16_t rumble_strength_prev = 0;
+
+// Low pass audio filter parameters
+static bool low_pass_enabled  = false;
+static int32_t low_pass_range = 0;
+static int32_t low_pass_prev  = 0; /* Previous sample */
+
+// Turbo button parameters
+#define DEVICE_ID_TURBO_A RETRO_DEVICE_ID_JOYPAD_X
+#define TURBO_RATE 18 /* 72/4 -> 4 presses per second */
+static uint16_t turbo_counter = 0;
 
 // Utilities
 ///////////////////////////////////////////////////////////
@@ -124,6 +132,7 @@ static void InitialiseInputDescriptors(void)
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT,  "D-Pad Right" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B,      "B" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A,      "A" },
+		{ 0, RETRO_DEVICE_JOYPAD, 0, DEVICE_ID_TURBO_A,             "Turbo A" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L,      "Shake" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R,      "C" },
 		{ 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT, "Power" },
@@ -139,16 +148,37 @@ static void InitialiseRumbleInterface(void)
 {
 	if (environ_cb(RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE, &rumble))
 	{
-		rumble_supported = true;
 		if (log_cb)
 			log_cb(RETRO_LOG_INFO, "Rumble environment supported\n");
 	}
-	else
-	{
-		rumble_supported = false;
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Rumble environment not supported\n");
-	}
+	else if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Rumble environment not supported\n");
+}
+
+///////////////////////////////////////////////////////////
+
+static void ActivateControllerRumble(void)
+{
+	if (!rumble.set_rumble_state ||
+		 (rumble_strength_prev == rumble_strength))
+		return;
+
+	rumble.set_rumble_state(0, RETRO_RUMBLE_WEAK,   rumble_strength);
+	rumble.set_rumble_state(0, RETRO_RUMBLE_STRONG, rumble_strength);
+	rumble_strength_prev = rumble_strength;
+}
+
+///////////////////////////////////////////////////////////
+
+static void DeactivateControllerRumble(void)
+{
+	if (!rumble.set_rumble_state ||
+		 (rumble_strength_prev == 0))
+		return;
+
+	rumble.set_rumble_state(0, RETRO_RUMBLE_WEAK,   0);
+	rumble.set_rumble_state(0, RETRO_RUMBLE_STRONG, 0);
+	rumble_strength_prev = 0;
 }
 
 ///////////////////////////////////////////////////////////
@@ -177,7 +207,6 @@ static void extract_basename(char *buf, const char *path, size_t size)
 
 static void SyncCoreOptionsWithCommandLine(void)
 {
-   bool rumble_enabled = true;
 	struct retro_variable variables = {0};
 	
 	// pokemini_lcdfilter
@@ -298,9 +327,9 @@ static void SyncCoreOptionsWithCommandLine(void)
 		}
 	}
 	
-	// pokemini_rumblelvl
+	// pokemini_screen_shake_lv
 	CommandLine.rumblelvl = 3; // (0 - 3; 3 == Default)
-	variables.key = "pokemini_rumblelvl";
+	variables.key = "pokemini_screen_shake_lv";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
 		CommandLine.rumblelvl = atoi(variables.value);
@@ -309,35 +338,46 @@ static void SyncCoreOptionsWithCommandLine(void)
 	// NB: The following parameters are not part of the 'CommandLine'
 	// interface, but there is no better place to handle them...
 	
-	// pokemini_controller_rumble
-	variables.key = "pokemini_controller_rumble";
+	// pokemini_lowpass_filter
+	low_pass_enabled = false;
+	variables.key = "pokemini_lowpass_filter";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
-		if (strcmp(variables.value, "disabled") == 0)
+		if (strcmp(variables.value, "enabled") == 0)
 		{
-			rumble_enabled = false;
+			low_pass_enabled = true;
 		}
 	}
 	
-	// > Determine rumble strength
-	if (rumble_enabled)
-	{
-		rumble_strength = 21845 * CommandLine.rumblelvl;
-	}
-	else
-	{
-		rumble_strength = 0;
-	}
-	
-	// pokemini_screen_shake
-	screen_shake_enabled = true;
-	variables.key = "pokemini_screen_shake";
+	// pokemini_lowpass_range
+	low_pass_range = (60 * 65536) / 100;
+	variables.key = "pokemini_lowpass_range";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
-		if (strcmp(variables.value, "disabled") == 0)
+		low_pass_range = (strtol(variables.value, NULL, 10) * 65536) / 100;
+	}
+	
+	// pokemini_rumble_lv
+	rumble_strength = 0;
+	variables.key = "pokemini_rumble_lv";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		rumble_strength = atoi(variables.value);
+		rumble_strength = (rumble_strength > 9) ? 9 : rumble_strength;
+
+		if (rumble_strength > 0)
 		{
-			screen_shake_enabled = false;
+			/* Requires a minimum strength of 0x3FFE,
+			 * or rumble effects will not be felt
+			 * (core has a tendency to enable rumble
+			 * for very brief periods of time) */
+			rumble_strength = 0x3FFF + ((rumble_strength - 1) * 0x1800);
 		}
+	}
+	
+	if (rumble_strength == 0)
+	{
+		DeactivateControllerRumble();
 	}
 }
 
@@ -445,39 +485,87 @@ static int PokeMini_LoadMINFileXPLATFORM(size_t size, uint8_t* buffer)
 
 ///////////////////////////////////////////////////////////
 
+typedef enum
+{
+	PM_BUTTON_POWER = 9,
+	PM_BUTTON_UP    = 10,
+	PM_BUTTON_DOWN  = 11,
+	PM_BUTTON_LEFT  = 4,
+	PM_BUTTON_RIGHT = 5,
+	PM_BUTTON_A     = 1,
+	PM_BUTTON_B     = 2,
+	PM_BUTTON_SHAKE = 6,
+	PM_BUTTON_C     = 7
+} pm_button_type;
+
+typedef struct
+{
+   unsigned retropad;
+   pm_button_type pokemini;
+} pm_button_map;
+
+static const pm_button_map btn_map[] = {
+	{ RETRO_DEVICE_ID_JOYPAD_SELECT, PM_BUTTON_POWER },
+	{ RETRO_DEVICE_ID_JOYPAD_UP,     PM_BUTTON_UP    },
+	{ RETRO_DEVICE_ID_JOYPAD_DOWN,   PM_BUTTON_DOWN  },
+	{ RETRO_DEVICE_ID_JOYPAD_LEFT,   PM_BUTTON_LEFT  },
+	{ RETRO_DEVICE_ID_JOYPAD_RIGHT,  PM_BUTTON_RIGHT },
+	{ RETRO_DEVICE_ID_JOYPAD_A,      PM_BUTTON_A     },
+	{ RETRO_DEVICE_ID_JOYPAD_B,      PM_BUTTON_B     },
+	{ RETRO_DEVICE_ID_JOYPAD_L,      PM_BUTTON_SHAKE },
+	{ RETRO_DEVICE_ID_JOYPAD_R,      PM_BUTTON_C     }
+};
+
 static void handlekeyevents(void)
 {
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_SELECT,  9);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_UP,     10);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_DOWN,   11);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_LEFT,    4);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_RIGHT,   5);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_A,       1);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_B,       2);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_L,       6);
-	MAKEBTNMAP(RETRO_DEVICE_ID_JOYPAD_R,       7);
-}
+	unsigned i;
+	bool a_pressed       = false;
+	bool turbo_a_pressed = false;
+	bool a_down          = false;
 
-///////////////////////////////////////////////////////////
-
-static void ActivateControllerRumble(void)
-{
-	if (rumble_supported)
+	if (libretro_supports_bitmasks)
 	{
-		rumble.set_rumble_state(0, RETRO_RUMBLE_WEAK, rumble_strength);
-		rumble.set_rumble_state(0, RETRO_RUMBLE_STRONG, rumble_strength);
+		int16_t ret = input_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_MASK);
+
+		for (i = 0; i < sizeof(btn_map) / sizeof(pm_button_map); i++)
+		{
+			if (btn_map[i].pokemini == PM_BUTTON_A)
+				a_pressed = (ret & (1 << btn_map[i].retropad)) != 0;
+			else
+				JoystickButtonsEvent(
+						btn_map[i].pokemini,
+						(ret & (1 << btn_map[i].retropad)) != 0);
+
+			turbo_a_pressed = (ret & (1 << DEVICE_ID_TURBO_A)) != 0;
+		}
 	}
-}
-
-///////////////////////////////////////////////////////////
-
-static void DeactivateControllerRumble(void)
-{
-	if (rumble_supported)
+	else
 	{
-		rumble.set_rumble_state(0, RETRO_RUMBLE_WEAK, 0);
-		rumble.set_rumble_state(0, RETRO_RUMBLE_STRONG, 0);
+		for (i = 0; i < sizeof(btn_map) / sizeof(pm_button_map); i++)
+		{
+			if (btn_map[i].pokemini == PM_BUTTON_A)
+				a_pressed = input_cb(0, RETRO_DEVICE_JOYPAD, 0, btn_map[i].retropad) != 0;
+			else
+				JoystickButtonsEvent(
+						btn_map[i].pokemini,
+						input_cb(0, RETRO_DEVICE_JOYPAD, 0, btn_map[i].retropad) != 0);
+
+			turbo_a_pressed = input_cb(0, RETRO_DEVICE_JOYPAD, 0, DEVICE_ID_TURBO_A) != 0;
+		}
 	}
+
+	/* Handle A/Turbo A input */
+	if (turbo_a_pressed)
+	{
+		a_down = (turbo_counter < (TURBO_RATE >> 1));
+		turbo_counter++;
+		if (turbo_counter >= TURBO_RATE)
+			turbo_counter = 0;
+	}
+	else
+		a_down = a_pressed;
+
+	JoystickButtonsEvent(PM_BUTTON_A, a_down);
 }
 
 ///////////////////////////////////////////////////////////
@@ -613,7 +701,7 @@ static void ReverseArray(uint16_t array[], int size)
 // Apply screen shake effect
 static void SetPixelOffset(void)
 {
-	if (screen_shake_enabled)
+	if (CommandLine.rumblelvl)
 	{
 		int row_offset = PokeMini_GenRumbleOffset(pix_pitch) * video_scale;
 		int buffer_size = video_width * video_height;
@@ -634,6 +722,42 @@ static void SetPixelOffset(void)
 
 		ReverseArray(video_buffer, buffer_size - 1);
 	}
+}
+
+///////////////////////////////////////////////////////////
+
+// Apply low pass audio filter
+static void ApplyLowPassFilter(int16_t *buf, int length)
+{
+   int samples      = length;
+   int16_t *out     = buf;
+
+   /* Restore previous sample */
+   int32_t low_pass = low_pass_prev;
+
+   /* Single-pole low-pass filter (6 dB/octave) */
+   int32_t factor_a = low_pass_range;
+   int32_t factor_b = 0x10000 - factor_a;
+
+   do
+   {
+      /* Apply low-pass filter */
+      low_pass = (low_pass * factor_a) + (*out * factor_b);
+
+      /* 16.16 fixed point */
+      low_pass >>= 16;
+
+      /* Update sound buffer
+       * > Note: Sound is mono, converted to
+       *   stereo by duplicating the left/right
+       *   channels */
+      *out++   = (int16_t)low_pass;
+      *out++   = (int16_t)low_pass;
+   }
+   while (--samples);
+
+   /* Save last sample for next frame */
+   low_pass_prev  = low_pass;
 }
 
 // Core functions
@@ -736,16 +860,32 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 void retro_init (void)
 {
 	enum retro_pixel_format rgb565 = RETRO_PIXEL_FORMAT_RGB565;
-	
+
 	if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &rgb565) && log_cb)
 		log_cb(RETRO_LOG_INFO, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
+
+	libretro_supports_bitmasks = false;
+	if (environ_cb(RETRO_ENVIRONMENT_GET_INPUT_BITMASKS, NULL))
+		libretro_supports_bitmasks = true;
 }
 
 ///////////////////////////////////////////////////////////
 
 void retro_deinit(void)
 {
-	// Previous content has been moved to retro_unload_game()
+	DeactivateControllerRumble();
+
+	memset(&rumble, 0, sizeof(struct retro_rumble_interface));
+	rumble_strength      = 0;
+	rumble_strength_prev = 0;
+
+	libretro_supports_bitmasks = false;
+
+	low_pass_enabled = false;
+	low_pass_range   = 0;
+	low_pass_prev    = 0;
+
+	turbo_counter = 0;
 }
 
 ///////////////////////////////////////////////////////////
@@ -754,6 +894,8 @@ void retro_reset (void)
 {
 	// Soft reset
 	PokeMini_Reset(0);
+
+	low_pass_prev = 0;
 }
 
 ///////////////////////////////////////////////////////////
@@ -778,6 +920,17 @@ void retro_run (void)
 	PokeMini_EmulateFrame();
 	
 	MinxAudio_GetSamplesS16Ch(audiobuffer, audiosamples, 2);
+	if (low_pass_enabled)
+	{
+		/* Note: We could be more efficient here by embedding
+		 * the low pass filter in MinxAudio_GetSamplesS16Ch().
+		 * This would be deeply invasive, however, requiring
+		 * many changes to MinxAudio and the 'command line'
+		 * interface. Since the performance overheads of the
+		 * ApplyLowPassFilter() function are very low, the
+		 * additional workload does not seem worthwhile... */
+		ApplyLowPassFilter(audiobuffer, audiosamples);
+	}
 	audio_batch_cb(audiobuffer, audiosamples);
 	
 	PokeMini_VideoBlit((uint16_t *)video_buffer, pix_pitch);
