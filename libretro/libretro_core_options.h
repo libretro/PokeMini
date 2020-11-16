@@ -163,9 +163,48 @@ struct retro_core_option_definition option_defs_us[] = {
       "enabled"
    },
    {
-      "pokemini_rumblelvl",
-      "Rumble Level (Screen + Controller)",
-      "Specify the magnitude of the force feedback effect, both virtual and physical.",
+      "pokemini_lowpass_filter",
+      "Low Pass Filter",
+      "Enables a low pass audio filter to soften the 'harsh' sound of the Pokemon Mini's piezoelectric speaker.",
+      {
+         { "disabled", NULL },
+         { "enabled",  NULL },
+         { NULL, NULL },
+      },
+      "disabled"
+   },
+   {
+      "pokemini_lowpass_range",
+      "Low Pass Filter Level (%)",
+      "Specifies the cut-off frequency of the low pass audio filter. A higher value increases the perceived 'strength' of the filter, since a wider range of the high frequency spectrum is attenuated.",
+      {
+         { "5",  NULL },
+         { "10", NULL },
+         { "15", NULL },
+         { "20", NULL },
+         { "25", NULL },
+         { "30", NULL },
+         { "35", NULL },
+         { "40", NULL },
+         { "45", NULL },
+         { "50", NULL },
+         { "55", NULL },
+         { "60", NULL },
+         { "65", NULL },
+         { "70", NULL },
+         { "75", NULL },
+         { "80", NULL },
+         { "85", NULL },
+         { "90", NULL },
+         { "95", NULL },
+         { NULL, NULL },
+      },
+      "60"
+   },
+   {
+      "pokemini_screen_shake_lv",
+      "Screen Shake Level",
+      "Enable virtual force feedback effect by 'shaking' the screen.",
       {
          { "0", NULL },
          { "1", NULL },
@@ -176,26 +215,23 @@ struct retro_core_option_definition option_defs_us[] = {
       "3"
    },
    {
-      "pokemini_controller_rumble",
-      "Controller Rumble",
+      "pokemini_rumble_lv",
+      "Controller Rumble Level",
       "Enable physical force feedback effect via controller rumble.",
       {
-         { "enabled",  NULL },
-         { "disabled", NULL },
+         { "0",  NULL },
+         { "1",  NULL },
+         { "2",  NULL },
+         { "3",  NULL },
+         { "4",  NULL },
+         { "5",  NULL },
+         { "6",  NULL },
+         { "7",  NULL },
+         { "8",  NULL },
+         { "9",  NULL },
          { NULL, NULL },
       },
-      "enabled"
-   },
-   {
-      "pokemini_screen_shake",
-      "Screen Shake",
-      "Enable virtual force feedback effect by 'shaking' the screen.",
-      {
-         { "enabled",  NULL },
-         { "disabled", NULL },
-         { NULL, NULL },
-      },
-      "enabled"
+      "9"
    },
    { NULL, NULL, NULL, {{0}}, NULL },
 };

@@ -72,9 +72,9 @@ extern TUIMenu_Item UIItems_Options[];			// Options items list
 int UIItems_PlatformDefC(int index, int reason);	// Platform default callback
 extern TUIMenu_Item UIItems_Platform[];			// Platform items list (USER DEFINED)
 
-#define PLATFORMDEF_GOBACK	{ 0,  0, "Go back...", UIItems_PlatformDefC }
-#define PLATFORMDEF_SAVEOPTIONS	{ 0, 99, "Save Configs...", UIItems_PlatformDefC }
-#define PLATFORMDEF_END(cb)	{ 9,  0, "Platform", cb }
+#define PLATFORMDEF_GOBACK	{ 0,  0, "Go back...", UIItems_PlatformDefC, NULL }
+#define PLATFORMDEF_SAVEOPTIONS	{ 0, 99, "Save Configs...", UIItems_PlatformDefC, NULL }
+#define PLATFORMDEF_END(cb)	{ 9,  0, "Platform", cb, NULL }
 
 // UI return status
 //  1 = In Menu
