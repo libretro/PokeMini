@@ -363,16 +363,8 @@ static void SyncCoreOptionsWithCommandLine(void)
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
 		rumble_strength = atoi(variables.value);
-		rumble_strength = (rumble_strength > 9) ? 9 : rumble_strength;
-
-		if (rumble_strength > 0)
-		{
-			/* Requires a minimum strength of 0x3FFE,
-			 * or rumble effects will not be felt
-			 * (core has a tendency to enable rumble
-			 * for very brief periods of time) */
-			rumble_strength = 0x3FFF + ((rumble_strength - 1) * 0x1800);
-		}
+		rumble_strength = (rumble_strength > 10) ? 10 : rumble_strength;
+		rumble_strength = (rumble_strength > 0)  ? ((0x1999 * rumble_strength) + 0x5) : 0;
 	}
 	
 	if (rumble_strength == 0)
