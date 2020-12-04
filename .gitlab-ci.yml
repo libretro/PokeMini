@@ -13,6 +13,8 @@ include:
   - project: 'libretro-infrastructure/ci-templates'
     file: '/ctr-static.yml'
   - project: 'libretro-infrastructure/ci-templates'
+    file: '/wii-static.yml'
+  - project: 'libretro-infrastructure/ci-templates'
     file: '/linux-x64.yml'
   - project: 'libretro-infrastructure/ci-templates'
     file: '/windows-x64-mingw.yml'
@@ -78,4 +80,9 @@ libretro-build-vita:
 libretro-build-ctr:
   extends:
     - .libretro-ctr-static-retroarch-master
+    - .core-defs
+
+libretro-build-wii:
+  extends:
+    - .libretro-wii-static-retroarch-master
     - .core-defs
