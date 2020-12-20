@@ -48,24 +48,24 @@ static const char *JoyLastIndexStr[] = {
 // Joystick menu
 int UIItems_JoystickC(int index, int reason);
 TUIMenu_Item UIItems_Joystick[] = {
-	{ 0,  0, "Go back...", UIItems_JoystickC },
-	{ 0,  1, "Apply changes...", UIItems_JoystickC },
-	{ 0, 21, "Check inputs...", UIItems_JoystickC },
-	{ 0,  2, "Enable Joystick: %s", UIItems_JoystickC },
-	{ 0, 20, "Device Index: %i", UIItems_JoystickC },
-	{ 0,  3, "Axis as D-Pad: %s", UIItems_JoystickC },
-	{ 0,  4, "Hats as D-Pad: %s", UIItems_JoystickC },
-	{ 0,  8, "Menu", UIItems_JoystickC },
-	{ 0,  9, "A", UIItems_JoystickC },
-	{ 0, 10, "B", UIItems_JoystickC },
-	{ 0, 11, "C", UIItems_JoystickC },
-	{ 0, 12, "Up", UIItems_JoystickC },
-	{ 0, 13, "Down", UIItems_JoystickC },
-	{ 0, 14, "Left", UIItems_JoystickC },
-	{ 0, 15, "Right", UIItems_JoystickC },
-	{ 0, 16, "Power", UIItems_JoystickC },
-	{ 0, 17, "Shake", UIItems_JoystickC },
-	{ 9,  0, "Joystick", UIItems_JoystickC }
+	{ 0,  0, "Go back...",          UIItems_JoystickC, NULL },
+	{ 0,  1, "Apply changes...",    UIItems_JoystickC, NULL },
+	{ 0, 21, "Check inputs...",     UIItems_JoystickC, NULL },
+	{ 0,  2, "Enable Joystick: %s", UIItems_JoystickC, NULL },
+	{ 0, 20, "Device Index: %i",    UIItems_JoystickC, NULL },
+	{ 0,  3, "Axis as D-Pad: %s",   UIItems_JoystickC, NULL },
+	{ 0,  4, "Hats as D-Pad: %s",   UIItems_JoystickC, NULL },
+	{ 0,  8, "Menu",                UIItems_JoystickC, NULL },
+	{ 0,  9, "A",                   UIItems_JoystickC, NULL },
+	{ 0, 10, "B",                   UIItems_JoystickC, NULL },
+	{ 0, 11, "C",                   UIItems_JoystickC, NULL },
+	{ 0, 12, "Up",                  UIItems_JoystickC, NULL },
+	{ 0, 13, "Down",                UIItems_JoystickC, NULL },
+	{ 0, 14, "Left",                UIItems_JoystickC, NULL },
+	{ 0, 15, "Right",               UIItems_JoystickC, NULL },
+	{ 0, 16, "Power",               UIItems_JoystickC, NULL },
+	{ 0, 17, "Shake",               UIItems_JoystickC, NULL },
+	{ 9,  0, "Joystick",            UIItems_JoystickC, NULL }
 };
 
 static const char *PM_Keys[] = {

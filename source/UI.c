@@ -227,59 +227,59 @@ enum {
 
 int UIItems_MainMenuC(int index, int reason);
 TUIMenu_Item UIItems_MainMenu[] = {
-	{ 0,  0, "Resume...", UIItems_MainMenuC },
+	{ 0,  0, "Resume...", UIItems_MainMenuC, NULL },
 #ifndef NO_SCANDIRS
-	{ 0,  1, "Load ROM...", UIItems_MainMenuC },
+	{ 0,  1, "Load ROM...", UIItems_MainMenuC, NULL },
 #endif
-	{ 0,  2, "Load State <0>", UIItems_MainMenuC },
-	{ 0,  3, "Save State <0>", UIItems_MainMenuC },
-	{ 0,  4, "Reset <Hard>", UIItems_MainMenuC },
-	{ 0,  5, "Options...", UIItems_MainMenuC },
-	{ 0,  6, "Platform...", UIItems_MainMenuC },
-	{ 0,  7, "About...", UIItems_MainMenuC },
-	{ 0,  8, "Exit", UIItems_MainMenuC },
-	{ 9,  0, "Main Menu", UIItems_MainMenuC }
+	{ 0,  2, "Load State <0>", UIItems_MainMenuC, NULL},
+	{ 0,  3, "Save State <0>", UIItems_MainMenuC, NULL },
+	{ 0,  4, "Reset <Hard>", UIItems_MainMenuC, NULL },
+	{ 0,  5, "Options...", UIItems_MainMenuC, NULL },
+	{ 0,  6, "Platform...", UIItems_MainMenuC, NULL },
+	{ 0,  7, "About...", UIItems_MainMenuC, NULL },
+	{ 0,  8, "Exit", UIItems_MainMenuC, NULL },
+	{ 9,  0, "Main Menu", UIItems_MainMenuC, NULL }
 };
 
 int UIItems_OptionsC(int index, int reason);
 TUIMenu_Item UIItems_Options[] = {
-	{ 0,  0, "Go Back...", UIItems_OptionsC },
-	{ 0,  1, "Palette: %s", UIItems_OptionsC },
-	{ 0,  2, "LCD Mode: %s", UIItems_OptionsC },
-	{ 0,  3, "LCD Filter: %s", UIItems_OptionsC },
-	{ 0, 10, "Contrast: %i%%", UIItems_OptionsC },
-	{ 0, 11, "Bright: %i%%", UIItems_OptionsC },
-	{ 0,  4, "Sound: %s", UIItems_OptionsC },
-	{ 0,  5, "Piezo Filter: %s", UIItems_OptionsC },
-	{ 0,  6, "PM Battery: %s", UIItems_OptionsC },
-	{ 0,  7, "RTC: %s", UIItems_OptionsC },
-	{ 0,  8, "Shared EEP.: %s", UIItems_OptionsC },
-	{ 0,  9, "Force FreeBIOS: %s", UIItems_OptionsC },
+	{ 0,  0, "Go Back...",         UIItems_OptionsC, NULL },
+	{ 0,  1, "Palette: %s",        UIItems_OptionsC, NULL },
+	{ 0,  2, "LCD Mode: %s",       UIItems_OptionsC, NULL },
+	{ 0,  3, "LCD Filter: %s",     UIItems_OptionsC, NULL },
+	{ 0, 10, "Contrast: %i%%",     UIItems_OptionsC, NULL },
+	{ 0, 11, "Bright: %i%%",       UIItems_OptionsC, NULL },
+	{ 0,  4, "Sound: %s",          UIItems_OptionsC, NULL },
+	{ 0,  5, "Piezo Filter: %s",   UIItems_OptionsC, NULL },
+	{ 0,  6, "PM Battery: %s",     UIItems_OptionsC, NULL },
+	{ 0,  7, "RTC: %s",            UIItems_OptionsC, NULL },
+	{ 0,  8, "Shared EEP.: %s",    UIItems_OptionsC, NULL },
+	{ 0,  9, "Force FreeBIOS: %s", UIItems_OptionsC, NULL },
 #ifndef PERFORMANCE
-	{ 0, 20, "Multicart: %s", UIItems_OptionsC },
+	{ 0, 20, "Multicart: %s",      UIItems_OptionsC, NULL },
 #endif
-	{ 0, 50, "Sync Cycles: %d", UIItems_OptionsC },
-	{ 0, 60, "Reload Color Info...", UIItems_OptionsC },
-	{ 0, 99, "Save Configs...", UIItems_OptionsC },
-	{ 9,  0, "Options", UIItems_OptionsC }
+	{ 0, 50, "Sync Cycles: %d",      UIItems_OptionsC, NULL },
+	{ 0, 60, "Reload Color Info...", UIItems_OptionsC, NULL },
+	{ 0, 99, "Save Configs...",      UIItems_OptionsC, NULL },
+	{ 9,  0, "Options",              UIItems_OptionsC, NULL }
 };
 
 int UIItems_PalEditC(int index, int reason);
 TUIMenu_Item UIItems_PalEdit[] = {
-	{ 0,  0, "Go Back...", UIItems_PalEditC },
-	{ 0,  1, "1-Light   Red: %d", UIItems_PalEditC },
-	{ 0,  2, "1-Light Green: %d", UIItems_PalEditC },
-	{ 0,  3, "1-Light  Blue: %d", UIItems_PalEditC },
-	{ 0,  4, "1-Dark    Red: %d", UIItems_PalEditC },
-	{ 0,  5, "1-Dark  Green: %d", UIItems_PalEditC },
-	{ 0,  6, "1-Dark   Blue: %d", UIItems_PalEditC },
-	{ 0,  7, "1-Light   Red: %d", UIItems_PalEditC },
-	{ 0,  8, "1-Light Green: %d", UIItems_PalEditC },
-	{ 0,  9, "1-Light  Blue: %d", UIItems_PalEditC },
-	{ 0, 10, "1-Dark    Red: %d", UIItems_PalEditC },
-	{ 0, 11, "1-Dark  Green: %d", UIItems_PalEditC },
-	{ 0, 12, "1-Dark   Blue: %d", UIItems_PalEditC },
-	{ 9,  0, "Palette Edit", UIItems_PalEditC }
+	{ 0,  0, "Go Back...",        UIItems_PalEditC, NULL },
+	{ 0,  1, "1-Light   Red: %d", UIItems_PalEditC, NULL },
+	{ 0,  2, "1-Light Green: %d", UIItems_PalEditC, NULL },
+	{ 0,  3, "1-Light  Blue: %d", UIItems_PalEditC, NULL },
+	{ 0,  4, "1-Dark    Red: %d", UIItems_PalEditC, NULL },
+	{ 0,  5, "1-Dark  Green: %d", UIItems_PalEditC, NULL },
+	{ 0,  6, "1-Dark   Blue: %d", UIItems_PalEditC, NULL },
+	{ 0,  7, "1-Light   Red: %d", UIItems_PalEditC, NULL },
+	{ 0,  8, "1-Light Green: %d", UIItems_PalEditC, NULL },
+	{ 0,  9, "1-Light  Blue: %d", UIItems_PalEditC, NULL },
+	{ 0, 10, "1-Dark    Red: %d", UIItems_PalEditC, NULL },
+	{ 0, 11, "1-Dark  Green: %d", UIItems_PalEditC, NULL },
+	{ 0, 12, "1-Dark   Blue: %d", UIItems_PalEditC, NULL },
+	{ 9,  0, "Palette Edit",      UIItems_PalEditC, NULL }
 };
 
 int UIMenu_SetDisplay(int width, int height, int pixellayout, uint8_t *bg_image, uint16_t *bg_pal16, uint32_t *bg_pal32)

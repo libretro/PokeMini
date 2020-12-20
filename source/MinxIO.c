@@ -303,10 +303,13 @@ void MinxIO_WriteReg(int cpu, uint8_t reg, uint8_t val)
 			return;
 		case 0x53: // Unknown
 			PMR_REG_53 = 0x00;
+         /* TODO/FIXME - is fallthrough intentional ?*/
 		case 0x54: // Unknown
 			PMR_REG_54 = val & 0x77;
+         /* TODO/FIXME - is fallthrough intentional ?*/
 		case 0x55: // Unknown
 			PMR_REG_55 = val & 0x07;
+         /* TODO/FIXME - is fallthrough intentional ?*/
 		case 0x60: // I/O Direction Select ( 0 = Input, 1 = Output )
 			PMR_IO_DIR = val;
 			MinxIO_IODataWrite();
@@ -329,7 +332,7 @@ uint8_t MinxIO_IODataRead(void)
 {
 	uint8_t Input = MINX_IO_PULL_UPS;
 
-	// Update all I/Os
+	/* Update all I/Os */
 	Input = MinxIO_EEPROM_REvent() ? MINX_EEPROM_DAT : 0;
 
 	return (PMR_IO_DATA & PMR_IO_DIR) | (Input & ~PMR_IO_DIR);
