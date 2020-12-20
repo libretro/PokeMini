@@ -1,4 +1,4 @@
-#if defined( VITA ) || defined( __CELLOS_LV2__ )
+#if defined( VITA )
 
 #include <stddef.h>
 
