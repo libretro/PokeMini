@@ -29,8 +29,12 @@ include $(BUILD_DIR)/Makefile.common
 #################
 # Toolchain setup
 
-CC  = cl.exe
-CXX = cl.exe
+ifeq ($(PREINITIALIZED),1)
+CC  ?= cl.exe
+CXX ?= cl.exe
+else
+CC   = cl.exe
+CXX  = cl.exe
 
 PATH := $(shell IFS=$$'\n'; cygpath "$(VS100COMNTOOLS)../../VC/bin/amd64"):$(PATH)
 PATH := $(PATH):$(shell IFS=$$'\n'; cygpath "$(VS100COMNTOOLS)../IDE")
@@ -42,6 +46,7 @@ WindowsSdkDir ?= $(shell reg query "HKLM\SOFTWARE\Microsoft\Microsoft SDKs\Windo
 
 export INCLUDE := $(INCLUDE)
 export LIB := $(LIB);$(WindowsSdkDir)
+endif
 
 ############
 # Extensions
