@@ -7,8 +7,10 @@ else
 endif
 
 DEFINES  +=
+ifeq (,$(findstring msvc,$(platform)))
 CFLAGS   += -Wall
 CXXFLAGS += -Wall
+endif
 LDFLAGS  +=
 OBJOUT   = -o 
 LINKOUT  = -o 
