@@ -116,9 +116,19 @@ static int32_t low_pass_range = 0;
 static int32_t low_pass_prev  = 0; /* Previous sample */
 
 // Turbo button parameters
-#define DEVICE_ID_TURBO_A RETRO_DEVICE_ID_JOYPAD_X
-#define TURBO_RATE 18 /* 72/4 -> 4 presses per second */
-static uint16_t turbo_counter = 0;
+// > Default turbo pulse train is 9 frames ON, 9 frames OFF
+// > At 72 Hz, corresponds to 4 presses per second
+#define DEVICE_ID_TURBO_A         RETRO_DEVICE_ID_JOYPAD_X
+#define TURBO_PERIOD_MIN          4
+#define TURBO_PERIOD_MAX          120
+#define TURBO_PERIOD_DEFAULT      18
+#define TURBO_PULSE_WIDTH_MIN     2
+#define TURBO_PULSE_WIDTH_MAX     18
+#define TURBO_PULSE_WIDTH_DEFAULT 9
+
+static uint16_t turbo_period      = TURBO_PERIOD_DEFAULT;
+static uint16_t turbo_pulse_width = TURBO_PULSE_WIDTH_DEFAULT;
+static uint16_t turbo_counter     = 0;
 
 // Utilities
 ///////////////////////////////////////////////////////////
@@ -371,6 +381,27 @@ static void SyncCoreOptionsWithCommandLine(void)
 	{
 		DeactivateControllerRumble();
 	}
+
+	// pokemini_turbo_period
+	turbo_period      = TURBO_PERIOD_DEFAULT;
+	turbo_pulse_width = TURBO_PULSE_WIDTH_DEFAULT;
+	variables.key     = "pokemini_turbo_period";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		turbo_period = atoi(variables.value);
+		turbo_period = (turbo_period < TURBO_PERIOD_MIN) ?
+				TURBO_PERIOD_MIN : turbo_period;
+		turbo_period = (turbo_period > TURBO_PERIOD_MAX) ?
+				TURBO_PERIOD_MAX : turbo_period;
+
+		turbo_pulse_width = turbo_period >> 1;
+		turbo_pulse_width = (turbo_pulse_width < TURBO_PULSE_WIDTH_MIN) ?
+				TURBO_PULSE_WIDTH_MIN : turbo_pulse_width;
+		turbo_pulse_width = (turbo_pulse_width > TURBO_PULSE_WIDTH_MAX) ?
+				TURBO_PULSE_WIDTH_MAX : turbo_pulse_width;
+
+		turbo_counter = 0;
+	}
 }
 
 ///////////////////////////////////////////////////////////
@@ -549,13 +580,17 @@ static void handlekeyevents(void)
 	/* Handle A/Turbo A input */
 	if (turbo_a_pressed)
 	{
-		a_down = (turbo_counter < (TURBO_RATE >> 1));
+		a_down = a_pressed || (turbo_counter < turbo_pulse_width);
+
 		turbo_counter++;
-		if (turbo_counter >= TURBO_RATE)
+		if (turbo_counter >= turbo_period)
 			turbo_counter = 0;
 	}
 	else
-		a_down = a_pressed;
+	{
+		a_down        = a_pressed;
+		turbo_counter = 0;
+	}
 
 	JoystickButtonsEvent(PM_BUTTON_A, a_down);
 }
@@ -877,7 +912,9 @@ void retro_deinit(void)
 	low_pass_range   = 0;
 	low_pass_prev    = 0;
 
-	turbo_counter = 0;
+	turbo_period      = TURBO_PERIOD_DEFAULT;
+	turbo_pulse_width = TURBO_PULSE_WIDTH_DEFAULT;
+	turbo_counter     = 0;
 }
 
 ///////////////////////////////////////////////////////////

@@ -143,6 +143,15 @@ struct retro_core_option_definition option_defs_fr[] = {
       },
       NULL
    },
+   {
+      "pokemini_turbo_period",
+      "Période du bouton Turbo",
+      "Spécifiez l'intervalle de répétition (en images) lorsque vous maintenez le bouton Turbo A.",
+      {
+         { NULL, NULL }, /* Numbers do not require translation */
+      },
+      NULL
+   },
    { NULL, NULL, NULL, {{0}}, NULL },
 };
 
@@ -274,6 +283,15 @@ struct retro_core_option_definition option_defs_tr[] = {
       "Kontrolör ile fiziksel kuvvet geri bildirim efektini etkinleştirin.",
       {
          { NULL, NULL },
+      },
+      NULL
+   },
+   {
+      "pokemini_turbo_period",
+      "Turbo Düğme Süresi",
+      "Turbo A düğmesini basılı tutarken tekrar aralığını (kare cinsinden) belirtin.",
+      {
+         { NULL, NULL }, /* Numbers do not require translation */
       },
       NULL
    },
