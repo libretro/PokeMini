@@ -103,10 +103,6 @@ static retro_audio_sample_t audio_cb = NULL;
 static retro_audio_sample_batch_t audio_batch_cb = NULL;
 static retro_environment_t environ_cb = NULL;
 
-static uint8_t *rom_buf                = NULL;
-static const uint8_t *rom_data         = NULL;
-static size_t rom_size                 = 0;
-
 static bool libretro_supports_bitmasks = false;
 
 // Force feedback parameters
@@ -227,12 +223,16 @@ static void SyncCoreOptionsWithCommandLine(void)
 	CommandLine.lcdfilter = 1; // LCD Filter (0: nofilter, 1: dotmatrix, 2: scanline)
 	variables.key = "pokemini_lcdfilter";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
-   {
-      if (strcmp(variables.value, "scanline") == 0)
-         CommandLine.lcdfilter = 2;
-      else if (strcmp(variables.value, "none") == 0)
-         CommandLine.lcdfilter = 0;
-   }
+	{
+		if (strcmp(variables.value, "scanline") == 0)
+		{
+			CommandLine.lcdfilter = 2;
+		}
+		else if (strcmp(variables.value, "none") == 0)
+		{
+			CommandLine.lcdfilter = 0;
+		}
+	}
 	
 	// pokemini_lcdmode
 	CommandLine.lcdmode = 0; // LCD Mode (0: analog, 1: 3shades, 2: 2shades)
@@ -240,9 +240,13 @@ static void SyncCoreOptionsWithCommandLine(void)
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
 		if (strcmp(variables.value, "3shades") == 0)
+		{
 			CommandLine.lcdmode = 1;
+		}
 		else if (strcmp(variables.value, "2shades") == 0)
+		{
 			CommandLine.lcdmode = 2;
+		}
 	}
 	
 	// pokemini_lcdcontrast
@@ -259,7 +263,9 @@ static void SyncCoreOptionsWithCommandLine(void)
 	CommandLine.lcdbright = 0; // LCD brightness offset
 	variables.key = "pokemini_lcdbright";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
 		CommandLine.lcdbright = atoi(variables.value);
+	}
 	
 	// pokemini_palette
 	CommandLine.palette = 0; // Palette Index (0 - 13; 0 == Default)
@@ -267,31 +273,57 @@ static void SyncCoreOptionsWithCommandLine(void)
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
 		if (strcmp(variables.value, "Old") == 0)
+		{
 			CommandLine.palette = 1;
+		}
 		else if (strcmp(variables.value, "Monochrome") == 0)
+		{
 			CommandLine.palette = 2;
+		}
 		else if (strcmp(variables.value, "Green") == 0)
+		{
 			CommandLine.palette = 3;
+		}
 		else if (strcmp(variables.value, "Green Vector") == 0)
+		{
 			CommandLine.palette = 4;
+		}
 		else if (strcmp(variables.value, "Red") == 0)
+		{
 			CommandLine.palette = 5;
+		}
 		else if (strcmp(variables.value, "Red Vector") == 0)
+		{
 			CommandLine.palette = 6;
+		}
 		else if (strcmp(variables.value, "Blue LCD") == 0)
+		{
 			CommandLine.palette = 7;
+		}
 		else if (strcmp(variables.value, "LEDBacklight") == 0)
+		{
 			CommandLine.palette = 8;
+		}
 		else if (strcmp(variables.value, "Girl Power") == 0)
+		{
 			CommandLine.palette = 9;
+		}
 		else if (strcmp(variables.value, "Blue") == 0)
+		{
 			CommandLine.palette = 10;
+		}
 		else if (strcmp(variables.value, "Blue Vector") == 0)
+		{
 			CommandLine.palette = 11;
+		}
 		else if (strcmp(variables.value, "Sepia") == 0)
+		{
 			CommandLine.palette = 12;
+		}
 		else if (strcmp(variables.value, "Monochrome Vector") == 0)
+		{
 			CommandLine.palette = 13;
+		}
 	}
 	
 	// pokemini_piezofilter
@@ -300,14 +332,18 @@ static void SyncCoreOptionsWithCommandLine(void)
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
 		if (strcmp(variables.value, "disabled") == 0)
+		{
 			CommandLine.piezofilter = 0;
+		}
 	}
 	
 	// pokemini_screen_shake_lv
 	CommandLine.rumblelvl = 3; // (0 - 3; 3 == Default)
 	variables.key = "pokemini_screen_shake_lv";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
 		CommandLine.rumblelvl = atoi(variables.value);
+	}
 	
 	// NB: The following parameters are not part of the 'CommandLine'
 	// interface, but there is no better place to handle them...
@@ -318,14 +354,18 @@ static void SyncCoreOptionsWithCommandLine(void)
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
 		if (strcmp(variables.value, "enabled") == 0)
+		{
 			low_pass_enabled = true;
+		}
 	}
 	
 	// pokemini_lowpass_range
 	low_pass_range = (60 * 65536) / 100;
 	variables.key = "pokemini_lowpass_range";
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
 		low_pass_range = (strtol(variables.value, NULL, 10) * 65536) / 100;
+	}
 	
 	// pokemini_rumble_lv
 	rumble_strength = 0;
@@ -338,7 +378,9 @@ static void SyncCoreOptionsWithCommandLine(void)
 	}
 	
 	if (rumble_strength == 0)
+	{
 		DeactivateControllerRumble();
+	}
 
 	// pokemini_turbo_period
 	turbo_period      = TURBO_PERIOD_DEFAULT;
@@ -388,10 +430,11 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 	// 3DS has limited performance...
 	// > Lower emualtion accuacy if required (o3DS/o2DS)
 	CFGU_GetSystemModel(&device_model); /* (0 = O3DS, 1 = O3DSXL, 2 = N3DS, 3 = 2DS, 4 = N3DSXL, 5 = N2DSXL) */
-	if (device_model == 2 || device_model == 4 || device_model == 5)
+	if (device_model == 2 || device_model == 4 || device_model == 5) {
 		CommandLine.synccycles = 8;
-   else
+	} else {
 		CommandLine.synccycles = 16;
+	}
 	// > Reduce sound quality
 	CommandLine.sound = MINX_AUDIO_GENERATED;
 #elif defined(DINGUX)
@@ -574,16 +617,26 @@ static void InitialiseVideo(void)
 	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
 	{
 		if (strcmp(variables.value, "1x") == 0)
+		{
 			video_scale = 1;
+		}
 		else if (strcmp(variables.value, "2x") == 0)
+		{
 			video_scale = 2;
+		}
 		else if (strcmp(variables.value, "3x") == 0)
+		{
 			video_scale = 3;
+		}
 #if !defined(_3DS)
 		else if (strcmp(variables.value, "5x") == 0)
+		{
 			video_scale = 5;
+		}
 		else if (strcmp(variables.value, "6x") == 0)
+		{
 			video_scale = 6;
+		}
 #endif
 	}
 
@@ -600,9 +653,9 @@ static void InitialiseVideo(void)
 	}
 	
 	// Determine video dimensions
-	video_width  = PM_SCEEN_WIDTH * video_scale;
+	video_width = PM_SCEEN_WIDTH * video_scale;
 	video_height = PM_SCEEN_HEIGHT * video_scale;
-	pix_pitch    = video_width;
+	pix_pitch = video_width;
 	
 	// Allocate video buffer
 	if (!video_buffer)
@@ -883,12 +936,10 @@ void retro_run (void)
 	
 	// Check for core options updates
 	bool options_updated = false;
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE,
-            &options_updated) && options_updated)
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &options_updated) && options_updated)
    {
 		SyncCoreOptionsWithCommandLine();
-		PokeMini_VideoPalette_Index(CommandLine.palette, NULL,
-            CommandLine.lcdcontrast, CommandLine.lcdbright);
+		PokeMini_VideoPalette_Index(CommandLine.palette, NULL, CommandLine.lcdcontrast, CommandLine.lcdbright);
 		PokeMini_ApplyChanges();
 	}
 	
@@ -919,7 +970,9 @@ void retro_run (void)
 		ActivateControllerRumble();
 	}
 	else
+	{
 		DeactivateControllerRumble();
+	}
 	
 	LCDDirty = 0;
 	
@@ -928,9 +981,9 @@ void retro_run (void)
 
 ///////////////////////////////////////////////////////////
 
-// Save states have a fixed size...
 size_t retro_serialize_size(void)
 {
+	// Save states have a fixed size...
 	return PM_SS_SIZE;
 }
 
@@ -938,35 +991,25 @@ size_t retro_serialize_size(void)
 
 bool retro_serialize(void *data, size_t size)
 {
-   if (PokeMini_SaveSSStream((uint8_t*)data, size))
-   {
-      if (log_cb)
-         log_cb(RETRO_LOG_INFO, "State saved successfully.\n");
-   }
-   else
-   {
-      if (log_cb)
-         log_cb(RETRO_LOG_ERROR, "Failed to save state.\n");
-      return false;
-   }
-   return true;
+	if (PokeMini_SaveSSStream((uint8_t*)data, size)) {
+		if (log_cb) log_cb(RETRO_LOG_INFO, "State saved successfully.\n");
+	} else {
+		if (log_cb) log_cb(RETRO_LOG_ERROR, "Failed to save state.\n");
+		return false;
+	}
+	return true;
 }
 
 ///////////////////////////////////////////////////////////
 
 bool retro_unserialize(const void *data, size_t size)
 {
-   if (PokeMini_LoadSSStream((uint8_t*)data, size))
-   {
-      if (log_cb)
-         log_cb(RETRO_LOG_INFO, "Save state loaded successfully.\n");
-   }
-   else
-   {
-      if (log_cb)
-         log_cb(RETRO_LOG_ERROR, "Failed to load save state.\n");
-      return false;
-   }
+	if (PokeMini_LoadSSStream((uint8_t*)data, size)) {
+		if (log_cb) log_cb(RETRO_LOG_INFO, "Save state loaded successfully.\n");
+	} else {
+		if (log_cb) log_cb(RETRO_LOG_ERROR, "Failed to load save state.\n");
+		return false;
+	}
 	return true;
 }
 
@@ -986,86 +1029,52 @@ void retro_cheat_set(unsigned index, bool enabled, const char *code)
 
 ///////////////////////////////////////////////////////////
 
-bool retro_load_game(const struct retro_game_info *info)
+bool retro_load_game(const struct retro_game_info *game)
 {
-   int passed;
-   const struct retro_game_info_ext *info_ext = NULL;
-
-   if (!info)
-      return false;
-
-   InitialiseInputDescriptors();
-   InitialiseRumbleInterface();
-   InitialiseCommandLine(info);
-   InitialiseVideo();
-
-   // returns 1 on completion,0 on error
-   if (!(passed = PokeMini_Create(0/*flags*/, PMSOUNDBUFF)))
-      abort();
-
+	int passed;
+	
+	if (!game)
+		return false;
+	
+	InitialiseInputDescriptors();
+	InitialiseRumbleInterface();
+	InitialiseCommandLine(game);
+	InitialiseVideo();
+	
+	passed = PokeMini_Create(0/*flags*/, PMSOUNDBUFF); // returns 1 on completion,0 on error
+	if (!passed)
+		abort();
+	
 #if (defined(_3DS) || defined(DINGUX))
    PokeMini_VideoPalette_Init(PokeMini_BGR16, 0/* disable high colour*/);
 #else
    PokeMini_VideoPalette_Init(PokeMini_BGR16, 1/* enable high colour */);
 #endif
-
-   PokeMini_VideoPalette_Index(CommandLine.palette, NULL,
-         CommandLine.lcdcontrast, CommandLine.lcdbright);
-   // Note: 'CommandLine.piezofilter' value is also read inside here
-   PokeMini_ApplyChanges(); 
-
-   PokeMini_UseDefaultCallbacks();
-
-   MinxAudio_ChangeEngine(CommandLine.sound); // enable sound
-
-   /* Pokemini requires a persistent ROM data buffer */
-   rom_buf  = NULL;
-   rom_data = NULL;
-   rom_size = 0;
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_GAME_INFO_EXT, &info_ext) &&
-         info_ext->persistent_data)
-   {
-      rom_data   = (const uint8_t*)info_ext->data;
-      rom_size   = info_ext->size;
-   }
-
-   /* If frontend does not support persistent
-    * content data, must create a copy */
-   if (!rom_data)
-   {
-      if (!info)
-         return false;
-
-      rom_size = info->size;
-      rom_buf  = (uint8_t*)malloc(rom_size);
-
-      if (!rom_buf)
-         return false;
-
-      memcpy(rom_buf, (const uint8_t*)info->data, rom_size);
-      rom_data = (const uint8_t*)rom_buf;
-   }
-
-   // returns 1 on completion,0 on error
-   if (!(passed = PokeMini_LoadMINFileXPLATFORM(rom_size,
-               (uint8_t*)rom_data))) 
-      abort();
-
-   // Load EEPROM
-   MinxIO_FormatEEPROM();
-   if (FileExist(CommandLine.eeprom_file))
-   {
-      PokeMini_LoadEEPROMFile(CommandLine.eeprom_file);
-      if (log_cb)
-         log_cb(RETRO_LOG_INFO, "Read EEPROM file: %s\n",
-               CommandLine.eeprom_file);
-   }
-
-   // Soft reset
-   PokeMini_Reset(0);
-
-   return true;
+	
+	PokeMini_VideoPalette_Index(CommandLine.palette, NULL, CommandLine.lcdcontrast, CommandLine.lcdbright);
+	PokeMini_ApplyChanges(); // Note: 'CommandLine.piezofilter' value is also read inside here
+	
+	PokeMini_UseDefaultCallbacks();
+	
+	MinxAudio_ChangeEngine(CommandLine.sound); // enable sound
+	
+	passed = PokeMini_LoadMINFileXPLATFORM(game->size, (uint8_t*)game->data); // returns 1 on completion,0 on error
+	if (!passed)
+		abort();
+	
+	// Load EEPROM
+	MinxIO_FormatEEPROM();
+	if (FileExist(CommandLine.eeprom_file))
+	{
+		PokeMini_LoadEEPROMFile(CommandLine.eeprom_file);
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Read EEPROM file: %s\n", CommandLine.eeprom_file);
+	}
+	
+	// Soft reset
+	PokeMini_Reset(0);
+	
+	return true;
 }
 
 ///////////////////////////////////////////////////////////
@@ -1138,13 +1147,6 @@ void retro_unload_game(void)
 #endif
 	}
 	video_buffer = NULL;
-
-   if (rom_buf)
-      free(rom_buf);
-
-   rom_buf               = NULL;
-   rom_data              = NULL;
-   rom_size              = 0;
 }
 
 // Useless (?) callbacks
