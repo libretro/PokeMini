@@ -428,7 +428,7 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 	
 #if defined(_3DS)
 	// 3DS has limited performance...
-	// > Lower emualtion accuacy if required (o3DS/o2DS)
+	// > Lower emulation accuracy if required (o3DS/o2DS)
 	CFGU_GetSystemModel(&device_model); /* (0 = O3DS, 1 = O3DSXL, 2 = N3DS, 3 = 2DS, 4 = N3DSXL, 5 = N2DSXL) */
 	if (device_model == 2 || device_model == 4 || device_model == 5) {
 		CommandLine.synccycles = 8;
@@ -437,9 +437,17 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 	}
 	// > Reduce sound quality
 	CommandLine.sound = MINX_AUDIO_GENERATED;
+#elif defined(RS90)
+	// RS-90 devices running OpenDingux appear
+	// to have similar performance to o3DS
+	// > Lower emulation accuracy and reduce
+	//   sound quality
+	CommandLine.synccycles = 16;
+	CommandLine.sound = MINX_AUDIO_GENERATED;
 #elif defined(DINGUX)
-	// Dingux platforms appear to have similar
-	// performance to n3DS when running this core
+	// Other OpenDingux platforms appear to have
+	// similar performance to n3DS when running
+	// this core
 	// > Use default 'accurate' emulation,
 	//   but reduce sound quality
 	CommandLine.synccycles = 8;
