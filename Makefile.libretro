@@ -458,6 +458,18 @@ else ifeq ($(platform), gcw0)
 	CFLAGS += -ffast-math -fomit-frame-pointer -march=mips32 -mtune=mips32r2 -mhard-float
 	CFLAGS += -DDINGUX
 
+# RETROFW
+else ifeq ($(platform), retrofw)
+	TARGET := $(TARGET_NAME)_libretro.so
+	CC = /opt/retrofw-toolchain/usr/bin/mipsel-linux-gcc
+	CXX = /opt/retrofw-toolchain/usr/bin/mipsel-linux-g++
+	AR = /opt/retrofw-toolchain/usr/bin/mipsel-linux-ar
+	SHARED := -shared -Wl,--version-script=libretro/link.T
+	fpic := -fPIC
+	CFLAGS += $(PTHREAD_FLAGS)
+	CFLAGS += -ffast-math -fomit-frame-pointer -march=mips32 -mtune=mips32 -mhard-float
+	CFLAGS += -DDINGUX
+
 else ifeq ($(platform), msvc)
 	OBJOUT = -Fo
 
