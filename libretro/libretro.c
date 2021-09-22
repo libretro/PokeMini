@@ -72,15 +72,15 @@ static char g_basename[PMTMPV];
 static char *g_system_dir;
 static char *g_save_dir;
 
-static retro_log_printf_t log_cb = NULL;
-static retro_video_refresh_t video_cb = NULL;
-static retro_input_poll_t poll_cb = NULL;
-static retro_input_state_t input_cb = NULL;
-static retro_audio_sample_t audio_cb = NULL;
+retro_log_printf_t log_cb                        = NULL;
+static retro_video_refresh_t video_cb            = NULL;
+static retro_input_poll_t poll_cb                = NULL;
+static retro_input_state_t input_cb              = NULL;
+static retro_audio_sample_t audio_cb             = NULL;
 static retro_audio_sample_batch_t audio_batch_cb = NULL;
-static retro_environment_t environ_cb = NULL;
+static retro_environment_t environ_cb            = NULL;
 
-static bool libretro_supports_bitmasks = false;
+static bool libretro_supports_bitmasks           = false;
 
 // Force feedback parameters
 static struct retro_rumble_interface rumble = {0};
@@ -1038,12 +1038,9 @@ bool retro_load_game(const struct retro_game_info *game)
 	PokeMini_VideoPalette_Index(CommandLine.palette, NULL, CommandLine.lcdcontrast, CommandLine.lcdbright);
 	PokeMini_ApplyChanges(); // Note: 'CommandLine.piezofilter' value is also read inside here
 	
-	PokeMini_UseDefaultCallbacks();
-	
 	MinxAudio_ChangeEngine(CommandLine.sound); // enable sound
 	
-	passed = PokeMini_LoadMINFileXPLATFORM(game->size, (uint8_t*)game->data); // returns 1 on completion,0 on error
-	if (!passed)
+	if (!(passed = PokeMini_LoadMINFileXPLATFORM(game->size, (uint8_t*)game->data))) // returns 1 on completion,0 on error
 		abort();
 	
 	// Load EEPROM

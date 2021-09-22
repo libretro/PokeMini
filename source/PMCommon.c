@@ -18,6 +18,7 @@
 
 #include "PMCommon.h"
 #include "Missing.h"
+#include "Pokemini.h"
 #include <ctype.h>
 
 #include <compat/posix_string.h>
@@ -166,23 +167,6 @@ void ConvertSlashes(char *filename, int slashtype)
 	}
 }
 
-void PokeDPrint(int pokemsg, char *format, ...)
-{
-	char buffer[PMTMPV];
-	va_list args;
-	va_start(args, format);
-	vsprintf(buffer, format, args);
-	switch (pokemsg) {
-	case POKEMSG_OUT:
-		printf("%s", buffer);
-		break;
-	case POKEMSG_ERR:
-		fprintf(stderr, "%s", buffer);
-		break;
-	}
-	va_end(args);
-}
-
 #ifndef NO_DIRS
 
 #ifdef _MSC_VER
@@ -199,7 +183,7 @@ void PokeMini_GetCustomDir(char *dir, int max)
 {
 	if (!getcwd(dir, max)) {
 		strcpy(dir, "/");
-		PokeDPrint(POKEMSG_ERR, "getcwd() error\n");
+		log_cb(RETRO_LOG_ERROR, "getcwd() error\n");
 	}
 	if (!strlen(dir)) strcpy(dir, "/");
 	else ConvertSlashes(dir, PATH_SLASH_UNIX);
@@ -212,7 +196,7 @@ void PokeMini_GotoCustomDir(const char *dir)
 	strcpy(buffer, dir);
 	ConvertSlashes(buffer, PATH_SLASH_OS);
 	if (chdir(buffer)) {
-		PokeDPrint(POKEMSG_ERR, "abs chdir('%s') error\n", buffer);
+		log_cb(RETRO_LOG_ERROR, "abs chdir('%s') error\n", buffer);
 	}
 }
 

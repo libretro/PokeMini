@@ -271,16 +271,16 @@ void MinxCPU_OnException(int type, uint32_t ir)
 {
 	switch (type) {
 		case EXCEPTION_UNKNOWN_INSTRUCTION:
-			PokeDPrint(POKEMSG_ERR, "Unknown instruction %08X before V=%02X,PC=%04X\n", (unsigned int)ir, (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
+			log_cb(RETRO_LOG_ERROR, "Unknown instruction %08X before V=%02X,PC=%04X\n", (unsigned int)ir, (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
 			return;
 		case EXCEPTION_CRASH_INSTRUCTION:
-			PokeDPrint(POKEMSG_ERR, "Crash instruction %08X before V=%02X,PC=%04X\n", (unsigned int)ir, (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
+			log_cb(RETRO_LOG_ERROR, "Crash instruction %08X before V=%02X,PC=%04X\n", (unsigned int)ir, (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
 			return;
 		case EXCEPTION_UNSTABLE_INSTRUCTION:
-			PokeDPrint(POKEMSG_ERR, "Unstable instruction %08X before V=%02X,PC=%04X\n", (unsigned int)ir, (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
+			log_cb(RETRO_LOG_ERROR, "Unstable instruction %08X before V=%02X,PC=%04X\n", (unsigned int)ir, (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
 			return;
 		case EXCEPTION_DIVISION_BY_ZERO:
-			PokeDPrint(POKEMSG_ERR, "Division by zero before V=%02X,PC=%04X\n", (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
+			log_cb(RETRO_LOG_ERROR, "Division by zero before V=%02X,PC=%04X\n", (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
 			return;
 		default:
 			return;
@@ -291,10 +291,10 @@ void MinxCPU_OnSleep(int type)
 {
 	switch (type) {
 		case MINX_SLEEP_HALT:
-			//PokeDPrint(POKEMSG_ERR, "Halt called before V=%02X,PC=%04X\n", (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L); // TOO NOISY!
+			//log_cb(RETRO_LOG_ERROR, "Halt called before V=%02X,PC=%04X\n", (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L); // TOO NOISY!
 			return;
 		case MINX_SLEEP_STOP:
-			PokeDPrint(POKEMSG_ERR, "Sleep called before V=%02X,PC=%04X\n", (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
+			log_cb(RETRO_LOG_ERROR, "Sleep called before V=%02X,PC=%04X\n", (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
 			return;
 		default:
 			return;

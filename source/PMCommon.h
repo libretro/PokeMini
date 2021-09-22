@@ -99,11 +99,4 @@ extern char PokeMini_ExecDir[PMTMPV];	// Launch directory
 extern char PokeMini_CurrDir[PMTMPV];	// Current directory
 #endif
 
-// For debugging
-enum {
-	POKEMSG_OUT,
-	POKEMSG_ERR
-};
-void PokeDPrint(int pokemsg, char *format, ...);
-
 #endif

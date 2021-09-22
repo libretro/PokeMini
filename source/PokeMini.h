@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <libretro.h>
 #include <retro_inline.h>
 #include <streams/memory_stream.h>
 
@@ -58,6 +59,8 @@ extern int PokeMini_HostBattStatus;	// Host battery status
 // Number of cycles to process on hardware
 extern int PokeHWCycles;
 
+extern retro_log_printf_t log_cb;
+
 enum {
 	LCDMODE_ANALOG = 0,
 	LCDMODE_3SHADES,
@@ -78,19 +81,6 @@ enum {
 #include "MinxAudio.h"
 #include "CommandLine.h"
 #include "Multicart.h"
-
-// Callbacks
-extern void (*PokeMini_OnAllocMIN)(int newsize, int success);
-extern void (*PokeMini_OnUnzipError)(const char *zipfile, const char *reason);
-extern void (*PokeMini_OnLoadBIOSFile)(const char *filename, int success);
-extern void (*PokeMini_OnLoadMINFile)(const char *filename, int success);
-extern void (*PokeMini_OnLoadColorFile)(const char *filename, int success);
-extern void (*PokeMini_OnLoadEEPROMFile)(const char *filename, int success);
-extern void (*PokeMini_OnSaveEEPROMFile)(const char *filename, int success);
-extern void (*PokeMini_OnReset)(int hardreset);
-
-extern int (*PokeMini_CustomLoadEEPROM)(const char *filename);
-extern int (*PokeMini_CustomSaveEEPROM)(const char *filename);
 
 // PRC Read/Write
 #ifdef PERFORMANCE
@@ -329,9 +319,6 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size);
 
 // Save emulator state to memory stream
 int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size);
-
-// Use default callbacks messages
-void PokeMini_UseDefaultCallbacks();
 
 // Reset CPU
 void PokeMini_Reset(int hardreset);

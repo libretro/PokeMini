@@ -80,19 +80,6 @@ const uint8_t PM_IO_INIT[256] = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x40, 0xFF  // $F8~$FF LCD I/O
 };
 
-// Callbacks
-void (*PokeMini_OnAllocMIN)(int newsize, int success) = NULL;
-void (*PokeMini_OnUnzipError)(const char *zipfile, const char *reason) = NULL;
-void (*PokeMini_OnLoadBIOSFile)(const char *filename, int success) = NULL;
-void (*PokeMini_OnLoadMINFile)(const char *filename, int success) = NULL;
-void (*PokeMini_OnLoadColorFile)(const char *filename, int success) = NULL;
-void (*PokeMini_OnLoadEEPROMFile)(const char *filename, int success) = NULL;
-void (*PokeMini_OnSaveEEPROMFile)(const char *filename, int success) = NULL;
-void (*PokeMini_OnReset)(int hardreset) = NULL;
-
-int (*PokeMini_CustomLoadEEPROM)(const char *filename) = NULL;
-int (*PokeMini_CustomSaveEEPROM)(const char *filename) = NULL;
-
 // Number of cycles to process on hardware
 int PokeHWCycles = 0;
 
@@ -160,7 +147,7 @@ void PokeMini_Destroy()
 }
 
 // Apply changes from command lines
-void PokeMini_ApplyChanges()
+void PokeMini_ApplyChanges(void)
 {
 	int i;
 	if (CommandLine.low_battery != 2) MinxIO_BatteryLow(CommandLine.low_battery);
@@ -211,7 +198,6 @@ int PokeMini_LoadBIOSFile(const char *filename)
 	// Open file
 	fbios = fopen(filename, "rb");
 	if (fbios == NULL) {
-		if (PokeMini_OnLoadBIOSFile) PokeMini_OnLoadBIOSFile(filename, -1);
 		return 0;
 	}
 
@@ -221,9 +207,6 @@ int PokeMini_LoadBIOSFile(const char *filename)
 
 	// Close file
 	fclose(fbios);
-
-	// Callback
-	if (PokeMini_OnLoadBIOSFile) PokeMini_OnLoadBIOSFile(filename, (readbytes == 4096) ? 1 : 0);
 
 	return (readbytes == 4096);
 }
@@ -269,29 +252,22 @@ int PokeMini_NewMIN(uint32_t size)
 	PM_ROM_Mask = GetMultiple2Mask(size);
 	PM_ROM_Size = PM_ROM_Mask + 1;
 	PM_ROM = (uint8_t *)malloc(PM_ROM_Size);
-	if (!PM_ROM) {
-		if (PokeMini_OnAllocMIN) PokeMini_OnAllocMIN(PM_ROM_Size, 0);
+	if (!PM_ROM)
 		return 0;
-	}
 	memset(PM_ROM, 0xFF, PM_ROM_Size);
 	PM_ROM_Alloc = 1;
 
-	if (PokeMini_OnAllocMIN) PokeMini_OnAllocMIN(PM_ROM_Size, 1);
 	return 1;
 }
 
 // Load MIN ROM
 int PokeMini_LoadMINFile(const char *filename)
 {
-	FILE *fi;
 	int size, readbytes;
-
 	// Open file
-	fi = fopen(filename, "rb");
-	if (fi == NULL) {
-		if (PokeMini_OnLoadMINFile) PokeMini_OnLoadMINFile(filename, -1);
+	FILE *fi = fopen(filename, "rb");
+	if (fi == NULL)
 		return 0;
-	}
 
 	// Check filesize
 	fseek(fi, 0, SEEK_END);
@@ -300,7 +276,6 @@ int PokeMini_LoadMINFile(const char *filename)
 	// Check if size is valid
 	if ((size <= 0x2100) || (size > 0x200000)) {
 		fclose(fi);
-		if (PokeMini_OnLoadMINFile) PokeMini_OnLoadMINFile(filename, -2);
 		return 0;
 	}
 
@@ -318,8 +293,6 @@ int PokeMini_LoadMINFile(const char *filename)
 	readbytes = fread(PM_ROM, 1, size, fi);
 	fclose(fi);
 
-	// Callback
-	if (PokeMini_OnLoadMINFile) PokeMini_OnLoadMINFile(filename, (readbytes == size) ? 1 : 0);
 	NewMulticart();
 
 	return (readbytes == size);
@@ -328,14 +301,11 @@ int PokeMini_LoadMINFile(const char *filename)
 // Save MIN ROM
 int PokeMini_SaveMINFile(const char *filename)
 {
-	FILE *fi;
 	int writebytes;
-
 	// Open file
-	fi = fopen(filename, "wb");
-	if (fi == NULL) {
+	FILE *fi = fopen(filename, "wb");
+	if (fi == NULL)
 		return 0;
-	}
 
 	// Write content
 	writebytes = fwrite(PM_ROM, 1, PM_ROM_Size, fi);
@@ -453,11 +423,9 @@ int PokeMini_StreamFromFile(void *data, int size, void *ptr)
 // Load color information from file, MIN must be loaded first
 int PokeMini_LoadColorFile(const char *filename)
 {
-	FILE *fi;
 	int res;
-
 	// Open file
-	fi = fopen(filename, "rb");
+	FILE *fi = fopen(filename, "rb");
 	if (fi == NULL) return 0;		// Silently exit
 
 	// Read color information
@@ -466,38 +434,21 @@ int PokeMini_LoadColorFile(const char *filename)
 	// Done
 	fclose(fi);
 
-	// Callback
-	if (PokeMini_OnLoadColorFile) PokeMini_OnLoadColorFile(filename, res);
-
 	return res;
 }
 
 // Load EEPROM
 int PokeMini_LoadEEPROMFile(const char *filename)
 {
-	FILE *fi;
-	int readbytes, success;
-
-	// Custom EEPROM load
-	if (PokeMini_CustomLoadEEPROM) {
-		success = PokeMini_CustomLoadEEPROM(filename);
-		PokeMini_OnLoadEEPROMFile(filename, success);
-		return success;
-	}
-
+	int readbytes;
 	// Open file
-	fi = fopen(filename, "rb");
-	if (fi == NULL) {
-		if (PokeMini_OnLoadEEPROMFile) PokeMini_OnLoadEEPROMFile(filename, -1);
+	FILE *fi = fopen(filename, "rb");
+	if (fi == NULL)
 		return 0;
-	}
 
 	// Read content
 	readbytes = fread(EEPROM, 1, 8192, fi);
 	fclose(fi);
-
-	// Callback
-	if (PokeMini_OnLoadEEPROMFile) PokeMini_OnLoadEEPROMFile(filename, (readbytes == 8192) ? 1 : 0);
 
 	return (readbytes == 8192);
 }
@@ -505,29 +456,15 @@ int PokeMini_LoadEEPROMFile(const char *filename)
 // Save EEPROM
 int PokeMini_SaveEEPROMFile(const char *filename)
 {
-	FILE *fo;
-	int writebytes, success;
-
-	// Custom EEPROM save
-	if (PokeMini_CustomSaveEEPROM) {
-		success = PokeMini_CustomSaveEEPROM(filename);
-		PokeMini_OnSaveEEPROMFile(filename, success);
-		return success;
-	}
-
+	int writebytes;
 	// Open file
-	fo = fopen(filename, "wb");
-	if (fo == NULL) {
-		if (PokeMini_OnSaveEEPROMFile) PokeMini_OnSaveEEPROMFile(filename, -1);
+	FILE *fo = fopen(filename, "wb");
+	if (fo == NULL)
 		return 0;
-	}
 
 	// Read content
 	writebytes = fwrite(EEPROM, 1, 8192, fo);
 	fclose(fo);
-
-	// Callback
-	if (PokeMini_OnSaveEEPROMFile) PokeMini_OnSaveEEPROMFile(filename, (writebytes == 8192) ? 1 : 0);
 
 	return (writebytes == 8192);
 }
@@ -730,59 +667,6 @@ int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size)
 	return 1;
 }
 
-// Use default callbacks messages
-void PokeMini_OnUnzipError_Def(const char *zipfile, const char *reason)
-{
-	PokeDPrint(POKEMSG_ERR, "Error decompressing %s: %s\n", zipfile, reason);
-}
-void PokeMini_OnLoadBIOSFile_Def(const char *filename, int success)
-{
-	if (success == 1) PokeDPrint(POKEMSG_OUT, "BIOS '%s' loaded\n", filename);
-	else if (success == -1) PokeDPrint(POKEMSG_ERR, "Error loading BIOS '%s': file not found\nUsing FreeBIOS\n", filename);
-	else PokeDPrint(POKEMSG_ERR, "Error loading BIOS '%s': read error\nUsing FreeBIOS\n", filename);
-}
-void PokeMini_OnLoadMINFile_Def(const char *filename, int success)
-{
-	if (success == 1) PokeDPrint(POKEMSG_OUT, "ROM '%s' loaded\n", filename);
-	else if (success == -1) PokeDPrint(POKEMSG_ERR, "Error loading ROM '%s': file not found\n", filename);
-	else if (success == -2) PokeDPrint(POKEMSG_ERR, "Error loading ROM '%s': invalid size\n", filename);
-	else PokeDPrint(POKEMSG_ERR, "Error loading ROM '%s', read error\n", filename);
-}
-void PokeMini_OnLoadColorFile_Def(const char *filename, int success)
-{
-	if (success == 1) PokeDPrint(POKEMSG_OUT, "Color info '%s' loaded\n", filename);
-	else if (success == -1) PokeDPrint(POKEMSG_ERR, "Error loading color info '%s': file not found\n", filename);
-	else PokeDPrint(POKEMSG_ERR, "Error loading color info '%s': read error\n", filename);
-}
-void PokeMini_OnLoadEEPROMFile_Def(const char *filename, int success)
-{
-	if (success == 1) PokeDPrint(POKEMSG_OUT, "EEPROM '%s' loaded\n", filename);
-	else if (success == -1) PokeDPrint(POKEMSG_ERR, "Error loading EEPROM '%s': file not found\n", filename);
-	else if (success == -2) PokeDPrint(POKEMSG_ERR, "Error saving EEPROM '%s': device not found\n", filename);
-	else PokeDPrint(POKEMSG_ERR, "Error loading EEPROM '%s': read error\n", filename);
-}
-void PokeMini_OnSaveEEPROMFile_Def(const char *filename, int success)
-{
-	if (success == 1) PokeDPrint(POKEMSG_OUT, "EEPROM '%s' saved\n", filename);
-	else if (success == -1) PokeDPrint(POKEMSG_ERR, "Error saving EEPROM '%s': filename invalid\n", filename);
-	else if (success == -2) PokeDPrint(POKEMSG_ERR, "Error saving EEPROM '%s': device not found\n", filename);
-	else PokeDPrint(POKEMSG_ERR, "Error saving EEPROM '%s': write error\n", filename);
-}
-void PokeMini_OnReset_Def(int hardreset)
-{
-}
-void PokeMini_UseDefaultCallbacks()
-{
-	PokeMini_OnAllocMIN = NULL;
-	PokeMini_OnUnzipError = PokeMini_OnUnzipError_Def;
-	PokeMini_OnLoadBIOSFile = PokeMini_OnLoadBIOSFile_Def;
-	PokeMini_OnLoadMINFile = PokeMini_OnLoadMINFile_Def;
-	PokeMini_OnLoadColorFile = PokeMini_OnLoadColorFile_Def;
-	PokeMini_OnLoadEEPROMFile = PokeMini_OnLoadEEPROMFile_Def;
-	PokeMini_OnSaveEEPROMFile = PokeMini_OnSaveEEPROMFile_Def;
-	PokeMini_OnReset = PokeMini_OnReset_Def;
-}
-
 // Reset emulation
 void PokeMini_Reset(int hardreset)
 {
@@ -828,7 +712,4 @@ void PokeMini_Reset(int hardreset)
 	// Set multicart type
 	SetMulticart(CommandLine.multicart);
 #endif
-
-	// Callback
-	if (PokeMini_OnReset) PokeMini_OnReset(hardreset);
 }

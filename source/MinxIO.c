@@ -380,7 +380,7 @@ void MinxIO_EEPROM_Write(uint8_t data)
 			MinxIO.OperState = data & 0x01 ? MINX_EEPROM_RBYTE : MINX_EEPROM_ADDRHI;
 		} else {
 			// Unknown Devide
-			PokeDPrint(POKEMSG_ERR, "Error: Accessing unknown I2C device: 0x%02X\n", (int)data);
+			log_cb(RETRO_LOG_ERROR, "Error: Accessing unknown I2C device: 0x%02X\n", (int)data);
 		}
 		break;
 	case MINX_EEPROM_ADDRHI:
