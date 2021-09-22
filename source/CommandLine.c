@@ -52,7 +52,6 @@ void CommandLineInit(void)
 	CommandLine.low_battery = 0;	// Low Battery
 	CommandLine.palette = 0;	// Palette Index
 	CommandLine.rumblelvl = 3;	// Rumble level
-	CommandLine.joyenabled = 0;	// Joystick Enabled
 	CommandLine.joyid = 0;		// Joystick ID
 	CommandLine.joyaxis_dpad = 1;	// Joystick Axis as DPad
 	CommandLine.joyhats_dpad = 1;	// Joystick Hats as DPad

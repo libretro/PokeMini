@@ -38,7 +38,6 @@ typedef struct {
 	int low_battery;
 	int palette;
 	int rumblelvl;
-	int joyenabled;
 	int joyid;
 	int joyaxis_dpad;
 	int joyhats_dpad;

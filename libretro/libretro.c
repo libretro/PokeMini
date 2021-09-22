@@ -402,7 +402,6 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 	CommandLine.eeprom_share = 0;  // OFF (there is no practical benefit to a shared eeprom save
 	                               //      - it just gets full and becomes a nuisance...)
 	CommandLine.updatertc = 2;	    // Update RTC (0=Off, 1=State, 2=Host)
-	CommandLine.joyenabled = 1;    // ON
 	
 #if defined(_3DS)
 	// 3DS has limited performance...

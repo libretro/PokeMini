@@ -26,12 +26,7 @@ void JoystickBitsEvent(uint32_t pressbits)
 {
 	static uint32_t lastpressbits;
 	uint32_t maskbit, togglebits = pressbits ^ lastpressbits;
-	int index, joybutton, pressed;
-
-	if (!CommandLine.joyenabled) {
-		lastpressbits = pressbits;
-		return;
-	}
+	int index, joybutton;
 
 	for (index=0; index<10; index++) {
 		joybutton = CommandLine.joybutton[index];
@@ -54,8 +49,6 @@ void JoystickBitsEvent(uint32_t pressbits)
 void JoystickButtonsEvent(int button, int pressed)
 {
 	int index;
-
-	if (!CommandLine.joyenabled) return;
 
 	for (index=0; index<10; index++) {
 		if (CommandLine.joybutton[index] == button) {
