@@ -330,14 +330,8 @@ int PokeMini_SaveEEPROMFile(const char *filename);
 // Check emulator state, output romfile from assigned ROM in state
 int PokeMini_CheckSSFile(const char *statefile, char *romfile);
 
-// Load emulator state
-int PokeMini_LoadSSFile(const char *statefile);
-
 // Load emulator state from memory stream
 int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size);
-
-// Save emulator state
-int PokeMini_SaveSSFile(const char *statefile, const char *romfile);
 
 // Save emulator state to memory stream
 int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size);

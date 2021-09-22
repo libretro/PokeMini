@@ -73,28 +73,6 @@ static char g_basename[PMTMPV];
 static char *g_system_dir;
 static char *g_save_dir;
 
-// Platform menu (REQUIRED >= 0.4.4)
-int UIItems_PlatformC(int index, int reason);
-TUIMenu_Item UIItems_Platform[] = {
-   PLATFORMDEF_GOBACK,
-   { 0,  9, "Define Joystick...", UIItems_PlatformC, NULL },
-   PLATFORMDEF_SAVEOPTIONS,
-   PLATFORMDEF_END(UIItems_PlatformC)
-};
-int UIItems_PlatformC(int index, int reason)
-{
-   if (reason == UIMENU_OK)
-      reason = UIMENU_RIGHT;
-   if (reason == UIMENU_CANCEL)
-      UIMenu_PrevMenu();
-   if (reason == UIMENU_RIGHT)
-   {
-      if (index == 9)
-         JoystickEnterMenu();
-   }
-   return 1;
-}
-
 static retro_log_printf_t log_cb = NULL;
 static retro_video_refresh_t video_cb = NULL;
 static retro_input_poll_t poll_cb = NULL;
