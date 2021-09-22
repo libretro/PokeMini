@@ -74,26 +74,6 @@ void MinxColorPRC_Reset(int hardreset)
 	MinxColorPRC.HNColor1 = 0xF0;
 }
 
-int MinxColorPRC_LoadState(FILE *fi, uint32_t bsize)
-{
-	POKELOADSS_START(16384+32);
-	POKELOADSS_A(PRCColorVMem, 16384);
-	POKELOADSS_16(MinxColorPRC.UnlockCode);
-	POKELOADSS_8(MinxColorPRC.Unlocked);
-	POKELOADSS_8(MinxColorPRC.Access);
-	POKELOADSS_8(MinxColorPRC.Modes);
-	POKELOADSS_8(MinxColorPRC.ActivePage);
-	POKELOADSS_16(MinxColorPRC.Address);
-	POKELOADSS_8(MinxColorPRC.LNColor0);
-	POKELOADSS_8(MinxColorPRC.HNColor0);
-	POKELOADSS_8(MinxColorPRC.LNColor1);
-	POKELOADSS_8(MinxColorPRC.HNColor1);
-	POKELOADSS_X(20);
-	POKELOADSS_END(16384+32);
-	MinxColorPRC.Address &= 0x3FFF;
-	PRCColorPixels = PRCColorVMem + (MinxColorPRC.ActivePage ? 0x2000 : 0);
-}
-
 int MinxColorPRC_LoadStateStream(memstream_t *stream, uint32_t bsize)
 {
 	POKELOADSS_START(16384+32);
@@ -112,24 +92,6 @@ int MinxColorPRC_LoadStateStream(memstream_t *stream, uint32_t bsize)
 	POKELOADSS_END(16384+32);
 	MinxColorPRC.Address &= 0x3FFF;
 	PRCColorPixels = PRCColorVMem + (MinxColorPRC.ActivePage ? 0x2000 : 0);
-}
-
-int MinxColorPRC_SaveState(FILE *fi)
-{
-	POKESAVESS_START(16384+32);
-	POKESAVESS_A(PRCColorVMem, 16384);
-	POKESAVESS_16(MinxColorPRC.UnlockCode);
-	POKESAVESS_8(MinxColorPRC.Unlocked);
-	POKESAVESS_8(MinxColorPRC.Access);
-	POKESAVESS_8(MinxColorPRC.Modes);
-	POKESAVESS_8(MinxColorPRC.ActivePage);
-	POKESAVESS_16(MinxColorPRC.Address);
-	POKESAVESS_8(MinxColorPRC.LNColor0);
-	POKESAVESS_8(MinxColorPRC.HNColor0);
-	POKESAVESS_8(MinxColorPRC.LNColor1);
-	POKESAVESS_8(MinxColorPRC.HNColor1);
-	POKESAVESS_X(20);
-	POKESAVESS_END(16384+32);
 }
 
 int MinxColorPRC_SaveStateStream(memstream_t *stream)

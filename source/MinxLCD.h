@@ -72,11 +72,7 @@ void MinxLCD_Destroy(void);
 
 void MinxLCD_Reset(int hardreset);
 
-int MinxLCD_LoadState(FILE *fi, uint32_t bsize);
-
 int MinxLCD_LoadStateStream(memstream_t *stream, uint32_t bsize);
-
-int MinxLCD_SaveState(FILE *fi);
 
 int MinxLCD_SaveStateStream(memstream_t *stream);
 

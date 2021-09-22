@@ -74,23 +74,6 @@ void MinxIO_Reset(int hardreset)
 	MinxIO_BatteryLow(PokeMini_BatteryStatus);
 }
 
-int MinxIO_LoadState(FILE *fi, uint32_t bsize)
-{
-	POKELOADSS_START(32+8192);
-	PokeMini_Rumbling = 0;
-	PokeMini_RumblingLatch = 0;
-	PokeMini_EEPROMWritten = 1;
-	POKELOADSS_8(MinxIO.EEPLastPins);
-	POKELOADSS_8(MinxIO.ListenState);
-	POKELOADSS_8(MinxIO.OperState);
-	POKELOADSS_8(MinxIO.EEPData);
-	POKELOADSS_32(MinxIO.EEPBit);
-	POKELOADSS_16(MinxIO.EEPAddress);
-	POKELOADSS_X(22);
-	POKELOADSS_A(EEPROM, 8192);
-	POKELOADSS_END(32+8192);
-}
-
 int MinxIO_LoadStateStream(memstream_t *stream, uint32_t bsize)
 {
 	POKELOADSS_START(32+8192);
@@ -106,20 +89,6 @@ int MinxIO_LoadStateStream(memstream_t *stream, uint32_t bsize)
 	POKELOADSS_STREAM_X(22);
 	POKELOADSS_STREAM_A(EEPROM, 8192);
 	POKELOADSS_END(32+8192);
-}
-
-int MinxIO_SaveState(FILE *fi)
-{
-	POKESAVESS_START(32+8192);
-	POKESAVESS_8(MinxIO.EEPLastPins);
-	POKESAVESS_8(MinxIO.ListenState);
-	POKESAVESS_8(MinxIO.OperState);
-	POKESAVESS_8(MinxIO.EEPData);
-	POKESAVESS_32(MinxIO.EEPBit);
-	POKESAVESS_16(MinxIO.EEPAddress);
-	POKESAVESS_X(22);
-	POKESAVESS_A(EEPROM, 8192);
-	POKESAVESS_END(32+8192);
 }
 
 int MinxIO_SaveStateStream(memstream_t *stream)

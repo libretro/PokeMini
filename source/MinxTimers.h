@@ -114,11 +114,7 @@ void MinxTimers_Destroy(void);
 
 void MinxTimers_Reset(int hardreset);
 
-int MinxTimers_LoadState(FILE *fi, uint32_t bsize);
-
 int MinxTimers_LoadStateStream(memstream_t *stream, uint32_t bsize);
-
-int MinxTimers_SaveState(FILE *fi);
 
 int MinxTimers_SaveStateStream(memstream_t *stream);
 

@@ -32,11 +32,7 @@ void MinxIRQ_Destroy(void);
 
 void MinxIRQ_Reset(int hardreset);
 
-int MinxIRQ_LoadState(FILE *fi, uint32_t bsize);
-
 int MinxIRQ_LoadStateStream(memstream_t *stream, uint32_t bsize);
-
-int MinxIRQ_SaveState(FILE *fi);
 
 int MinxIRQ_SaveStateStream(memstream_t *stream);
 

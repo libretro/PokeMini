@@ -58,11 +58,7 @@ void MinxColorPRC_Destroy(void);
 
 void MinxColorPRC_Reset(int hardreset);
 
-int MinxColorPRC_LoadState(FILE *fi, uint32_t bsize);
-
 int MinxColorPRC_LoadStateStream(memstream_t *stream, uint32_t bsize);
-
-int MinxColorPRC_SaveState(FILE *fi);
 
 int MinxColorPRC_SaveStateStream(memstream_t *stream);
 

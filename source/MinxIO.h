@@ -96,11 +96,7 @@ void MinxIO_Destroy(void);
 
 void MinxIO_Reset(int hardreset);
 
-int MinxIO_LoadState(FILE *fi, uint32_t bsize);
-
 int MinxIO_LoadStateStream(memstream_t *stream, uint32_t bsize);
-
-int MinxIO_SaveState(FILE *fi);
 
 int MinxIO_SaveStateStream(memstream_t *stream);
 

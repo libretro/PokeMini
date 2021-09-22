@@ -79,25 +79,6 @@ void MinxPRC_Reset(int hardreset)
 	MinxPRC.PRCRateMatch = 0x10;
 }
 
-int MinxPRC_LoadState(FILE *fi, uint32_t bsize)
-{
-	POKELOADSS_START(1+32);
-	POKELOADSS_8(StallCPU);
-	POKELOADSS_32(MinxPRC.PRCCnt);
-	POKELOADSS_32(MinxPRC.PRCBGBase);
-	POKELOADSS_32(MinxPRC.PRCSprBase);
-	POKELOADSS_8(MinxPRC.PRCMode);
-	POKELOADSS_8(MinxPRC.PRCRateMatch);
-	POKELOADSS_8(MinxPRC.PRCMapPX);
-	POKELOADSS_8(MinxPRC.PRCMapPY);
-	POKELOADSS_8(MinxPRC.PRCMapTW);
-	POKELOADSS_8(MinxPRC.PRCMapTH);
-	POKELOADSS_8(MinxPRC.PRCState);
-	POKELOADSS_X(13);
-	POKELOADSS_END(1+32);
-
-}
-
 int MinxPRC_LoadStateStream(memstream_t *stream, uint32_t bsize)
 {
 	POKELOADSS_START(1+32);
@@ -114,24 +95,6 @@ int MinxPRC_LoadStateStream(memstream_t *stream, uint32_t bsize)
 	POKELOADSS_STREAM_8(MinxPRC.PRCState);
 	POKELOADSS_STREAM_X(13);
 	POKELOADSS_END(1+32);
-}
-
-int MinxPRC_SaveState(FILE *fi)
-{
-	POKESAVESS_START(1+32);
-	POKESAVESS_8(StallCPU);
-	POKESAVESS_32(MinxPRC.PRCCnt);
-	POKESAVESS_32(MinxPRC.PRCBGBase);
-	POKESAVESS_32(MinxPRC.PRCSprBase);
-	POKESAVESS_8(MinxPRC.PRCMode);
-	POKESAVESS_8(MinxPRC.PRCRateMatch);
-	POKESAVESS_8(MinxPRC.PRCMapPX);
-	POKESAVESS_8(MinxPRC.PRCMapPY);
-	POKESAVESS_8(MinxPRC.PRCMapTW);
-	POKESAVESS_8(MinxPRC.PRCMapTH);
-	POKESAVESS_8(MinxPRC.PRCState);
-	POKESAVESS_X(13);
-	POKESAVESS_END(1+32);
 }
 
 int MinxPRC_SaveStateStream(memstream_t *stream)

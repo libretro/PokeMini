@@ -149,8 +149,6 @@ void MinxCPU_OnIRQAct(uint8_t intr);
 int MinxCPU_Create(void);		// Create MinxCPU
 void MinxCPU_Destroy(void);		// Destroy MinxCPU
 void MinxCPU_Reset(int hardreset);	// Reset CPU
-int MinxCPU_LoadState(FILE *fi, uint32_t bsize); // Load State
-int MinxCPU_SaveState(FILE *fi);	// Save State
 int MinxCPU_Exec(void);			// Execute 1 CPU instruction
 int MinxCPU_CallIRQ(uint8_t IRQ);	// Call an IRQ
 

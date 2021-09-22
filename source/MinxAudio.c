@@ -56,16 +56,6 @@ static INLINE int MinxAudio_iSamplesInBuffer(void)
    else return (MinxAudio_FIFOSize - MinxAudio_ReadPtr) + MinxAudio_WritePtr;
 }
 
-int MinxAudio_TotalSamples(void)
-{
-	return MinxAudio_FIFOSize;
-}
-
-int MinxAudio_SamplesInBuffer(void)
-{
-	return MinxAudio_iSamplesInBuffer();
-}
-
 static INLINE void MinxAudio_FIFOWrite(int16_t data)
 {
 	if (MinxAudio_iSamplesInBuffer() < MinxAudio_FIFOSize) {
@@ -133,17 +123,6 @@ void MinxAudio_Reset(int hardreset)
 	memset((void *)&MinxAudio, 0, sizeof(TMinxAudio));
 }
 
-int MinxAudio_LoadState(FILE *fi, uint32_t bsize)
-{
-	POKELOADSS_START(32);
-	POKELOADSS_32(MinxAudio.AudioCCnt);
-	POKELOADSS_32(MinxAudio.AudioSCnt);
-	POKELOADSS_16(MinxAudio.Volume);
-	POKELOADSS_16(MinxAudio.PWMMul);
-	POKELOADSS_X(20);
-	POKELOADSS_END(32);
-}
-
 int MinxAudio_LoadStateStream(memstream_t *stream, uint32_t bsize)
 {
 	POKELOADSS_START(32);
@@ -153,17 +132,6 @@ int MinxAudio_LoadStateStream(memstream_t *stream, uint32_t bsize)
 	POKELOADSS_STREAM_16(MinxAudio.PWMMul);
 	POKELOADSS_STREAM_X(20);
 	POKELOADSS_END(32);
-}
-
-int MinxAudio_SaveState(FILE *fi)
-{
-	POKESAVESS_START(32);
-	POKESAVESS_32(MinxAudio.AudioCCnt);
-	POKESAVESS_32(MinxAudio.AudioSCnt);
-	POKESAVESS_16(MinxAudio.Volume);
-	POKESAVESS_16(MinxAudio.PWMMul);
-	POKESAVESS_X(20);
-	POKESAVESS_END(32);
 }
 
 int MinxAudio_SaveStateStream(memstream_t *stream)
@@ -282,7 +250,7 @@ void MinxAudio_WriteReg(uint8_t reg, uint8_t val)
 // Get emulated frequency and pulsewidth
 // Sound_Frequency is in Hz
 // Pulse_Width is between 0 to 4095 (0% to ~99.99%)
-void MinxAudio_GetEmulated(int *Sound_Frequency, int *Pulse_Width)
+static void MinxAudio_GetEmulated(int *Sound_Frequency, int *Pulse_Width)
 {
 	int Timer3_Frequency;
 	int Preset_Value, Sound_Pivot;

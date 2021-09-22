@@ -84,33 +84,6 @@ void MinxLCD_Reset(int hardreset)
 	MinxLCD_SetContrast(0x1F);
 }
 
-int MinxLCD_LoadState(FILE *fi, uint32_t bsize)
-{
-	POKELOADSS_START(256*9 + 96*64 + 96*64 + 64);
-	POKELOADSS_A(LCDData, 256*9);
-	POKELOADSS_A(LCDPixelsD, 96*64);
-	POKELOADSS_A(LCDPixelsA, 96*64);
-	POKELOADSS_32(MinxLCD.Pixel0Intensity);
-	POKELOADSS_32(MinxLCD.Pixel1Intensity);
-	POKELOADSS_8(MinxLCD.Column);
-	POKELOADSS_8(MinxLCD.StartLine);
-	POKELOADSS_8(MinxLCD.SetContrast);
-	POKELOADSS_8(MinxLCD.Contrast);
-	POKELOADSS_8(MinxLCD.SegmentDir);
-	POKELOADSS_8(MinxLCD.MaxContrast);
-	POKELOADSS_8(MinxLCD.SetAllPix);
-	POKELOADSS_8(MinxLCD.InvAllPix);
-	POKELOADSS_8(MinxLCD.DisplayOn);
-	POKELOADSS_8(MinxLCD.Page);
-	POKELOADSS_8(MinxLCD.RowOrder);
-	POKELOADSS_8(MinxLCD.ReadModifyMode);
-	POKELOADSS_8(MinxLCD.RequireDummyR);
-	POKELOADSS_8(MinxLCD.RMWColumn);
-	POKELOADSS_X(42);
-	POKELOADSS_END(256*9 + 96*64 + 96*64 + 64);
-	return 1;
-}
-
 int MinxLCD_LoadStateStream(memstream_t *stream, uint32_t bsize)
 {
 	POKELOADSS_START(256*9 + 96*64 + 96*64 + 64);
@@ -136,32 +109,6 @@ int MinxLCD_LoadStateStream(memstream_t *stream, uint32_t bsize)
 	POKELOADSS_STREAM_X(42);
 	POKELOADSS_END(256*9 + 96*64 + 96*64 + 64);
 	return 1;
-}
-
-int MinxLCD_SaveState(FILE *fi)
-{
-	POKESAVESS_START(256*9 + 96*64 + 96*64 + 64);
-	POKESAVESS_A(LCDData, 256*9);
-	POKESAVESS_A(LCDPixelsD, 96*64);
-	POKESAVESS_A(LCDPixelsA, 96*64);
-	POKESAVESS_32(MinxLCD.Pixel0Intensity);
-	POKESAVESS_32(MinxLCD.Pixel1Intensity);
-	POKESAVESS_8(MinxLCD.Column);
-	POKESAVESS_8(MinxLCD.StartLine);
-	POKESAVESS_8(MinxLCD.SetContrast);
-	POKESAVESS_8(MinxLCD.Contrast);
-	POKESAVESS_8(MinxLCD.SegmentDir);
-	POKESAVESS_8(MinxLCD.MaxContrast);
-	POKESAVESS_8(MinxLCD.SetAllPix);
-	POKESAVESS_8(MinxLCD.InvAllPix);
-	POKESAVESS_8(MinxLCD.DisplayOn);
-	POKESAVESS_8(MinxLCD.Page);
-	POKESAVESS_8(MinxLCD.RowOrder);
-	POKESAVESS_8(MinxLCD.ReadModifyMode);
-	POKESAVESS_8(MinxLCD.RequireDummyR);
-	POKESAVESS_8(MinxLCD.RMWColumn);
-	POKESAVESS_X(42);
-	POKESAVESS_END(256*9 + 96*64 + 96*64 + 64);
 }
 
 int MinxLCD_SaveStateStream(memstream_t *stream)

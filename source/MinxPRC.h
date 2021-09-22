@@ -74,11 +74,7 @@ void MinxPRC_Destroy(void);
 
 void MinxPRC_Reset(int hardreset);
 
-int MinxPRC_LoadState(FILE *fi, uint32_t bsize);
-
 int MinxPRC_LoadStateStream(memstream_t *stream, uint32_t bsize);
-
-int MinxPRC_SaveState(FILE *fi);
 
 int MinxPRC_SaveStateStream(memstream_t *stream);
 

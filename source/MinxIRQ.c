@@ -48,25 +48,11 @@ void MinxIRQ_Reset(int hardreset)
 	PMR_IRQ_ACT4 = 0x00;
 }
 
-int MinxIRQ_LoadState(FILE *fi, uint32_t bsize)
-{
-	POKELOADSS_START(1);
-	POKELOADSS_8(MinxIRQ_MasterIRQ);
-	POKELOADSS_END(1);
-}
-
 int MinxIRQ_LoadStateStream(memstream_t *stream, uint32_t bsize)
 {
 	POKELOADSS_START(1);
 	POKELOADSS_STREAM_8(MinxIRQ_MasterIRQ);
 	POKELOADSS_END(1);
-}
-
-int MinxIRQ_SaveState(FILE *fi)
-{
-	POKESAVESS_START(1);
-	POKESAVESS_8(MinxIRQ_MasterIRQ);
-	POKESAVESS_END(1);
 }
 
 int MinxIRQ_SaveStateStream(memstream_t *stream)

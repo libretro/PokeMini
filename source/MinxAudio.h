@@ -83,11 +83,7 @@ void MinxAudio_Destroy(void);
 
 void MinxAudio_Reset(int hardreset);
 
-int MinxAudio_LoadState(FILE *fi, uint32_t bsize);
-
 int MinxAudio_LoadStateStream(memstream_t *stream, uint32_t bsize);
-
-int MinxAudio_SaveState(FILE *fi);
 
 int MinxAudio_SaveStateStream(memstream_t *stream);
 
@@ -100,12 +96,6 @@ void MinxAudio_Sync(void);
 uint8_t MinxAudio_ReadReg(uint8_t reg);
 
 void MinxAudio_WriteReg(uint8_t reg, uint8_t val);
-
-int MinxAudio_TotalSamples(void);
-
-int MinxAudio_SamplesInBuffer(void);
-
-void MinxAudio_GetEmulated(int *Sound_Frequency, int *Pulse_Width);
 
 int16_t MinxAudio_AudioProcessDirect(void);
 
