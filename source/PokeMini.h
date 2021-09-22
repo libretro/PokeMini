@@ -131,28 +131,6 @@ static INLINE void MinxPRC_OnWrite(int cpu, uint32_t addr, uint8_t data)
 	if (size != bsize) return 0;\
 	{ tmp32 = 0; tmp16 = 0; }
 
-#define POKELOADSS_32(var) {\
-	rsize += (uint32_t)fread((void *)&tmp32, 1, 4, fi);\
-	var = Endian32(tmp32);\
-}
-
-#define POKELOADSS_16(var) {\
-	rsize += (uint32_t)fread((void *)&tmp16, 1, 2, fi);\
-	var = Endian16(tmp16);\
-}
-
-#define POKELOADSS_8(var) {\
-	rsize += (uint32_t)fread((void *)&var, 1, 1, fi);\
-}
-
-#define POKELOADSS_A(array, size) {\
-	rsize += (uint32_t)fread((void *)array, 1, size, fi);\
-}
-
-#define POKELOADSS_X(size) {\
-	rsize += fseek(fi, size, SEEK_CUR) ? 0 : size;\
-}
-
 // -- Stream versions START
 #define POKELOADSS_STREAM_32(var) {\
 	rsize += (uint32_t)memstream_read(stream, (void *)&tmp32, 4);\
@@ -180,39 +158,6 @@ static INLINE void MinxPRC_OnWrite(int cpu, uint32_t addr, uint8_t data)
 #define POKELOADSS_END(size) {\
 	tmp32 = 0; tmp16 = 0;\
 	return (rsize == size) + tmp32 + (uint32_t)tmp16;\
-}
-
-// Save state safe variables
-#define POKESAVESS_START(size)\
-	uint32_t wsize = 0;\
-	uint32_t tmp32 = Endian32(size);\
-	uint16_t tmp16;\
-	if (fwrite((void *)&tmp32, 1, 4, fi) != 4) return 0;\
-	{ tmp32 = 0; tmp16 = 0; }
-
-#define POKESAVESS_32(var) {\
-	tmp32 = Endian32((uint32_t)var);\
-	wsize += (uint32_t)fwrite((void *)&tmp32, 1, 4, fi);\
-}
-
-#define POKESAVESS_16(var) {\
-	tmp16 = Endian16((uint16_t)var);\
-	wsize += (uint32_t)fwrite((void *)&tmp16, 1, 2, fi);\
-}
-
-#define POKESAVESS_8(var) {\
-	wsize += (uint32_t)fwrite((void *)&var, 1, 1, fi);\
-}
-
-#define POKESAVESS_A(array, size) {\
-	wsize += (uint32_t)fwrite((void *)array, 1, size, fi);\
-}
-
-#define POKESAVESS_X(size) {\
-	tmp16 = 0;\
-	for (tmp32=0; tmp32<(uint32_t)size; tmp32++) {\
-		wsize += (uint32_t)fwrite((void *)&tmp16, 1, 1, fi);\
-	}\
 }
 
 // -- Stream versions START

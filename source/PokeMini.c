@@ -585,10 +585,9 @@ int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size)
 // Reset emulation
 void PokeMini_Reset(int hardreset)
 {
-	char tmp[PMTMPV];
-
 	// Reset IO
-	if (hardreset) {
+	if (hardreset)
+	{
 		memset(PM_RAM, 0xFF, 8192);
 		memcpy(PM_IO, PM_IO_INIT, 256);
 	}
@@ -604,15 +603,14 @@ void PokeMini_Reset(int hardreset)
 	MinxCPU_Reset(hardreset);
 
 	// Change BIOS
-	if (!PokeMini_FreeBIOS && CommandLine.forcefreebios) {
+	if (!PokeMini_FreeBIOS && CommandLine.forcefreebios)
 		PokeMini_LoadFreeBIOS();
-	}
-	if (PokeMini_FreeBIOS && !CommandLine.forcefreebios) {
+	if (PokeMini_FreeBIOS && !CommandLine.forcefreebios)
+	{
 		PokeMini_LoadFreeBIOS();
-		if (StringIsSet(CommandLine.bios_file)) {
+		if (StringIsSet(CommandLine.bios_file))
 			if (FileExist(CommandLine.bios_file))
 				PokeMini_LoadBIOSFile(CommandLine.bios_file);
-		}
 	}
 
 	// Synchronize with host time
