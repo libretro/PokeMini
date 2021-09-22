@@ -135,18 +135,4 @@ void PokeMini_VideoPalette_16(uint16_t P0Color, uint16_t P1Color, int contrastbo
 void PokeMini_VideoPalette_Index(int index, uint32_t *CustomMonoPal, int contrastboost, int brightoffset);
 void PokeMini_VideoPalette_Free(void);
 
-// Render to a preview 96x64 buffer
-void PokeMini_VideoPreview_32(uint32_t *screen, int pitchW, int lcdmode);
-void PokeMini_VideoPreview_16(uint16_t *screen, int pitchW, int lcdmode);
-void PokeMini_VideoPreviewA_32(uint32_t *screen, int pitchW);
-void PokeMini_VideoPreviewA_16(uint16_t *screen, int pitchW);
-void PokeMini_VideoPreview2_32(uint32_t *screen, int pitchW);
-void PokeMini_VideoPreview2_16(uint16_t *screen, int pitchW);
-void PokeMini_VideoPreview3_32(uint32_t *screen, int pitchW);
-void PokeMini_VideoPreview3_16(uint16_t *screen, int pitchW);
-void PokeMini_VideoPreviewC_32(uint32_t *screen, int pitchW);
-void PokeMini_VideoPreviewC_16(uint16_t *screen, int pitchW);
-void PokeMini_VideoPreviewCH_32(uint32_t *screen, int pitchW);
-void PokeMini_VideoPreviewCH_16(uint16_t *screen, int pitchW);
-
 #endif
