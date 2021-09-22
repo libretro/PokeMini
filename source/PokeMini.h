@@ -345,12 +345,6 @@ int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size);
 // Load MIN ROM (and others)
 int PokeMini_LoadROM(const char *filename);
 
-// Load all files from command-line, return false if require menu
-int PokeMini_LoadFromCommandLines(const char *nobios, const char *noeeprom);
-
-// Save all files from command-line
-void PokeMini_SaveFromCommandLines(int exitemulator);
-
 // Use default callbacks messages
 void PokeMini_UseDefaultCallbacks();
 

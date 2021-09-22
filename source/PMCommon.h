@@ -85,51 +85,6 @@ int HasLastSlash(char *path);
 // Convert slashes to windows type
 void ConvertSlashes(char *filename, int slashtype);
 
-// Trim string
-char *TrimStr(char *s);
-
-// Remove comments
-void RemoveComments(char *s);
-
-// Up to token...
-char *UpToToken(char *out, const char *in, char *tokens, char *tokenfound);
-
-// Remove characters
-void RemoveChars(char *out, const char *in, char *chs);
-
-// Convert string to boolean
-int Str2Bool(char *s);
-
-// Convert boolean to string
-const char *Bool2Str(int i);
-
-// Convert boolean to string with an affirmative result
-const char *Bool2StrAf(int i);
-
-// Fix symbol identification
-void FixSymbolID(char *filename);
-
-// Clear control characters
-void ClearCtrlChars(char *s, int len);
-
-// atoi() that support hex numbers and default on failure
-int atoi_Ex(const char *str, int defnum);
-
-// atoi() that support hex numbers, return false on failure
-int atoi_Ex2(const char *str, int *outnum);
-
-// atof() that return float and support default on failure
-float atof_Ex(const char *str, float defnum);
-
-// Separate string at character
-int SeparateAtChar(char *s, char ch, char **key, char **value);
-
-// Separate string at any character
-int SeparateAtChars(char *s, char *chs, char **key, char **value);
-
-// Get an argument from executable parameters
-int GetArgument(const char *runcmd, int args, char *out, int len, char **runcmd_found);
-
 // Directories
 void PokeMini_InitDirs(char *argv0, char *exec);
 void PokeMini_GetCustomDir(char *dir, int max);
@@ -149,8 +104,6 @@ enum {
 	POKEMSG_OUT,
 	POKEMSG_ERR
 };
-extern FILE *PokeDebugFOut;
-extern FILE *PokeDebugFErr;
 void PokeDPrint(int pokemsg, char *format, ...);
 
 #endif

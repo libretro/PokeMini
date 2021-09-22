@@ -807,11 +807,6 @@ int UIItems_OptionsC(int index, int reason)
 				UIMenu_SetMessage("Save Configs...", 1);
 				UIMenu_SetMessage("", 1);
 				PokeMini_GotoExecDir();
-				if (CommandLineConfSave()) {
-					UIMenu_SetMessage("Configurations saved", 0);
-				} else {
-					UIMenu_SetMessage("Saving failed!", 0);
-				}
 				UIMenu_EndMessage(240);
 				break;
 		}
@@ -1036,11 +1031,6 @@ int UIItems_PlatformDefC(int index, int reason)
 			UIMenu_SetMessage("Save Configs...", 1);
 			UIMenu_SetMessage("", 1);
 			PokeMini_GotoExecDir();
-			if (CommandLineConfSave()) {
-				UIMenu_SetMessage("Configurations saved", 0);
-			} else {
-				UIMenu_SetMessage("Saving failed!", 0);
-			}
 			UIMenu_EndMessage(240);
 		} else reason = UIMENU_CANCEL;
 	}
