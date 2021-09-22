@@ -15,14 +15,6 @@
 #include <libretro.h>
 #include <libretro_core_options.h>
 #include <retro_miscellaneous.h>
-/*
- bare functions to use
- int PokeMini_EmulateFrame(void);
- int PokeMini_Create(int flags, int soundfifo);
- void PokeMini_Destroy();
- int PokeMini_NewMIN(uint32_t size);
- int PokeMini_LoadMINFile(const char *filename);
- */
 
 // PokeMini headers
 #include "MinxIO.h"

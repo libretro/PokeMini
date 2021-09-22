@@ -293,12 +293,6 @@ int PokeMini_FileExist(const char *filename);
 // New MIN ROM
 int PokeMini_NewMIN(uint32_t size);
 
-// Load MIN ROM
-int PokeMini_LoadMINFile(const char *filename);
-
-// Save MIN ROM
-int PokeMini_SaveMINFile(const char *filename);
-
 // Set MIN from memory
 int PokeMini_SetMINMem(uint8_t *mem, int size);
 

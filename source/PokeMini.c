@@ -254,60 +254,6 @@ int PokeMini_NewMIN(uint32_t size)
 	return 1;
 }
 
-// Load MIN ROM
-int PokeMini_LoadMINFile(const char *filename)
-{
-	int size, readbytes;
-	// Open file
-	FILE *fi = fopen(filename, "rb");
-	if (fi == NULL)
-		return 0;
-
-	// Check filesize
-	fseek(fi, 0, SEEK_END);
-	size = ftell(fi);
-
-	// Check if size is valid
-	if ((size <= 0x2100) || (size > 0x200000)) {
-		fclose(fi);
-		return 0;
-	}
-
-	// Free existing color information
-	PokeMini_FreeColorInfo();
-
-	// Allocate ROM and set cartridge size
-	if (!PokeMini_NewMIN(size)) {
-		fclose(fi);
-		return 0;
-	}
-
-	// Read content
-	fseek(fi, 0, SEEK_SET);
-	readbytes = fread(PM_ROM, 1, size, fi);
-	fclose(fi);
-
-	NewMulticart();
-
-	return (readbytes == size);
-}
-
-// Save MIN ROM
-int PokeMini_SaveMINFile(const char *filename)
-{
-	int writebytes;
-	// Open file
-	FILE *fi = fopen(filename, "wb");
-	if (fi == NULL)
-		return 0;
-
-	// Write content
-	writebytes = fwrite(PM_ROM, 1, PM_ROM_Size, fi);
-	fclose(fi);
-
-	return (writebytes == PM_ROM_Size);
-}
-
 // Set MIN from memory
 int PokeMini_SetMINMem(uint8_t *mem, int size)
 {
