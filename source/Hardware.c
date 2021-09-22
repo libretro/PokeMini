@@ -18,36 +18,12 @@
 
 #include "PokeMini.h"
 
-// Emulate X cycles, return remaining
-int PokeMini_EmulateCycles(int lcylc)
-{
-	if (RequireSoundSync) {
-		while (lcylc > 0) {
-			if (StallCPU) PokeHWCycles = StallCycles;
-			else PokeHWCycles = MinxCPU_Exec();
-			MinxTimers_Sync();
-			MinxPRC_Sync();
-			MinxAudio_Sync();
-			lcylc -= PokeHWCycles;
-		}
-	} else {
-		while (lcylc > 0) {
-			if (StallCPU) PokeHWCycles = StallCycles;
-			else PokeHWCycles = MinxCPU_Exec();
-			MinxTimers_Sync();
-			MinxPRC_Sync();
-			lcylc -= PokeHWCycles;
-		}
-	}
-
-	return lcylc;
-}
-
-// Emulate 1 frame, return cycles ran
+/* Emulate 1 frame, return cycles ran */
 static int PokeMini_EmulateFrameRun;
+
 int PokeMini_EmulateFrame(void)
 {
-	int lcylc = 0;
+	int lcylc    = 0;
 	int synccylc = CommandLine.synccycles;
 
 	PokeMini_EmulateFrameRun = 1;

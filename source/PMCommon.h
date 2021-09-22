@@ -55,48 +55,16 @@ static INLINE int BetweenNum(int num, int min, int max)
 // Return true if the string is valid and non-empty
 int StringIsSet(char *str);
 
-// Get multiple of 2
-int GetMultiple2(int input);
-
 // Get multiple of 2 (Mask)
 int GetMultiple2Mask(int input);
 
 // Check if file exist
 int FileExist(const char *filename);
 
-// Get filename
-char *GetFilename(const char *filename);
-
-// Get extension
-char *GetExtension(const char *filename);
-
-// Extract path
-char *ExtractPath(char *filename, int slash);
-
-// Remove extension
-char *RemoveExtension(char *filename);
-
-// Check if filename has certain extension
-int ExtensionCheck(const char *filename, const char *ext);
-
-// true if the path ends with a slash
-int HasLastSlash(char *path);
-
-// Convert slashes to windows type
-void ConvertSlashes(char *filename, int slashtype);
-
 // Directories
 void PokeMini_InitDirs(char *argv0, char *exec);
 void PokeMini_GetCustomDir(char *dir, int max);
-void PokeMini_SetCurrentDir(const char *dir);
 void PokeMini_GotoCustomDir(const char *dir);
-void PokeMini_GetCurrentDir();
-void PokeMini_GotoCurrentDir();
-void PokeMini_GotoExecDir();
-
-#ifndef NO_DIRS
-extern char PokeMini_ExecDir[PMTMPV];	// Launch directory
-extern char PokeMini_CurrDir[PMTMPV];	// Current directory
-#endif
+void PokeMini_GotoExecDir(void);
 
 #endif

@@ -192,14 +192,11 @@ int PokeMini_GenRumbleOffset(int pitch)
 // Load BIOS from file
 int PokeMini_LoadBIOSFile(const char *filename)
 {
-	FILE *fbios;
 	int readbytes;
-
 	// Open file
-	fbios = fopen(filename, "rb");
-	if (fbios == NULL) {
+	FILE *fbios = fopen(filename, "rb");
+	if (fbios == NULL)
 		return 0;
-	}
 
 	// Read content
 	readbytes = fread(PM_BIOS, 1, 4096, fbios);
@@ -214,14 +211,11 @@ int PokeMini_LoadBIOSFile(const char *filename)
 // Save BIOS from file
 int PokeMini_SaveBIOSFile(const char *filename)
 {
-	FILE *fbios;
 	int writebytes;
-
 	// Open file
-	fbios = fopen(filename, "wb");
-	if (fbios == NULL) {
+	FILE *fbios = fopen(filename, "wb");
+	if (fbios == NULL)
 		return 0;
-	}
 
 	// Read content
 	writebytes = fwrite(PM_BIOS, 1, 4096, fbios);
@@ -326,21 +320,23 @@ int PokeMini_SetMINMem(uint8_t *mem, int size)
 	return 1;
 }
 
-// Free color information
-void PokeMini_FreeColorInfo()
+/* Free color information */
+void PokeMini_FreeColorInfo(void)
 {
-	if (PRCColorMap) {
+	if (PRCColorMap)
+	{
 		free(PRCColorMap);
 		PRCColorMap = NULL;
 	}
 }
 
-// Syncronize host time
-int PokeMini_SyncHostTime()
+/* Synchronize host time */
+int PokeMini_SyncHostTime(void)
 {
 #ifndef NO_RTC
-	// Modify EEPROM for host time
-	if (CommandLine.updatertc == 2) {
+	/* Modify EEPROM for host time */
+	if (CommandLine.updatertc == 2)
+	{
 		time_t tim = time(NULL);
 		struct tm *now = localtime(&tim);
 		MinxIO_SetTimeStamp(now->tm_year % 100, now->tm_mon+1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
@@ -362,14 +358,14 @@ const uint8_t RemapMINC10_11[16] = {
 	 0, 1, 2, 4, 5, 6, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 
 };
 
-// Load color information from stream, note that PokeMini_OnLoadColorFile callback isn't called!
+/* Load color information from stream, note that PokeMini_OnLoadColorFile callback isn't called! */
 int PokeMini_LoadColorStream(TPokeMini_StreamIO stream, void *stream_ptr)
 {
 	uint8_t hdr[4], vcod[4], reserved[16];
 	uint32_t maptiles, mapoffset, bytespertile;
 	int i, readbytes;
 
-	// Check header
+	/* Check header */
 	DATAREADFROMFILE(hdr, 4);		// ID
 	if ((hdr[0] != 'M') || (hdr[1] != 'I') || (hdr[2] != 'N') || (hdr[3] != 'c')) return 0;
 	DATAREADFROMFILE(vcod, 4);		// VCode
@@ -405,36 +401,13 @@ int PokeMini_LoadColorStream(TPokeMini_StreamIO stream, void *stream_ptr)
 	PRCColorTop = (uint8_t *)PRCColorMap + (maptiles * bytespertile);
 
 	// Version 0.4.5 have old color palette, remap colors to the new one
-	if (!(PRCColorFlags & 1)) {
-		for (i=0; i<maptiles * bytespertile; i++) {
+	if (!(PRCColorFlags & 1))
+	{
+		for (i=0; i<maptiles * bytespertile; i++)
 			PRCColorMap[i] = RemapMINC10_11[PRCColorMap[i] & 15] | (PRCColorMap[i] & 0xF0);
-		}
 	}
 
 	return (readbytes > 0);
-}
-
-// Internal: Stream from file
-int PokeMini_StreamFromFile(void *data, int size, void *ptr)
-{
-	return fread(data, 1, size, (FILE *)ptr);
-}
-
-// Load color information from file, MIN must be loaded first
-int PokeMini_LoadColorFile(const char *filename)
-{
-	int res;
-	// Open file
-	FILE *fi = fopen(filename, "rb");
-	if (fi == NULL) return 0;		// Silently exit
-
-	// Read color information
-	res = PokeMini_LoadColorStream(PokeMini_StreamFromFile, (void *)fi);
-
-	// Done
-	fclose(fi);
-
-	return res;
 }
 
 // Load EEPROM
@@ -480,9 +453,8 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
 	// Open memory stream
 	memstream_set_buffer(buffer, size);
 	stream = memstream_open(0);
-	if (stream == NULL) {
+	if (stream == NULL)
 		return 0;
-	}
 
 	// Read content
 	PMiniStr[12] = 0;
@@ -590,30 +562,27 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
 	memstream_set_buffer(NULL, 0);
 
 	// Update RTC if requested
-	if (CommandLine.updatertc == 1) {
+	if (CommandLine.updatertc == 1)
 		MinxTimers.SecTimerCnt += (uint32_t)time(NULL) - StatTime;
-	}
 
-	// Syncronize with host time
+	// Synchronize with host time
 	PokeMini_SyncHostTime();
 
 	return 1;
 }
 
-// Save emulator state to memory stream
+/* Save emulator state to memory stream */
 int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size)
 {
-	// TODO: Error check bytes written
-	
+	/* TODO: Error check bytes written */
 	memstream_t *stream;
 	uint32_t PMiniID, StatTime, BSize;
 
 	// Open memory stream
 	memstream_set_buffer(buffer, size);
 	stream = memstream_open(1);
-	if (stream == NULL) {
+	if (stream == NULL)
 		return 0;
-	}
 
 	// Write content
 	memstream_write(stream, (void *)"PokeMiniStat", 12);	// Write File ID
@@ -705,7 +674,7 @@ void PokeMini_Reset(int hardreset)
 		}
 	}
 
-	// Syncronize with host time
+	// Synchronize with host time
 	PokeMini_SyncHostTime();
 
 #ifndef PERFORMANCE

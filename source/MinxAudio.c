@@ -52,8 +52,9 @@ const uint32_t MinxAudio_CountFreq[32] = {
 
 static INLINE int MinxAudio_iSamplesInBuffer(void)
 {
-   if (MinxAudio_WritePtr > MinxAudio_ReadPtr) return MinxAudio_WritePtr - MinxAudio_ReadPtr;
-   else return (MinxAudio_FIFOSize - MinxAudio_ReadPtr) + MinxAudio_WritePtr;
+   if (MinxAudio_WritePtr > MinxAudio_ReadPtr)
+	   return MinxAudio_WritePtr - MinxAudio_ReadPtr;
+   return (MinxAudio_FIFOSize - MinxAudio_ReadPtr) + MinxAudio_WritePtr;
 }
 
 static INLINE void MinxAudio_FIFOWrite(int16_t data)
@@ -66,12 +67,13 @@ static INLINE void MinxAudio_FIFOWrite(int16_t data)
 
 static INLINE int16_t MinxAudio_FIFORead(void)
 {
-	int16_t data = 0;
-	if (MinxAudio_iSamplesInBuffer() > 0) {
-		data = MinxAudio_FIFO[MinxAudio_ReadPtr];
+	if (MinxAudio_iSamplesInBuffer() > 0)
+	{
+		int16_t data      = MinxAudio_FIFO[MinxAudio_ReadPtr];
 		MinxAudio_ReadPtr = (MinxAudio_ReadPtr + 1) & MinxAudio_FIFOMask;
+		return data;
 	}
-	return data;
+	return 0;
 }
 
 //
@@ -81,8 +83,8 @@ static INLINE int16_t MinxAudio_FIFORead(void)
 int MinxAudio_Create(int audioenable, int fifosize)
 {
 	// Init variables
-	AudioEnabled = audioenable;
-	SoundEngine = MINX_AUDIO_DISABLED;
+	AudioEnabled     = audioenable;
+	SoundEngine      = MINX_AUDIO_DISABLED;
 	RequireSoundSync = 0;
 
 	// Reset
@@ -91,16 +93,20 @@ int MinxAudio_Create(int audioenable, int fifosize)
 	// Init FIFO if audio enabled
 	MinxAudio_ReadPtr = 0;
 	MinxAudio_WritePtr = 0;
-	if (fifosize) {
+	if (fifosize)
+	{
 		MinxAudio_FIFOMask = GetMultiple2Mask(fifosize);
 		MinxAudio_FIFOSize = MinxAudio_FIFOMask + 1;
 		MinxAudio_FIFOThreshold = (fifosize * 3) >> 2;	// ... at 3 / 4
-	} else {
+	}
+	else
+	{
 		MinxAudio_FIFOMask = 0;
 		MinxAudio_FIFOSize = 0;
 		MinxAudio_FIFOThreshold = 0;
 	}
-	if ((audioenable) && (fifosize)) {
+	if ((audioenable) && (fifosize))
+	{
 		MinxAudio_FIFO = (int16_t *)malloc(MinxAudio_FIFOSize*2);
 		if (!MinxAudio_FIFO) return 0;
 		memset(MinxAudio_FIFO, 0, MinxAudio_FIFOSize*2);
@@ -147,29 +153,28 @@ int MinxAudio_SaveStateStream(memstream_t *stream)
 
 void MinxAudio_ChangeEngine(int engine)
 {
-	if (PokeMini_Flags & POKEMINI_GENSOUND) {
+	if (PokeMini_Flags & POKEMINI_GENSOUND)
 		engine = engine ? 1 : 0;
-	}
 	SoundEngine = engine;
 	switch (engine) {
 		case MINX_AUDIO_GENERATED:
-			RequireSoundSync = 0;
+			RequireSoundSync       = 0;
 			MinxAudio_AudioProcess = NULL;
 			break;
 		case MINX_AUDIO_DIRECT:
-			RequireSoundSync = 1;
+			RequireSoundSync       = 1;
 			MinxAudio_AudioProcess = MinxAudio_AudioProcessDirect;
 			break;
 		case MINX_AUDIO_EMULATED:
-			RequireSoundSync = 1;
+			RequireSoundSync       = 1;
 			MinxAudio_AudioProcess = MinxAudio_AudioProcessEmulated;
 			break;
 		case MINX_AUDIO_DIRECTPWM:
-			RequireSoundSync = 1;
+			RequireSoundSync       = 1;
 			MinxAudio_AudioProcess = MinxAudio_AudioProcessDirectPWM;
 			break;
 		default:
-			RequireSoundSync = 0;
+			RequireSoundSync       = 0;
 			MinxAudio_AudioProcess = NULL;
 			break;
 	}
@@ -184,14 +189,15 @@ void MinxAudio_Sync(void)
 {
 	// Process single audio sample
 	MinxAudio.AudioCCnt += MINX_AUDIOINC * PokeHWCycles;
-	if (MinxAudio.AudioCCnt >= 0x01000000) {
+	if (MinxAudio.AudioCCnt >= 0x01000000)
+	{
 		MinxAudio.AudioCCnt -= 0x01000000;
-		if (MinxAudio_AudioProcess) {
-			if (PiezoFilter) {
+		if (MinxAudio_AudioProcess)
+		{
+			if (PiezoFilter)
 				MinxAudio_FIFOWrite(MinxAudio_PiezoFilter(MinxAudio_AudioProcess()));
-			} else {
+			else
 				MinxAudio_FIFOWrite(MinxAudio_AudioProcess());
-			}
 		}
 	}
 }
@@ -199,24 +205,28 @@ void MinxAudio_Sync(void)
 uint8_t MinxAudio_ReadReg(uint8_t reg)
 {
 	// 0x70 to 0x71
-	switch(reg) {
+	switch(reg)
+	{
 		case 0x70: // Unknown Audio Control
 			return PMR_AUD_CTRL & 0x07;
 		case 0x71: // Audio Volume Control
 			return PMR_AUD_VOL & 0x07;
 		default:
-			return 0;
+			break;
 	}
+
+	return 0;
 }
 
 void MinxAudio_WriteReg(uint8_t reg, uint8_t val)
 {
-	// 0x70 to 0x71
-	switch(reg) {
-		case 0x70: // Unknown Audio Control
+	/* 0x70 to 0x71 */
+	switch(reg)
+	{
+		case 0x70: /* Unknown Audio Control */
 			PMR_AUD_CTRL = val & 0x07;
 			break;
-		case 0x71: // Audio Volume Control
+		case 0x71: /* Audio Volume Control */
 			PMR_AUD_VOL = val & 0x07;
 			break;
 	}
@@ -252,21 +262,26 @@ void MinxAudio_WriteReg(uint8_t reg, uint8_t val)
 // Pulse_Width is between 0 to 4095 (0% to ~99.99%)
 static void MinxAudio_GetEmulated(int *Sound_Frequency, int *Pulse_Width)
 {
-	int Timer3_Frequency;
 	int Preset_Value, Sound_Pivot;
-
 	// Calculate timer 3 frequency
-	Timer3_Frequency = MinxAudio_CountFreq[(PMR_TMR3_SCALE & 0xF) | ((PMR_TMR3_OSC & 0x01) << 4)];
-	if (!(PMR_TMR3_CTRL_L & 0x04)) Timer3_Frequency = 0;
-	if (PMR_TMR3_OSC & 0x01) {
+	int Timer3_Frequency = MinxAudio_CountFreq[(PMR_TMR3_SCALE & 0xF) | ((PMR_TMR3_OSC & 0x01) << 4)];
+	if (!(PMR_TMR3_CTRL_L & 0x04))
+		Timer3_Frequency = 0;
+	if (PMR_TMR3_OSC & 0x01)
+	{
 		// Osci2
-		if (!MinxTimers.TmrXEna2) Timer3_Frequency = 0;
-	} else {
+		if (!MinxTimers.TmrXEna2)
+			Timer3_Frequency = 0;
+	}
+	else
+	{
 		// Osci1
-		if (!MinxTimers.TmrXEna1) Timer3_Frequency = 0;
+		if (!MinxTimers.TmrXEna1)
+			Timer3_Frequency = 0;
 	}
 
-	if (Timer3_Frequency) {
+	if (Timer3_Frequency)
+	{
 		// Calculate preset value
 		Preset_Value = (MinxTimers.Tmr3PreA >> 24) + ((MinxTimers.Tmr3PreB >> 24) << 8);
 
@@ -274,12 +289,16 @@ static void MinxAudio_GetEmulated(int *Sound_Frequency, int *Pulse_Width)
 		*Sound_Frequency = Timer3_Frequency / (Preset_Value + 1);
 
 		// ... and pulse width
-		if (Preset_Value) {
-			Sound_Pivot = (int)MinxTimers.Timer3Piv;
+		if (Preset_Value)
+		{
+			Sound_Pivot  = (int)MinxTimers.Timer3Piv;
 			*Pulse_Width = 4095 - (Sound_Pivot * 4096 / Preset_Value);
-			if (*Pulse_Width < 0) *Pulse_Width = 0;
+			if (*Pulse_Width < 0)
+				*Pulse_Width = 0;
 		} else *Pulse_Width = 0;
-	} else {
+	}
+	else
+	{
 		*Sound_Frequency = 0;
 		*Pulse_Width = 0;
 	}
@@ -287,12 +306,10 @@ static void MinxAudio_GetEmulated(int *Sound_Frequency, int *Pulse_Width)
 
 int16_t MinxAudio_AudioProcessDirect(void)
 {
-	uint16_t TmrCnt;
-	TmrCnt = (MinxTimers.Tmr3CntA >> 24) | ((MinxTimers.Tmr3CntB >> 24) << 8);
+	uint16_t TmrCnt = (MinxTimers.Tmr3CntA >> 24) | ((MinxTimers.Tmr3CntB >> 24) << 8);
 
-	if (TmrCnt <= MinxTimers.Timer3Piv) {
+	if (TmrCnt <= MinxTimers.Timer3Piv)
 		return MinxAudio.Volume;
-	}
 	return MINX_AUDIO_SILENCE;
 }
 
@@ -300,38 +317,41 @@ int16_t MinxAudio_AudioProcessEmulated(void)
 {
 	int Sound_Frequency, Pulse_Width;
 	MinxAudio_GetEmulated(&Sound_Frequency, &Pulse_Width);
-	if (Sound_Frequency < 50) {
-		// Silence
+	// Silence
+	if (Sound_Frequency < 50)
 		return MINX_AUDIO_SILENCE;
-	} else if (Sound_Frequency < 20000) {
+	else if (Sound_Frequency < 20000)
+	{
 		// Normal
 		MinxAudio.AudioSCnt -= Sound_Frequency * MINX_AUDIOCONV;
-		if ((MinxAudio.AudioSCnt & 0xFFF00000) >= (Pulse_Width << 20)) {
+		if ((MinxAudio.AudioSCnt & 0xFFF00000) 
+				>= (Pulse_Width << 20))
 			return MinxAudio.Volume;
-		}
 		return MINX_AUDIO_SILENCE;
 	}
 	// PWM
-	if (Pulse_Width > 4095) Pulse_Width = 4095;
+	if (Pulse_Width > 4095)
+		Pulse_Width = 4095;
 	return MINX_AUDIO_SILENCE + (Pulse_Width << 2) * MinxAudio.PWMMul;
 }
 
 int16_t MinxAudio_AudioProcessDirectPWM(void)
 {
-	uint16_t TmrCnt, TmrPre;
-	uint32_t Pwm;
-	TmrCnt = (MinxTimers.Tmr3CntA >> 24) | ((MinxTimers.Tmr3CntB >> 24) << 8);
-	TmrPre = (MinxTimers.Tmr3PreA >> 24) | ((MinxTimers.Tmr3PreB >> 24) << 8);
+	uint32_t Pwm    = 0;
+	uint16_t TmrCnt = (MinxTimers.Tmr3CntA >> 24) | ((MinxTimers.Tmr3CntB >> 24) << 8);
+	uint16_t TmrPre = (MinxTimers.Tmr3PreA >> 24) | ((MinxTimers.Tmr3PreB >> 24) << 8);
 
 	// Affect sound based of PWM
-	if (TmrPre) Pwm = MinxTimers.Timer3Piv * MINX_AUDIO_PWM_RAG / TmrPre; else Pwm = 0;
-	if (Pwm > MINX_AUDIO_PWM_RAG) Pwm = MINX_AUDIO_PWM_RAG-1;	// Avoid clipping
-	if (TmrPre < 128) TmrCnt = 0;					// Avoid high hizz
+	if (TmrPre)
+		Pwm = MinxTimers.Timer3Piv * MINX_AUDIO_PWM_RAG / TmrPre;
+	if (Pwm > MINX_AUDIO_PWM_RAG)
+		Pwm = MINX_AUDIO_PWM_RAG-1;	// Avoid clipping
+	if (TmrPre < 128)
+		TmrCnt = 0;			// Avoid high hizz
 
 	// Output
-	if (TmrCnt <= MinxTimers.Timer3Piv) {
+	if (TmrCnt <= MinxTimers.Timer3Piv)
 		return MinxAudio.Volume + Pwm * MinxAudio.PWMMul;
-	}
 	return MINX_AUDIO_SILENCE + Pwm * MinxAudio.PWMMul;
 }
 
@@ -352,8 +372,10 @@ int16_t MinxAudio_PiezoFilter(int32_t Sample)
 
 	// Amplify by 4
 	Sample = TmpSamples[3] << 2;
-	if (Sample < -32768) Sample = -32768;
-	if (Sample > 32767) Sample = 32767;
+	if (Sample < -32768)
+		Sample = -32768;
+	else if (Sample > 32767)
+		Sample = 32767;
 
 	// Low pass to kill the spikes in sound
 	LPSamples[0] = Sample;
@@ -363,173 +385,93 @@ int16_t MinxAudio_PiezoFilter(int32_t Sample)
 
 	// Amplify by 2, clamp and output
 	Sample = LPSamples[3] << 1;
-	if (Sample < -32768) Sample = -32768;
-	if (Sample > 32767) Sample = 32767;
-
+	if (Sample < -32768)
+		return -32768;
+	if (Sample > 32767)
+		return 32767;
 	return Sample;
 }
 
-void MinxAudio_GetSamplesU8(uint8_t *soundout, int numsamples)
+// This doesn't require audio to be created:
+static void MinxAudio_GenerateEmulatedS16(
+		int16_t *soundout, int numsamples, int channels)
 {
-	if (SoundEngine == MINX_AUDIO_GENERATED) {
-		MinxAudio_GenerateEmulatedU8(soundout, numsamples, 1);
+	int i, j, Sound_Frequency, Pulse_Width;
+	if (numsamples <= 0)
 		return;
-	}
-	if (AudioEnabled && SoundEngine) {
-		while (numsamples--) {
-			*soundout++ = 0x80 + (MinxAudio_FIFORead() >> 8);
+	MinxAudio_GetEmulated(&Sound_Frequency, &Pulse_Width);
+	for (i=0; i<numsamples; i++)
+	{
+		if ((Sound_Frequency >= 50) && (Sound_Frequency < 20000))
+		{
+			MinxAudio.AudioSCnt += Sound_Frequency * MINX_AUDIOCONV;
+			if ((MinxAudio.AudioSCnt & 0xFFF00000) >= (Pulse_Width << 20))
+			{
+				if (PiezoFilter)
+				{
+					for (j=0; j<channels; j++) *soundout++ = MinxAudio_PiezoFilter(MinxAudio.Volume);
+				}
+				else
+				{
+					for (j=0; j<channels; j++) *soundout++ = MinxAudio.Volume;
+				}
+			}
+			else
+			{
+				if (PiezoFilter)
+				{
+					for (j=0; j<channels; j++) *soundout++ = MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE);
+				}
+				else
+				{
+					for (j=0; j<channels; j++) *soundout++ = 0;
+				}
+			}
 		}
-	} else {
-		while (numsamples--) *soundout++ = 0x80;
+		else
+		{
+			if (PiezoFilter)
+			{
+				for (j=0; j<channels; j++) *soundout++ = MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE);
+			}
+			else
+			{
+				for (j=0; j<channels; j++) *soundout++ = 0;
+			}
+		}
 	}
 }
 
-void MinxAudio_GetSamplesS16(int16_t *soundout, int numsamples)
-{
-	if (SoundEngine == MINX_AUDIO_GENERATED) {
-		MinxAudio_GenerateEmulatedS16(soundout, numsamples, 1);
-		return;
-	}
-	if (AudioEnabled && SoundEngine) {
-		while (numsamples--) {
-			*soundout++ = MinxAudio_FIFORead();
-		}
-	} else {
-		while (numsamples--) *soundout++ = 0x0000;
-	}
-}
-
-void MinxAudio_GetSamplesU8Ch(uint8_t *soundout, int numsamples, int channels)
+void MinxAudio_GetSamplesS16Ch(int16_t *soundout,
+		int numsamples, int channels)
 {
 	int j;
-	if (SoundEngine == MINX_AUDIO_GENERATED) {
-		MinxAudio_GenerateEmulatedU8(soundout, numsamples, channels);
-		return;
-	}
-	if (AudioEnabled && SoundEngine) {
-		while (numsamples--) {
-			uint8_t sample = 0x80 + (MinxAudio_FIFORead() >> 8);
-			for (j=0; j<channels; j++) *soundout++ = sample;
-		}
-	} else {
-		while (numsamples--) for (j=0; j<channels; j++) *soundout++ = 0x80;
-	}
-}
-
-void MinxAudio_GetSamplesS16Ch(int16_t *soundout, int numsamples, int channels)
-{
-	int j;
-	if (SoundEngine == MINX_AUDIO_GENERATED) {
+	if (SoundEngine == MINX_AUDIO_GENERATED)
+	{
 		MinxAudio_GenerateEmulatedS16(soundout, numsamples, channels);
 		return;
 	}
-	if (AudioEnabled && SoundEngine) {
-		while (numsamples--) {
+	if (AudioEnabled && SoundEngine)
+	{
+		while (numsamples--)
+		{
 			int16_t sample = MinxAudio_FIFORead();
-			for (j=0; j<channels; j++) *soundout++ = sample;
+			for (j=0; j<channels; j++)
+				*soundout++ = sample;
 		}
-	} else {
-		while (numsamples--) for (j=0; j<channels; j++) *soundout++ = 0x0000;
+	}
+	else
+	{
+		while (numsamples--)
+			for (j=0; j<channels; j++)
+				*soundout++ = 0x0000;
 	}
 }
 
 int MinxAudio_SyncWithAudio(void)
 {
-	if (!RequireSoundSync) return 0;
+	if (!RequireSoundSync)
+		return 0;
 	return MinxAudio_iSamplesInBuffer() >= MinxAudio_FIFOThreshold;
 }
 
-// This doesn't require audio to be created:
-
-void MinxAudio_GenerateEmulatedU8(uint8_t *soundout, int numsamples, int channels)
-{
-	int i, j, Sound_Frequency, Pulse_Width;
-	if (numsamples <= 0) return;
-	MinxAudio_GetEmulated(&Sound_Frequency, &Pulse_Width);
-	for (i=0; i<numsamples; i++) {
-		if ((Sound_Frequency >= 50) && (Sound_Frequency < 20000)) {
-			MinxAudio.AudioSCnt += Sound_Frequency * MINX_AUDIOCONV;
-			if ((MinxAudio.AudioSCnt & 0xFFF00000) >= (Pulse_Width << 20)) {
-				if (PiezoFilter) {
-					for (j=0; j<channels; j++) *soundout++ = 0x80 + (MinxAudio_PiezoFilter(MinxAudio.Volume) >> 8);
-				} else {
-					for (j=0; j<channels; j++) *soundout++ = 0x80 + (MinxAudio.Volume >> 8);
-				}
-			} else {
-				if (PiezoFilter) {
-					for (j=0; j<channels; j++) *soundout++ = 0x80 + (MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE) >> 8);
-				} else {
-					for (j=0; j<channels; j++) *soundout++ = 0x80;
-				}
-			}
-		} else {
-			if (PiezoFilter) {
-				for (j=0; j<channels; j++) *soundout++ = 0x80 + (MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE) >> 8);
-			} else {
-				for (j=0; j<channels; j++) *soundout++ = 0x80;
-			}
-		}
-	}
-}
-
-void MinxAudio_GenerateEmulatedS8(int8_t *soundout, int numsamples, int channels)
-{
-	int i, j, Sound_Frequency, Pulse_Width;
-	if (numsamples <= 0) return;
-	MinxAudio_GetEmulated(&Sound_Frequency, &Pulse_Width);
-	for (i=0; i<numsamples; i++) {
-		if ((Sound_Frequency >= 50) && (Sound_Frequency < 20000)) {
-			MinxAudio.AudioSCnt += Sound_Frequency * MINX_AUDIOCONV;
-			if ((MinxAudio.AudioSCnt & 0xFFF00000) >= (Pulse_Width << 20)) {
-				if (PiezoFilter) {
-					for (j=0; j<channels; j++) *soundout++ = (MinxAudio_PiezoFilter(MinxAudio.Volume) >> 8);
-				} else {
-					for (j=0; j<channels; j++) *soundout++ = (MinxAudio.Volume >> 8);
-				}
-			} else {
-				if (PiezoFilter) {
-					for (j=0; j<channels; j++) *soundout++ = (MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE) >> 8);
-				} else {
-					for (j=0; j<channels; j++) *soundout++ = 0;
-				}
-			}
-		} else {
-			if (PiezoFilter) {
-				for (j=0; j<channels; j++) *soundout++ = (MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE) >> 8);
-			} else {
-				for (j=0; j<channels; j++) *soundout++ = 0;
-			}
-		}
-	}
-}
-
-void MinxAudio_GenerateEmulatedS16(int16_t *soundout, int numsamples, int channels)
-{
-	int i, j, Sound_Frequency, Pulse_Width;
-	if (numsamples <= 0) return;
-	MinxAudio_GetEmulated(&Sound_Frequency, &Pulse_Width);
-	for (i=0; i<numsamples; i++) {
-		if ((Sound_Frequency >= 50) && (Sound_Frequency < 20000)) {
-			MinxAudio.AudioSCnt += Sound_Frequency * MINX_AUDIOCONV;
-			if ((MinxAudio.AudioSCnt & 0xFFF00000) >= (Pulse_Width << 20)) {
-				if (PiezoFilter) {
-					for (j=0; j<channels; j++) *soundout++ = MinxAudio_PiezoFilter(MinxAudio.Volume);
-				} else {
-					for (j=0; j<channels; j++) *soundout++ = MinxAudio.Volume;
-				}
-			} else {
-				if (PiezoFilter) {
-					for (j=0; j<channels; j++) *soundout++ = MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE);
-				} else {
-					for (j=0; j<channels; j++) *soundout++ = 0;
-				}
-			}
-		} else {
-			if (PiezoFilter) {
-				for (j=0; j<channels; j++) *soundout++ = MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE);
-			} else {
-				for (j=0; j<channels; j++) *soundout++ = 0;
-			}
-		}
-	}
-}

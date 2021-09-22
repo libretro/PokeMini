@@ -261,10 +261,10 @@ typedef int TPokeMini_StreamIO(void *data, int size, void *ptr);
 int PokeMini_Create(int flags, int soundfifo);
 
 // Destroy emulator and all interfaces
-void PokeMini_Destroy();
+void PokeMini_Destroy(void);
 
 // Apply changes from command lines
-void PokeMini_ApplyChanges();
+void PokeMini_ApplyChanges(void);
 
 // User press or release a Pokemon-Mini key
 void PokeMini_KeypadEvent(uint8_t key, int pressed);
@@ -285,7 +285,7 @@ int PokeMini_LoadBIOSFile(const char *filename);
 int PokeMini_SaveBIOSFile(const char *filename);
 
 // Load FreeBIOS
-int PokeMini_LoadFreeBIOS();
+int PokeMini_LoadFreeBIOS(void);
 
 // Check if file exist
 int PokeMini_FileExist(const char *filename);
@@ -299,14 +299,11 @@ int PokeMini_LoadMINFile(const char *filename);
 // Save MIN ROM
 int PokeMini_SaveMINFile(const char *filename);
 
-// Load color information from file, MIN must be loaded first
-int PokeMini_LoadColorFile(const char *filename);
-
 // Set MIN from memory
 int PokeMini_SetMINMem(uint8_t *mem, int size);
 
-// Syncronize host time
-int PokeMini_SyncHostTime();
+// Synchronize host time
+int PokeMini_SyncHostTime(void);
 
 // Load EEPROM data
 int PokeMini_LoadEEPROMFile(const char *filename);
@@ -324,6 +321,6 @@ int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size);
 void PokeMini_Reset(int hardreset);
 
 // Internals, do not call directly!
-void PokeMini_FreeColorInfo();
+void PokeMini_FreeColorInfo(void);
 
 #endif

@@ -19,10 +19,7 @@
 #ifndef HARDWARE_EMU
 #define HARDWARE_EMU
 
-// Emulate X cycles, return remaining
-int PokeMini_EmulateCycles(int lcylc);
-
-// Emulate 1 frame, return cycles ran
+/* Emulate 1 frame, return cycles ran */
 int PokeMini_EmulateFrame(void);
 
 #endif

@@ -105,20 +105,8 @@ int16_t MinxAudio_AudioProcessDirectPWM(void);
 
 int16_t MinxAudio_PiezoFilter(int32_t Sample);
 
-void MinxAudio_GetSamplesU8(uint8_t *soundout, int numsamples);
-
-void MinxAudio_GetSamplesS16(int16_t *soundout, int numsamples);
-
-void MinxAudio_GetSamplesU8Ch(uint8_t *soundout, int numsamples, int channels);
-
 void MinxAudio_GetSamplesS16Ch(int16_t *soundout, int numsamples, int channels);
 
 int MinxAudio_SyncWithAudio(void);
-
-void MinxAudio_GenerateEmulatedU8(uint8_t *soundout, int numsamples, int channels);
-
-void MinxAudio_GenerateEmulatedS8(int8_t *soundout, int numsamples, int channels);
-
-void MinxAudio_GenerateEmulatedS16(int16_t *soundout, int numsamples, int channels);
 
 #endif
