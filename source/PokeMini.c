@@ -610,13 +610,8 @@ void PokeMini_Reset(int hardreset)
 	if (PokeMini_FreeBIOS && !CommandLine.forcefreebios) {
 		PokeMini_LoadFreeBIOS();
 		if (StringIsSet(CommandLine.bios_file)) {
-			if (FileExist(CommandLine.bios_file)) PokeMini_LoadBIOSFile(CommandLine.bios_file);
-			else {
-				PokeMini_GetCustomDir(tmp, PMTMPV);
-				PokeMini_GotoExecDir();
-				if (FileExist(CommandLine.bios_file)) PokeMini_LoadBIOSFile(CommandLine.bios_file);
-				PokeMini_GotoCustomDir(tmp);
-			}
+			if (FileExist(CommandLine.bios_file))
+				PokeMini_LoadBIOSFile(CommandLine.bios_file);
 		}
 	}
 

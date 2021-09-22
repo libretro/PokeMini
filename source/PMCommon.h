@@ -63,8 +63,5 @@ int FileExist(const char *filename);
 
 // Directories
 void PokeMini_InitDirs(char *argv0, char *exec);
-void PokeMini_GetCustomDir(char *dir, int max);
-void PokeMini_GotoCustomDir(const char *dir);
-void PokeMini_GotoExecDir(void);
 
 #endif
