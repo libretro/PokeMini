@@ -18,7 +18,7 @@
 
 #include "PMCommon.h"
 #include "Missing.h"
-#include "Pokemini.h"
+#include "PokeMini.h"
 #include <ctype.h>
 
 #include <compat/posix_string.h>
