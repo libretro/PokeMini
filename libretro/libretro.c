@@ -31,7 +31,6 @@
 #include "Hardware.h"
 #include "Joystick.h"
 #include "MinxAudio.h"
-#include "UI.h"
 #include "Video.h"
 #include "Video_x1.h"
 #include "Video_x2.h"

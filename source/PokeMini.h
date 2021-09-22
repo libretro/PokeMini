@@ -78,7 +78,6 @@ enum {
 #include "MinxAudio.h"
 #include "CommandLine.h"
 #include "Multicart.h"
-#include "UI.h"
 
 // Callbacks
 extern void (*PokeMini_OnAllocMIN)(int newsize, int success);

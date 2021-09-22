@@ -26,7 +26,6 @@ SOURCES_C := $(CORE_DIR)/freebios/freebios.c \
 	$(CORE_DIR)/source/Multicart.c \
 	$(CORE_DIR)/source/PMCommon.c \
 	$(CORE_DIR)/source/PokeMini.c \
-	$(CORE_DIR)/source/UI.c \
 	$(CORE_DIR)/source/Video_x1.c \
 	$(CORE_DIR)/source/Video_x2.c \
 	$(CORE_DIR)/source/Video_x3.c \

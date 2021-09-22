@@ -21,6 +21,14 @@
 
 #include "Joystick.h"
 
+static void KeyEvent(int key, int press)
+{
+	if (press)
+		PokeMini_KeypadEvent(key, 1);
+	else
+		PokeMini_KeypadEvent(key, 0);
+}
+
 // Process joystick buttons packed in bits
 void JoystickBitsEvent(uint32_t pressbits)
 {
@@ -34,7 +42,7 @@ void JoystickBitsEvent(uint32_t pressbits)
 			uint32_t maskbit = (1 << joybutton);
 			if (togglebits & maskbit) {
 				if (index)
-					UIMenu_KeyEvent(index, (pressbits & maskbit) ? 1 : 0);
+					KeyEvent(index, (pressbits & maskbit) ? 1 : 0);
 			}
 		}
 	}
@@ -50,7 +58,7 @@ void JoystickButtonsEvent(int button, int pressed)
 	for (index=0; index<10; index++) {
 		if (CommandLine.joybutton[index] == button) {
 			if (index)
-				UIMenu_KeyEvent(index, pressed);
+				KeyEvent(index, pressed);
 		}
 	}
 }
