@@ -33,14 +33,7 @@ SOURCES_C := $(CORE_DIR)/freebios/freebios.c \
 	$(CORE_DIR)/source/Video_x5.c \
 	$(CORE_DIR)/source/Video_x6.c \
 	$(CORE_DIR)/source/Video.c \
-	$(CORE_DIR)/resource/PokeMini_BG2.c \
-	$(CORE_DIR)/resource/PokeMini_BG3.c \
-	$(CORE_DIR)/resource/PokeMini_BG4.c \
-	$(CORE_DIR)/resource/PokeMini_BG5.c \
-	$(CORE_DIR)/resource/PokeMini_BG6.c \
 	$(CORE_DIR)/resource/PokeMini_ColorPal.c \
-	$(CORE_DIR)/resource/PokeMini_Font12.c \
-	$(CORE_DIR)/resource/PokeMini_Icons12.c \
 	$(CORE_DIR)/libretro/libretro.c
 
 ifneq ($(STATIC_LINKING),1)
