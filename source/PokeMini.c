@@ -93,8 +93,6 @@ void (*PokeMini_OnLoadMINFile)(const char *filename, int success) = NULL;
 void (*PokeMini_OnLoadColorFile)(const char *filename, int success) = NULL;
 void (*PokeMini_OnLoadEEPROMFile)(const char *filename, int success) = NULL;
 void (*PokeMini_OnSaveEEPROMFile)(const char *filename, int success) = NULL;
-void (*PokeMini_OnLoadStateFile)(const char *filename, int success) = NULL;
-void (*PokeMini_OnSaveStateFile)(const char *filename, int success) = NULL;
 void (*PokeMini_OnReset)(int hardreset) = NULL;
 
 int (*PokeMini_CustomLoadEEPROM)(const char *filename) = NULL;
@@ -537,45 +535,6 @@ int PokeMini_SaveEEPROMFile(const char *filename)
 	if (PokeMini_OnSaveEEPROMFile) PokeMini_OnSaveEEPROMFile(filename, (writebytes == 8192) ? 1 : 0);
 
 	return (writebytes == 8192);
-}
-
-// Check emulator state
-int PokeMini_CheckSSFile(const char *statefile, char *romfile)
-{
-	FILE *fi;
-	int readbytes;
-	char PMiniStr[PMTMPV];
-	uint32_t PMiniID;
-
-	// Open file
-	fi = fopen(statefile, "rb");
-	if (fi == NULL) {
-		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -1);
-		return 0;
-	}
-
-	// Read content
-	PMiniStr[12] = 0;
-	readbytes = fread(PMiniStr, 1, 12, fi);	// Read File ID
-	if ((readbytes != 12) || strcmp(PMiniStr, "PokeMiniStat")) {
-		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -2);
-		return 0;
-	}
-	readbytes = fread(&PMiniID, 1, 4, fi);	// Read State ID
-	if ((readbytes != 4) || (PMiniID != PokeMini_ID)) {
-		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -3);
-		return 0;
-	}
-	readbytes = fread(PMiniStr, 1, PMTMPV, fi);	// Read ROM related to state
-	if (readbytes != 256) {
-		if (PokeMini_OnLoadStateFile) PokeMini_OnLoadStateFile(statefile, -4);
-		return 0;
-	}
-	PMiniStr[127] = 0;
-	if (romfile) strcpy(romfile, PMiniStr);
-	fclose(fi);
-
-	return 1;
 }
 
 // Load emulator state from memory stream
@@ -1030,22 +989,6 @@ void PokeMini_OnSaveEEPROMFile_Def(const char *filename, int success)
 	else if (success == -2) PokeDPrint(POKEMSG_ERR, "Error saving EEPROM '%s': device not found\n", filename);
 	else PokeDPrint(POKEMSG_ERR, "Error saving EEPROM '%s': write error\n", filename);
 }
-void PokeMini_OnLoadStateFile_Def(const char *filename, int success)
-{
-	if (success == 1) PokeDPrint(POKEMSG_OUT, "State '%s' loaded\n", filename);
-	else if (success == -1) PokeDPrint(POKEMSG_ERR, "Error loading state '%s': file not found\n", filename);
-	else if (success == -2) PokeDPrint(POKEMSG_ERR, "Error loading state '%s': invalid file\n", filename);
-	else if (success == -3) PokeDPrint(POKEMSG_ERR, "Error loading state '%s': wrong version\n", filename);
-	else if (success == -4) PokeDPrint(POKEMSG_ERR, "Error loading state '%s': invalid header\n", filename);
-	else if (success == -5) PokeDPrint(POKEMSG_ERR, "Error loading state '%s': invalid internal block\n", filename);
-	else PokeDPrint(POKEMSG_ERR, "Error loading state '%s': read error\n", filename);
-}
-void PokeMini_OnSaveStateFile_Def(const char *filename, int success)
-{
-	if (success == 1) PokeDPrint(POKEMSG_OUT, "State '%s' saved\n", filename);
-	else if (success == -1) PokeDPrint(POKEMSG_ERR, "Error saving state '%s': filename invalid\n", filename);
-	else PokeDPrint(POKEMSG_ERR, "Error saving state '%s': write error\n", filename);
-}
 void PokeMini_OnReset_Def(int hardreset)
 {
 }
@@ -1058,8 +1001,6 @@ void PokeMini_UseDefaultCallbacks()
 	PokeMini_OnLoadColorFile = PokeMini_OnLoadColorFile_Def;
 	PokeMini_OnLoadEEPROMFile = PokeMini_OnLoadEEPROMFile_Def;
 	PokeMini_OnSaveEEPROMFile = PokeMini_OnSaveEEPROMFile_Def;
-	PokeMini_OnLoadStateFile = PokeMini_OnLoadStateFile_Def;
-	PokeMini_OnSaveStateFile = PokeMini_OnSaveStateFile_Def;
 	PokeMini_OnReset = PokeMini_OnReset_Def;
 }
 
