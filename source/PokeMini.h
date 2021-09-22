@@ -331,9 +331,6 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size);
 // Save emulator state to memory stream
 int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size);
 
-// Load MIN ROM (and others)
-int PokeMini_LoadROM(const char *filename);
-
 // Use default callbacks messages
 void PokeMini_UseDefaultCallbacks();
 

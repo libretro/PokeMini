@@ -889,68 +889,6 @@ static int PokeMini_iLoadROMZip(const char *zipfile, int *colorloaded)
 }
 #endif
 
-// Load MIN ROM (and others)
-int PokeMini_LoadROM(const char *filename)
-{
-	int colorloaded;
-	char tmp[PMTMPV];
-
-	// Save Individual EEPROM
-	if (!CommandLine.eeprom_share) {
-		if (PokeMini_EEPROMWritten && StringIsSet(CommandLine.eeprom_file)) {
-			PokeMini_EEPROMWritten = 0;
-			PokeMini_SaveEEPROMFile(CommandLine.eeprom_file);
-		}
-	}
-
-#ifndef NO_ZIP
-	if (ExtensionCheck(filename, ".zip")) {
-		// Load new MIN ROM and Color Information inside zip
-		if (!PokeMini_iLoadROMZip(filename, &colorloaded)) return 0;
-		strcpy(CommandLine.min_file, filename);
-	} else
-#endif
- 	{
-		// Setup LCD mode based of color support
-		if (ExtensionCheck(filename, ".minc")) {
-			// Remove c and load new MIN ROM
-			strcpy(tmp, filename);
-			tmp[strlen(filename)-1] = 0;
-			if (!PokeMini_LoadMINFile(tmp)) return 0;
-			strcpy(CommandLine.min_file, tmp);
-		} else {
-			// Load new MIN ROM
-			if (!PokeMini_LoadMINFile(filename)) return 0;
-			strcpy(CommandLine.min_file, filename);
-		}
-
-		// Load Color Information
-		sprintf(tmp, "%sc", CommandLine.min_file);
-		if (FileExist(tmp) && PokeMini_LoadColorFile(tmp)) {
-			colorloaded = 1;
-		} else colorloaded = 0;
-	}
-
-	if (!colorloaded) {
-		if (CommandLine.lcdmode == 3) CommandLine.lcdmode = 0;
-	} else CommandLine.lcdmode = 3;
-
-	// Load Individual EEPROM
-	if (!CommandLine.eeprom_share) {
-		sprintf(CommandLine.eeprom_file, "%s.eep", CommandLine.min_file);
-		MinxIO_FormatEEPROM();
-		if (FileExist(CommandLine.eeprom_file)) PokeMini_LoadEEPROMFile(CommandLine.eeprom_file);
-	}
-
-	// Soft reset hardware
-	PokeMini_Reset(0);
-
-	// Apply changes
-	PokeMini_ApplyChanges();
-
-	return 1;
-}
-
 // Use default callbacks messages
 void PokeMini_OnUnzipError_Def(const char *zipfile, const char *reason)
 {
