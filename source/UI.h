@@ -58,33 +58,6 @@ typedef struct TUIMenu_Item {
 	struct TUIMenu_Item *prev;	// Must be NULL
 } TUIMenu_Item;
 
-// External font and icons palette
-extern uint32_t *UI_Font1_Pal32;
-extern uint16_t *UI_Font1_Pal16;
-extern uint32_t *UI_Font2_Pal32;
-extern uint16_t *UI_Font2_Pal16;
-extern uint32_t *UI_Icons_Pal32;
-extern uint16_t *UI_Icons_Pal16;
-
-// UI Items
-extern TUIMenu_Item UIItems_MainMenu[];			// Main Menu items list
-extern TUIMenu_Item UIItems_Options[];			// Options items list
-int UIItems_PlatformDefC(int index, int reason);	// Platform default callback
-extern TUIMenu_Item UIItems_Platform[];			// Platform items list (USER DEFINED)
-
-#define PLATFORMDEF_GOBACK	{ 0,  0, "Go back...", UIItems_PlatformDefC, NULL }
-#define PLATFORMDEF_SAVEOPTIONS	{ 0, 99, "Save Configs...", UIItems_PlatformDefC, NULL }
-#define PLATFORMDEF_END(cb)	{ 9,  0, "Platform", cb, NULL }
-
-// UI return status
-//  1 = In Menu
-//  0 = Game
-// -1 = Exit
-extern int UI_Status;
-
-// UI PM screen preview distance from top-right, 0 to disable
-extern int UI_PreviewDist;
-
 // Load items list
 void UIMenu_LoadItems(TUIMenu_Item *items, int cursorindex);
 
@@ -103,39 +76,7 @@ void UIMenu_EndMessage(int timeout);
 typedef int (*TUIRealtimeCB)(int line, char *outtext);
 void UIMenu_RealTimeMessage(TUIRealtimeCB cb);
 
-// Resize display
-int UIMenu_SetDisplay(int width, int height, int pixellayout, uint8_t *bg_image, uint16_t *bg_pal16, uint32_t *bg_pal32);
-
-// Initialize
-int UIMenu_Init(void);
-
-// Destroy
-void UIMenu_Destroy(void);
-
 // Handle key events
 void UIMenu_KeyEvent(int key, int press);
-
-// Display Character
-void UIDraw_Char_32(uint32_t *screen, int pitchW, int x, int y, uint8_t ch, const uint32_t *palette);
-void UIDraw_Char_16(uint16_t *screen, int pitchW, int x, int y, uint8_t ch, const uint16_t *palette);
-
-// Display String
-void UIDraw_String_32(uint32_t *screen, int pitchW, int x, int y, int padd, char *str, const uint32_t *palette);
-void UIDraw_String_16(uint16_t *screen, int pitchW, int x, int y, int padd, char *str, const uint16_t *palette);
-
-// Display Icons
-void UIDraw_Icon_32(uint32_t *screen, int pitchW, int x, int y, uint8_t ch);
-void UIDraw_Icon_16(uint16_t *screen, int pitchW, int x, int y, uint8_t ch);
-
-// Process UI
-int UIMenu_Process(void);
-
-// Display UI
-void UIMenu_Display_32(uint32_t *screen, int pitchW);
-void UIMenu_Display_16(uint16_t *screen, int pitchW);
-
-// Display Saving EEPROM
-void UIMenu_SaveEEPDisplay_32(uint32_t *screen, int pitchW);
-void UIMenu_SaveEEPDisplay_16(uint16_t *screen, int pitchW);
 
 #endif

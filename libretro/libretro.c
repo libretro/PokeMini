@@ -73,28 +73,6 @@ static char g_basename[PMTMPV];
 static char *g_system_dir;
 static char *g_save_dir;
 
-// Platform menu (REQUIRED >= 0.4.4)
-int UIItems_PlatformC(int index, int reason);
-TUIMenu_Item UIItems_Platform[] = {
-   PLATFORMDEF_GOBACK,
-   { 0,  9, "Define Joystick...", UIItems_PlatformC, NULL },
-   PLATFORMDEF_SAVEOPTIONS,
-   PLATFORMDEF_END(UIItems_PlatformC)
-};
-int UIItems_PlatformC(int index, int reason)
-{
-   if (reason == UIMENU_OK)
-      reason = UIMENU_RIGHT;
-   if (reason == UIMENU_CANCEL)
-      UIMenu_PrevMenu();
-   if (reason == UIMENU_RIGHT)
-   {
-      if (index == 9)
-         JoystickEnterMenu();
-   }
-   return 1;
-}
-
 static retro_log_printf_t log_cb = NULL;
 static retro_video_refresh_t video_cb = NULL;
 static retro_input_poll_t poll_cb = NULL;
@@ -424,7 +402,6 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 	CommandLine.eeprom_share = 0;  // OFF (there is no practical benefit to a shared eeprom save
 	                               //      - it just gets full and becomes a nuisance...)
 	CommandLine.updatertc = 2;	    // Update RTC (0=Off, 1=State, 2=Host)
-	CommandLine.joyenabled = 1;    // ON
 	
 #if defined(_3DS)
 	// 3DS has limited performance...

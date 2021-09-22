@@ -88,8 +88,6 @@ extern void (*PokeMini_OnLoadMINFile)(const char *filename, int success);
 extern void (*PokeMini_OnLoadColorFile)(const char *filename, int success);
 extern void (*PokeMini_OnLoadEEPROMFile)(const char *filename, int success);
 extern void (*PokeMini_OnSaveEEPROMFile)(const char *filename, int success);
-extern void (*PokeMini_OnLoadStateFile)(const char *filename, int success);
-extern void (*PokeMini_OnSaveStateFile)(const char *filename, int success);
 extern void (*PokeMini_OnReset)(int hardreset);
 
 extern int (*PokeMini_CustomLoadEEPROM)(const char *filename);
@@ -327,23 +325,11 @@ int PokeMini_LoadEEPROMFile(const char *filename);
 // Save EEPROM data
 int PokeMini_SaveEEPROMFile(const char *filename);
 
-// Check emulator state, output romfile from assigned ROM in state
-int PokeMini_CheckSSFile(const char *statefile, char *romfile);
-
-// Load emulator state
-int PokeMini_LoadSSFile(const char *statefile);
-
 // Load emulator state from memory stream
 int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size);
 
-// Save emulator state
-int PokeMini_SaveSSFile(const char *statefile, const char *romfile);
-
 // Save emulator state to memory stream
 int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size);
-
-// Load MIN ROM (and others)
-int PokeMini_LoadROM(const char *filename);
 
 // Use default callbacks messages
 void PokeMini_UseDefaultCallbacks();

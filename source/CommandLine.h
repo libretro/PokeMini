@@ -24,11 +24,8 @@
 
 typedef struct {
 	int forcefreebios;
-	char min_file[PMTMPV];
 	char bios_file[PMTMPV];
 	char eeprom_file[PMTMPV];
-	char state_file[PMTMPV];
-	char rom_dir[PMTMPV];
 	int updatertc;
 	int eeprom_share;
 	int sound;
@@ -38,16 +35,10 @@ typedef struct {
 	int low_battery;
 	int palette;
 	int rumblelvl;
-	int joyenabled;
-	int joyid;
-	int joyaxis_dpad;
-	int joyhats_dpad;
 	char joyplatform[32];
 	int joybutton[10];
 	int multicart;
 	int synccycles;
-	int keyb_a[10];
-	int keyb_b[10];
 	uint32_t custompal[4];
 	int lcdcontrast;
 	int lcdbright;
