@@ -141,7 +141,6 @@ extern TMinxCPU MinxCPU;
 uint8_t MinxCPU_OnRead(int cpu, uint32_t addr);
 void MinxCPU_OnWrite(int cpu, uint32_t addr, uint8_t data);
 void MinxCPU_OnException(int type, uint32_t opc);
-void MinxCPU_OnSleep(int type);
 void MinxCPU_OnIRQHandle(uint8_t flag, uint8_t shift_u);
 void MinxCPU_OnIRQAct(uint8_t intr);
 
@@ -722,13 +721,11 @@ static INLINE uint8_t NEG(uint8_t A)
 static INLINE void HALT(void)
 {
 	MinxCPU.Status = MINX_STATUS_HALT;
-	MinxCPU_OnSleep(MINX_SLEEP_HALT);
 }
 
 static INLINE void STOP(void)
 {
 	MinxCPU.Status = MINX_STATUS_STOP;
-	MinxCPU_OnSleep(MINX_SLEEP_STOP);
 }
 
 static INLINE void MUL(void)

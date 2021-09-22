@@ -245,6 +245,7 @@ void MinxCPU_OnWrite(int cpu, uint32_t addr, uint8_t data)
 
 void MinxCPU_OnException(int type, uint32_t ir)
 {
+#ifdef DEBUG
 	switch (type) {
 		case EXCEPTION_UNKNOWN_INSTRUCTION:
 			log_cb(RETRO_LOG_ERROR, "Unknown instruction %08X before V=%02X,PC=%04X\n", (unsigned int)ir, (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
@@ -261,20 +262,7 @@ void MinxCPU_OnException(int type, uint32_t ir)
 		default:
 			return;
 	}
-}
-
-void MinxCPU_OnSleep(int type)
-{
-	switch (type) {
-		case MINX_SLEEP_HALT:
-			//log_cb(RETRO_LOG_ERROR, "Halt called before V=%02X,PC=%04X\n", (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L); // TOO NOISY!
-			return;
-		case MINX_SLEEP_STOP:
-			log_cb(RETRO_LOG_ERROR, "Sleep called before V=%02X,PC=%04X\n", (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
-			return;
-		default:
-			return;
-	}
+#endif
 }
 
 void MinxCPU_OnIRQHandle(uint8_t cpuflag, uint8_t shift_u)
