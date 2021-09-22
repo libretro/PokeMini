@@ -10,7 +10,6 @@ SOURCES_C := $(CORE_DIR)/freebios/freebios.c \
 	$(CORE_DIR)/source/CommandLine.c \
 	$(CORE_DIR)/source/Hardware.c \
 	$(CORE_DIR)/source/Joystick.c \
-	$(CORE_DIR)/source/Keyboard.c \
 	$(CORE_DIR)/source/MinxAudio.c \
 	$(CORE_DIR)/source/MinxColorPRC.c \
 	$(CORE_DIR)/source/MinxCPU_CE.c \

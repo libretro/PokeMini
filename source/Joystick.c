@@ -25,19 +25,16 @@
 void JoystickBitsEvent(uint32_t pressbits)
 {
 	static uint32_t lastpressbits;
-	uint32_t maskbit, togglebits = pressbits ^ lastpressbits;
-	int index, joybutton;
+	uint32_t togglebits = pressbits ^ lastpressbits;
+	int index;
 
 	for (index=0; index<10; index++) {
-		joybutton = CommandLine.joybutton[index];
+		int joybutton = CommandLine.joybutton[index];
 		if (joybutton >= 0) {
-			maskbit = (1 << joybutton);
+			uint32_t maskbit = (1 << joybutton);
 			if (togglebits & maskbit) {
-				if (index) {
+				if (index)
 					UIMenu_KeyEvent(index, (pressbits & maskbit) ? 1 : 0);
-				} else {
-					if (pressbits & maskbit) UI_Status = !UI_Status;
-				}
 			}
 		}
 	}
@@ -52,11 +49,8 @@ void JoystickButtonsEvent(int button, int pressed)
 
 	for (index=0; index<10; index++) {
 		if (CommandLine.joybutton[index] == button) {
-			if (index) {
+			if (index)
 				UIMenu_KeyEvent(index, pressed);
-			} else {
-				if (pressed) UI_Status = !UI_Status;
-			}
 		}
 	}
 }

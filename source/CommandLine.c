@@ -19,7 +19,6 @@
 #include <compat/posix_string.h>
 
 #include "PokeMini.h"
-#include "Keyboard.h"
 
 TCommandLine CommandLine;
 
@@ -29,12 +28,9 @@ void CommandLineInit(void)
 	memset((void *)&CommandLine, 0, sizeof(TCommandLine));
 
 	// Default strings
-	CommandLine.min_file[0] = 0; 
 	strcpy(CommandLine.bios_file, "bios.min");
 	strcpy(CommandLine.eeprom_file, "PokeMini.eep");
-	CommandLine.state_file[0] = 0;
 	strcpy(CommandLine.joyplatform, "default");
-	CommandLine.rom_dir[0] = 0;
 
 	// Default booleans / integers
 	CommandLine.forcefreebios = 0;	// Force FreeBIOS
@@ -52,9 +48,6 @@ void CommandLineInit(void)
 	CommandLine.low_battery = 0;	// Low Battery
 	CommandLine.palette = 0;	// Palette Index
 	CommandLine.rumblelvl = 3;	// Rumble level
-	CommandLine.joyid = 0;		// Joystick ID
-	CommandLine.joyaxis_dpad = 1;	// Joystick Axis as DPad
-	CommandLine.joyhats_dpad = 1;	// Joystick Hats as DPad
 	// Joystick mapping
 	CommandLine.joybutton[0] = 8;	// Menu:  Button 8
 	CommandLine.joybutton[1] = 1;	// A:     Button 1
@@ -66,28 +59,6 @@ void CommandLineInit(void)
 	CommandLine.joybutton[7] = 5;	// Right: Button 5
 	CommandLine.joybutton[8] = 9;	// Power: Button 9
 	CommandLine.joybutton[9] = 6;	// Shake: Button 6
-	// Keyboard mapping (Magic numbers!)
-	CommandLine.keyb_a[0] = PMKEYB_ESCAPE;	// Menu:  ESCAPE
-	CommandLine.keyb_a[1] = PMKEYB_X;	// A:     X
-	CommandLine.keyb_a[2] = PMKEYB_Z;	// B:     Z
-	CommandLine.keyb_a[3] = PMKEYB_C;	// C:     C
-	CommandLine.keyb_a[4] = PMKEYB_UP;	// Up:    UP
-	CommandLine.keyb_a[5] = PMKEYB_DOWN;	// Down:  DOWN
-	CommandLine.keyb_a[6] = PMKEYB_LEFT;	// Left:  LEFT
-	CommandLine.keyb_a[7] = PMKEYB_RIGHT;	// Right: RIGHT
-	CommandLine.keyb_a[8] = PMKEYB_E;	// Power: E
-	CommandLine.keyb_a[9] = PMKEYB_A;	// Shake: A
-	// Keyboard alternative mapping (Magic numbers!)
-	CommandLine.keyb_b[0] = PMKEYB_Q;	// Menu:  Q
-	CommandLine.keyb_b[1] = PMKEYB_NONE;	// A:     NONE
-	CommandLine.keyb_b[2] = PMKEYB_NONE;	// B:     NONE
-	CommandLine.keyb_b[3] = PMKEYB_D;	// C:     D
-	CommandLine.keyb_b[4] = PMKEYB_KP_8;	// Up:    KP_8
-	CommandLine.keyb_b[5] = PMKEYB_KP_2;	// Down:  KP_2
-	CommandLine.keyb_b[6] = PMKEYB_KP_4;	// Left:  KP_4
-	CommandLine.keyb_b[7] = PMKEYB_KP_6;	// Right: KP_6
-	CommandLine.keyb_b[8] = PMKEYB_P;	// Power: P
-	CommandLine.keyb_b[9] = PMKEYB_S;	// Shake: S
 	CommandLine.custompal[0] = 0xFFFFFF;	// Custom Palette 1 Light
 	CommandLine.custompal[1] = 0x000000;	// Custom Palette 1 Dark
 	CommandLine.custompal[2] = 0xFFFFFF;	// Custom Palette 2 Light

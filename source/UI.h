@@ -58,32 +58,6 @@ typedef struct TUIMenu_Item {
 	struct TUIMenu_Item *prev;	// Must be NULL
 } TUIMenu_Item;
 
-// External font and icons palette
-extern uint32_t *UI_Font1_Pal32;
-extern uint16_t *UI_Font1_Pal16;
-extern uint32_t *UI_Font2_Pal32;
-extern uint16_t *UI_Font2_Pal16;
-extern uint32_t *UI_Icons_Pal32;
-extern uint16_t *UI_Icons_Pal16;
-
-// UI Items
-extern TUIMenu_Item UIItems_Options[];			// Options items list
-int UIItems_PlatformDefC(int index, int reason);	// Platform default callback
-extern TUIMenu_Item UIItems_Platform[];			// Platform items list (USER DEFINED)
-
-#define PLATFORMDEF_GOBACK	{ 0,  0, "Go back...", UIItems_PlatformDefC, NULL }
-#define PLATFORMDEF_SAVEOPTIONS	{ 0, 99, "Save Configs...", UIItems_PlatformDefC, NULL }
-#define PLATFORMDEF_END(cb)	{ 9,  0, "Platform", cb, NULL }
-
-// UI return status
-//  1 = In Menu
-//  0 = Game
-// -1 = Exit
-extern int UI_Status;
-
-// UI PM screen preview distance from top-right, 0 to disable
-extern int UI_PreviewDist;
-
 // Load items list
 void UIMenu_LoadItems(TUIMenu_Item *items, int cursorindex);
 
