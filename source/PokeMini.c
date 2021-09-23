@@ -19,6 +19,7 @@
 #include "PokeMini.h"
 #include "Endianess.h"
 #include <time.h>
+#include <streams/file_stream.h>
 
 // Include Free BIOS
 #include "freebios.h"
@@ -192,38 +193,24 @@ int PokeMini_GenRumbleOffset(int pitch)
 // Load BIOS from file
 int PokeMini_LoadBIOSFile(const char *filename)
 {
-	int readbytes;
+	int64_t readbytes;
+	RFILE *fbios = NULL;
+
 	// Open file
-	FILE *fbios = fopen(filename, "rb");
-	if (fbios == NULL)
+	fbios = filestream_open(filename,
+			RETRO_VFS_FILE_ACCESS_READ,
+			RETRO_VFS_FILE_ACCESS_HINT_NONE);
+	if (!fbios)
 		return 0;
 
 	// Read content
-	readbytes = fread(PM_BIOS, 1, 4096, fbios);
+	readbytes = filestream_read(fbios, PM_BIOS, 4096);
 	PokeMini_FreeBIOS = 0;
 
 	// Close file
-	fclose(fbios);
+	filestream_close(fbios);
 
 	return (readbytes == 4096);
-}
-
-// Save BIOS from file
-int PokeMini_SaveBIOSFile(const char *filename)
-{
-	int writebytes;
-	// Open file
-	FILE *fbios = fopen(filename, "wb");
-	if (fbios == NULL)
-		return 0;
-
-	// Read content
-	writebytes = fwrite(PM_BIOS, 1, 4096, fbios);
-
-	// Close file
-	fclose(fbios);
-
-	return (writebytes == 4096);
 }
 
 // Load FreeBIOS
@@ -359,15 +346,19 @@ int PokeMini_LoadColorStream(TPokeMini_StreamIO stream, void *stream_ptr)
 // Load EEPROM
 int PokeMini_LoadEEPROMFile(const char *filename)
 {
-	int readbytes;
+	int64_t readbytes;
+	RFILE *fi = NULL;
+
 	// Open file
-	FILE *fi = fopen(filename, "rb");
-	if (fi == NULL)
+	fi = filestream_open(filename,
+			RETRO_VFS_FILE_ACCESS_READ,
+			RETRO_VFS_FILE_ACCESS_HINT_NONE);
+	if (!fi)
 		return 0;
 
 	// Read content
-	readbytes = fread(EEPROM, 1, 8192, fi);
-	fclose(fi);
+	readbytes = filestream_read(fi, EEPROM, 8192);
+	filestream_close(fi);
 
 	return (readbytes == 8192);
 }
@@ -375,15 +366,19 @@ int PokeMini_LoadEEPROMFile(const char *filename)
 // Save EEPROM
 int PokeMini_SaveEEPROMFile(const char *filename)
 {
-	int writebytes;
+	int64_t writebytes;
+	RFILE *fo = NULL;
+
 	// Open file
-	FILE *fo = fopen(filename, "wb");
-	if (fo == NULL)
+	fo = filestream_open(filename,
+			RETRO_VFS_FILE_ACCESS_WRITE,
+			RETRO_VFS_FILE_ACCESS_HINT_NONE);
+	if (!fo)
 		return 0;
 
 	// Read content
-	writebytes = fwrite(EEPROM, 1, 8192, fo);
-	fclose(fo);
+	writebytes = filestream_write(fo, EEPROM, 8192);
+	filestream_close(fo);
 
 	return (writebytes == 8192);
 }

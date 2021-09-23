@@ -20,14 +20,13 @@
 #include "PokeMini.h"
 #include <ctype.h>
 
-#include <compat/posix_string.h>
+#include <string/stdstring.h>
+#include <file/file_path.h>
 
 /* Return true if the string is valid and non-empty */
 int StringIsSet(char *str)
 {
-	if (!str) return 0;
-	if (strlen(str) == 0) return 0;
-	return 1;
+	return string_is_empty(str) ? 0 : 1;
 }
 
 /* Get multiple of 2 (Mask) */
@@ -42,13 +41,8 @@ int GetMultiple2Mask(int input)
 	return input;
 }
 
-// Check if file exist
+/* Check if file exists */
 int FileExist(const char *filename)
 {
-	// Test open file
-	FILE *fi = fopen(filename, "rb");
-	if (fi == NULL) return 0;
-	fclose(fi);
-
-	return 1;
+	return (!string_is_empty(filename) && path_is_valid(filename)) ? 1 : 0;
 }

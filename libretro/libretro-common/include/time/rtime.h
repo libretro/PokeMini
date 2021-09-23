@@ -1,7 +1,7 @@
-/* Copyright  (C) 2010-2019 The RetroArch team
+/* Copyright  (C) 2010-2020 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
- * The following license statement only applies to this file (vfs_implementation_cdrom.h).
+ * The following license statement only applies to this file (rtime.h).
  * ---------------------------------------------------------------------------------------
  *
  * Permission is hereby granted, free of charge,
@@ -20,32 +20,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __LIBRETRO_SDK_VFS_IMPLEMENTATION_CDROM_H
-#define __LIBRETRO_SDK_VFS_IMPLEMENTATION_CDROM_H
+#ifndef __LIBRETRO_SDK_RTIME_H__
+#define __LIBRETRO_SDK_RTIME_H__
 
-#include <vfs/vfs.h>
-#include <cdrom/cdrom.h>
+#include <retro_common_api.h>
+
+#include <stdint.h>
+#include <stddef.h>
+#include <time.h>
 
 RETRO_BEGIN_DECLS
 
-int64_t retro_vfs_file_seek_cdrom(libretro_vfs_implementation_file *stream, int64_t offset, int whence);
+/* TODO/FIXME: Move all generic time handling functions
+ * to this file */
 
-void retro_vfs_file_open_cdrom(
-      libretro_vfs_implementation_file *stream,
-      const char *path, unsigned mode, unsigned hints);
+/* Must be called before using rtime_localtime() */
+void rtime_init(void);
 
-int retro_vfs_file_close_cdrom(libretro_vfs_implementation_file *stream);
+/* Must be called upon program termination */
+void rtime_deinit(void);
 
-int64_t retro_vfs_file_tell_cdrom(libretro_vfs_implementation_file *stream);
-
-int64_t retro_vfs_file_read_cdrom(libretro_vfs_implementation_file *stream,
-      void *s, uint64_t len);
-
-int retro_vfs_file_error_cdrom(libretro_vfs_implementation_file *stream);
-
-const cdrom_toc_t* retro_vfs_file_get_cdrom_toc(void);
-
-const vfs_cdrom_t* retro_vfs_file_get_cdrom_position(const libretro_vfs_implementation_file *stream);
+/* Thread-safe wrapper for localtime() */
+struct tm *rtime_localtime(const time_t *timep, struct tm *result);
 
 RETRO_END_DECLS
 

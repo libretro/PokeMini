@@ -1,7 +1,7 @@
-/* Copyright  (C) 2010-2018 The RetroArch team
+/* Copyright  (C) 2010-2020 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
- * The following license statement only applies to this file (memmap.h).
+ * The following license statement only applies to this file (rtime.c).
  * ---------------------------------------------------------------------------------------
  *
  * Permission is hereby granted, free of charge,
@@ -20,33 +20,62 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _LIBRETRO_MEMMAP_H
-#define _LIBRETRO_MEMMAP_H
-
-#include <stdio.h>
-#include <stdint.h>
-
-#if defined(PSP) || defined(PS2) || defined(GEKKO) || defined(VITA) || defined(_XBOX) || defined(_3DS) || defined(WIIU) || defined(SWITCH)
-/* No mman available */
-#elif defined(_WIN32) && !defined(_XBOX)
-#include <windows.h>
-#include <errno.h>
-#include <io.h>
-#else
-#define HAVE_MMAN
-#include <sys/mman.h>
+#ifdef HAVE_THREADS
+#include <rthreads/rthreads.h>
+#include <retro_assert.h>
+#include <stdlib.h>
 #endif
 
-#if !defined(HAVE_MMAN) || defined(_WIN32)
-void* mmap(void *addr, size_t len, int mmap_prot, int mmap_flags, int fildes, size_t off);
+#include <string.h>
+#include <time/rtime.h>
 
-int munmap(void *addr, size_t len);
-
-int mprotect(void *addr, size_t len, int prot);
+#ifdef HAVE_THREADS
+/* TODO/FIXME - global */
+slock_t *rtime_localtime_lock = NULL;
 #endif
 
-int memsync(void *start, void *end);
+/* Must be called before using rtime_localtime() */
+void rtime_init(void)
+{
+   rtime_deinit();
+#ifdef HAVE_THREADS
+   if (!rtime_localtime_lock)
+      rtime_localtime_lock = slock_new();
 
-int memprotect(void *addr, size_t len);
-
+   retro_assert(rtime_localtime_lock);
 #endif
+}
+
+/* Must be called upon program termination */
+void rtime_deinit(void)
+{
+#ifdef HAVE_THREADS
+   if (rtime_localtime_lock)
+   {
+      slock_free(rtime_localtime_lock);
+      rtime_localtime_lock = NULL;
+   }
+#endif
+}
+
+/* Thread-safe wrapper for localtime() */
+struct tm *rtime_localtime(const time_t *timep, struct tm *result)
+{
+   struct tm *time_info = NULL;
+
+   /* Lock mutex */
+#ifdef HAVE_THREADS
+   slock_lock(rtime_localtime_lock);
+#endif
+
+   time_info = localtime(timep);
+   if (time_info)
+      memcpy(result, time_info, sizeof(struct tm));
+
+   /* Unlock mutex */
+#ifdef HAVE_THREADS
+   slock_unlock(rtime_localtime_lock);
+#endif
+
+   return result;
+}
