@@ -15,6 +15,7 @@
 #include <libretro.h>
 #include <libretro_core_options.h>
 #include <retro_miscellaneous.h>
+#include <streams/file_stream.h>
 
 // PokeMini headers
 #include "MinxIO.h"
@@ -822,6 +823,7 @@ void retro_set_input_state(retro_input_state_t cb)
 void retro_set_environment(retro_environment_t cb)
 {
 	struct retro_log_callback logging;
+	struct retro_vfs_interface_info vfs_iface_info;
 	
 	environ_cb = cb;
 	
@@ -829,6 +831,11 @@ void retro_set_environment(retro_environment_t cb)
 		log_cb = logging.log;
 	else
 		log_cb = NULL;
+	
+	vfs_iface_info.required_interface_version = 1;
+	vfs_iface_info.iface                      = NULL;
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
+		filestream_vfs_init(&vfs_iface_info);
 	
 	libretro_set_core_options(environ_cb);
 }

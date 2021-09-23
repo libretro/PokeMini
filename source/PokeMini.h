@@ -226,9 +226,6 @@ int PokeMini_GenRumbleOffset(int pitch);
 // Load BIOS file
 int PokeMini_LoadBIOSFile(const char *filename);
 
-// Save BIOS file
-int PokeMini_SaveBIOSFile(const char *filename);
-
 // Load FreeBIOS
 int PokeMini_LoadFreeBIOS(void);
 
