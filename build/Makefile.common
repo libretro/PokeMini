@@ -38,6 +38,7 @@ SOURCES_C := \
 	$(CORE_DIR)/source/Video_x4.c \
 	$(CORE_DIR)/source/Video_x5.c \
 	$(CORE_DIR)/source/Video_x6.c \
+	$(CORE_DIR)/source/Video_x7.c \
 	$(CORE_DIR)/source/Video.c \
 	$(CORE_DIR)/resource/PokeMini_ColorPal.c \
 	$(CORE_DIR)/libretro/libretro.c
