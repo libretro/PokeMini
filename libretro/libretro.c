@@ -31,6 +31,7 @@
 #include "Video_x4.h"
 #include "Video_x5.h"
 #include "Video_x6.h"
+#include "Video_x7.h"
 
 #ifdef _3DS
 void* linearMemAlign(size_t size, size_t alignment);
@@ -614,6 +615,10 @@ static void InitialiseVideo(void)
 		{
 			video_scale = 6;
 		}
+		else if (strcmp(variables.value, "7x") == 0)
+		{
+			video_scale = 7;
+		}
 #endif
 	}
 
@@ -661,6 +666,9 @@ static void InitialiseVideo(void)
 			break;
 		case 6:
 			video_spec = (TPokeMini_VideoSpec *)&PokeMini_Video6x6;
+			break;
+		case 7:
+			video_spec = (TPokeMini_VideoSpec *)&PokeMini_Video7x7;
 			break;
 		default: // video_scale == 1
 			video_spec = (TPokeMini_VideoSpec *)&PokeMini_Video1x1;

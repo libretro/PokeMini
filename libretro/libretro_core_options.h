@@ -61,6 +61,7 @@ struct retro_core_option_definition option_defs_us[] = {
          { "4x", NULL },
          { "5x", NULL },
          { "6x", NULL },
+         { "7x", NULL },
 #endif
          { NULL, NULL },
       },
