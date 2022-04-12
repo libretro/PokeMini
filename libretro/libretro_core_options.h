@@ -72,6 +72,17 @@ struct retro_core_option_definition option_defs_us[] = {
 #endif
    },
    {
+      "pokemini_60hz_mode",
+      "60Hz Mode",
+      "Update the display at 60Hz instead of the native 72Hz Pokemon Mini's refresh rate by dropping every sixth frame. Reduces video smoothness, but avoids screen tearing on displays that do not support native operation above 60Hz.",
+      {
+         { "disabled", NULL },
+         { "enabled",  NULL },
+         { NULL, NULL },
+      },
+      "enabled",
+   },
+   {
       "pokemini_lcdfilter",
       "LCD Filter",
       "Select internal screen filter. 'Dot Matrix' produces an LCD effect that mimics real hardware. LCD filters are disabled when 'Video Scale' is set to '1x'.",

@@ -400,20 +400,50 @@ static void MinxAudio_GenerateEmulatedS16(
 	if (numsamples <= 0)
 		return;
 	MinxAudio_GetEmulated(&Sound_Frequency, &Pulse_Width);
-	for (i=0; i<numsamples; i++)
+	if (channels == 1)
 	{
-		if ((Sound_Frequency >= 50) && (Sound_Frequency < 20000))
+		for (i=0; i<numsamples; i++)
 		{
-			MinxAudio.AudioSCnt += Sound_Frequency * MINX_AUDIOCONV;
-			if ((MinxAudio.AudioSCnt & 0xFFF00000) >= (Pulse_Width << 20))
+			if ((Sound_Frequency >= 50) && (Sound_Frequency < 20000))
 			{
-				if (PiezoFilter)
+				MinxAudio.AudioSCnt += Sound_Frequency * MINX_AUDIOCONV;
+				if ((MinxAudio.AudioSCnt & 0xFFF00000) >= (Pulse_Width << 20))
+					*soundout++ = PiezoFilter ? MinxAudio_PiezoFilter(MinxAudio.Volume) : MinxAudio.Volume;
+				else
+					*soundout++ = PiezoFilter ? MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE) : 0;
+			}
+			else
+				*soundout++ = PiezoFilter ? MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE) : 0;
+		}
+	}
+	else
+	{
+		for (i=0; i<numsamples; i++)
+		{
+			if ((Sound_Frequency >= 50) && (Sound_Frequency < 20000))
+			{
+				MinxAudio.AudioSCnt += Sound_Frequency * MINX_AUDIOCONV;
+				if ((MinxAudio.AudioSCnt & 0xFFF00000) >= (Pulse_Width << 20))
 				{
-					for (j=0; j<channels; j++) *soundout++ = MinxAudio_PiezoFilter(MinxAudio.Volume);
+					if (PiezoFilter)
+					{
+						for (j=0; j<channels; j++) *soundout++ = MinxAudio_PiezoFilter(MinxAudio.Volume);
+					}
+					else
+					{
+						for (j=0; j<channels; j++) *soundout++ = MinxAudio.Volume;
+					}
 				}
 				else
 				{
-					for (j=0; j<channels; j++) *soundout++ = MinxAudio.Volume;
+					if (PiezoFilter)
+					{
+						for (j=0; j<channels; j++) *soundout++ = MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE);
+					}
+					else
+					{
+						for (j=0; j<channels; j++) *soundout++ = 0;
+					}
 				}
 			}
 			else
@@ -428,17 +458,6 @@ static void MinxAudio_GenerateEmulatedS16(
 				}
 			}
 		}
-		else
-		{
-			if (PiezoFilter)
-			{
-				for (j=0; j<channels; j++) *soundout++ = MinxAudio_PiezoFilter(MINX_AUDIO_SILENCE);
-			}
-			else
-			{
-				for (j=0; j<channels; j++) *soundout++ = 0;
-			}
-		}
 	}
 }
 
@@ -451,20 +470,36 @@ void MinxAudio_GetSamplesS16Ch(int16_t *soundout,
 		MinxAudio_GenerateEmulatedS16(soundout, numsamples, channels);
 		return;
 	}
-	if (AudioEnabled && SoundEngine)
+	if (channels == 1)
 	{
-		while (numsamples--)
+		if (AudioEnabled && SoundEngine)
 		{
-			int16_t sample = MinxAudio_FIFORead();
-			for (j=0; j<channels; j++)
-				*soundout++ = sample;
+			while (numsamples--)
+				*soundout++ = MinxAudio_FIFORead();
+		}
+		else
+		{
+			while (numsamples--)
+				*soundout++ = 0x0000;
 		}
 	}
 	else
 	{
-		while (numsamples--)
-			for (j=0; j<channels; j++)
-				*soundout++ = 0x0000;
+		if (AudioEnabled && SoundEngine)
+		{
+			while (numsamples--)
+			{
+				int16_t sample = MinxAudio_FIFORead();
+				for (j=0; j<channels; j++)
+					*soundout++ = sample;
+			}
+		}
+		else
+		{
+			while (numsamples--)
+				for (j=0; j<channels; j++)
+					*soundout++ = 0x0000;
+		}
 	}
 }
 
