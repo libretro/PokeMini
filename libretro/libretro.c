@@ -46,8 +46,9 @@ void linearFree(void* mem);
 #define PM_SS_SIZE 44014
 
 // Screen parameters
-#define PM_SCEEN_WIDTH  96
-#define PM_SCEEN_HEIGHT 64
+#define PM_SCEEN_WIDTH     96
+#define PM_SCEEN_HEIGHT    64
+#define VIDEO_REFRESH_RATE 72.0
 
 static uint16_t video_scale = 1;
 static uint16_t video_width = PM_SCEEN_WIDTH;
@@ -81,6 +82,29 @@ static struct retro_rumble_interface rumble = {0};
 static uint16_t rumble_strength      = 0;
 static uint16_t rumble_strength_prev = 0;
 
+// Audio parameters
+#define AUDIO_SAMPLES_PER_FRAME_MAX 613
+#define AUDIO_SAMPLES_PER_FRAME_MIN 612
+
+typedef struct
+{
+	int16_t *samples_mono;
+	int16_t *samples_stereo;
+	size_t samples_pos;
+	uint16_t samples_per_frame_72hz[2];
+	uint16_t samples_per_frame_60hz;
+	uint8_t per_frame_72hz_index;
+} retro_audio_t;
+
+static retro_audio_t retro_audio = {0};
+
+// 60Hz mode parameters
+#define RETRO_60HZ_FPS         ((5.0 * VIDEO_REFRESH_RATE) / 6.0)
+#define RETRO_60HZ_CYCLE_INDEX 5
+
+static bool retro_60hz_enabled    = false;
+static uint8_t retro_60hz_counter = 0;
+
 // Low pass audio filter parameters
 static bool low_pass_enabled  = false;
 static int32_t low_pass_range = 0;
@@ -100,6 +124,9 @@ static int32_t low_pass_prev  = 0; /* Previous sample */
 static uint16_t turbo_period      = TURBO_PERIOD_DEFAULT;
 static uint16_t turbo_pulse_width = TURBO_PULSE_WIDTH_DEFAULT;
 static uint16_t turbo_counter     = 0;
+
+// Frontend notification flags
+static bool update_av_info = false;
 
 // Utilities
 ///////////////////////////////////////////////////////////
@@ -186,9 +213,66 @@ static void extract_basename(char *buf, const char *path, size_t size)
 
 ///////////////////////////////////////////////////////////
 
-static void SyncCoreOptionsWithCommandLine(void)
+static void DeinitialiseAudio(void)
+{
+	if (retro_audio.samples_mono)
+		free(retro_audio.samples_mono);
+	retro_audio.samples_mono = NULL;
+
+	if (retro_audio.samples_stereo)
+		free(retro_audio.samples_stereo);
+	retro_audio.samples_stereo = NULL;
+
+	retro_audio.samples_pos          = 0;
+	retro_audio.per_frame_72hz_index = 0;
+}
+
+///////////////////////////////////////////////////////////
+
+static void InitialiseAudio(void)
+{
+	uint16_t samples_size;
+
+	DeinitialiseAudio();
+
+	// Native refresh rate: 72Hz
+	// Audio sample rate: 44100Hz
+	// - 612.5 samples per frame
+	// - Have to alternate between 612 and 613
+	//   samples on successive frames
+	retro_audio.samples_per_frame_72hz[0] = AUDIO_SAMPLES_PER_FRAME_MIN;
+	retro_audio.samples_per_frame_72hz[1] = AUDIO_SAMPLES_PER_FRAME_MAX;
+
+	// Get expected number of samples per frame
+	// in 60Hz mode
+	// > Round down - any excess samples will be read
+	//   out at the end of each 5/6 frame cycle
+	retro_audio.samples_per_frame_60hz = ((uint16_t)(MINX_AUDIOFREQ /
+			RETRO_60HZ_FPS));
+
+	// - At native 72Hz, mono buffer must be large enough
+	//   to hold AUDIO_SAMPLES_PER_FRAME_MAX samples
+	// - At 60Hz, mono buffer must be large enough to
+	//   cache two frames worth of data:
+	//   AUDIO_SAMPLES_PER_FRAME_MAX + AUDIO_SAMPLES_PER_FRAME_MIN
+	samples_size = retro_60hz_enabled ?
+			(AUDIO_SAMPLES_PER_FRAME_MAX + AUDIO_SAMPLES_PER_FRAME_MIN) :
+			AUDIO_SAMPLES_PER_FRAME_MAX;
+
+	// Allocate buffers
+	// > Stereo must be twice the size of mono
+	retro_audio.samples_mono   = (int16_t*)malloc(
+			samples_size * sizeof(int16_t));
+	retro_audio.samples_stereo = (int16_t*)malloc(
+			(samples_size << 1) * sizeof(int16_t));
+}
+
+///////////////////////////////////////////////////////////
+
+static void SyncCoreOptionsWithCommandLine(bool startup)
 {
 	struct retro_variable variables = {0};
+	bool retro_60hz_enabled_prev;
 	
 	// pokemini_lcdfilter
 	CommandLine.lcdfilter = 1; // LCD Filter (0: nofilter, 1: dotmatrix, 2: scanline)
@@ -373,6 +457,27 @@ static void SyncCoreOptionsWithCommandLine(void)
 
 		turbo_counter = 0;
 	}
+	
+	// pokemini_60hz_mode
+	retro_60hz_enabled_prev = retro_60hz_enabled;
+	retro_60hz_enabled = false;
+	variables.key = "pokemini_60hz_mode";
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &variables))
+	{
+		if (strcmp(variables.value, "enabled") == 0)
+		{
+			retro_60hz_enabled = true;
+		}
+	}
+	
+	if (!startup &&
+		 (retro_60hz_enabled != retro_60hz_enabled_prev))
+	{
+		// Reinitialise audio buffers and notify frontend
+		InitialiseAudio();
+		retro_60hz_counter = 0;
+		update_av_info     = true;
+	}
 }
 
 ///////////////////////////////////////////////////////////
@@ -428,7 +533,7 @@ static void InitialiseCommandLine(const struct retro_game_info *game)
 #endif
 	
 	// Set overrides read from core options
-	SyncCoreOptionsWithCommandLine();
+	SyncCoreOptionsWithCommandLine(true);
 	
 	// Set file paths
 	// > Handle Windows nonsense...
@@ -738,12 +843,10 @@ static void SetPixelOffset(void)
 
 ///////////////////////////////////////////////////////////
 
-// Apply low pass audio filter
-static void ApplyLowPassFilter(int16_t *buf, int length)
+// Apply low pass filter to a mono sound buffer 'buf_in',
+// upmixing the result to a stereo sound buffer 'buf_out'
+static void ApplyLowPassFilterUpmix(int16_t *buf_in, int16_t *buf_out, int32_t length)
 {
-   int samples      = length;
-   int16_t *out     = buf;
-
    /* Restore previous sample */
    int32_t low_pass = low_pass_prev;
 
@@ -754,7 +857,7 @@ static void ApplyLowPassFilter(int16_t *buf, int length)
    do
    {
       /* Apply low-pass filter */
-      low_pass = (low_pass * factor_a) + (*out * factor_b);
+      low_pass = (low_pass * factor_a) + (*buf_in++ * factor_b);
 
       /* 16.16 fixed point */
       low_pass >>= 16;
@@ -763,13 +866,27 @@ static void ApplyLowPassFilter(int16_t *buf, int length)
        * > Note: Sound is mono, converted to
        *   stereo by duplicating the left/right
        *   channels */
-      *out++   = (int16_t)low_pass;
-      *out++   = (int16_t)low_pass;
+      *buf_out++ = (int16_t)low_pass;
+      *buf_out++ = (int16_t)low_pass;
    }
-   while (--samples);
+   while (--length);
 
    /* Save last sample for next frame */
-   low_pass_prev  = low_pass;
+   low_pass_prev = low_pass;
+}
+
+///////////////////////////////////////////////////////////
+
+// Upmix mono sound buffer 'buf_in' to stereo sound
+// buffer 'buf_out'
+static void AudioUpmix(int16_t *buf_in, int16_t *buf_out, int32_t length)
+{
+   do
+   {
+      *buf_out++ = *buf_in;
+      *buf_out++ = *buf_in++;
+   }
+   while (--length);
 }
 
 // Core functions
@@ -869,8 +986,9 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
 	info->geometry.max_width    = video_width;
 	info->geometry.max_height   = video_height;
 	info->geometry.aspect_ratio = (float)video_width / (float)video_height;
-	info->timing.fps            = 72.0;
-	info->timing.sample_rate    = 44100.0;
+	info->timing.fps            = retro_60hz_enabled ?
+			RETRO_60HZ_FPS : VIDEO_REFRESH_RATE;
+	info->timing.sample_rate    = (double)MINX_AUDIOFREQ;
 }
 
 ///////////////////////////////////////////////////////////
@@ -899,6 +1017,9 @@ void retro_deinit(void)
 
 	libretro_supports_bitmasks = false;
 
+	retro_60hz_enabled = false;
+	retro_60hz_counter = 0;
+
 	low_pass_enabled = false;
 	low_pass_range   = 0;
 	low_pass_prev    = 0;
@@ -906,6 +1027,8 @@ void retro_deinit(void)
 	turbo_period      = TURBO_PERIOD_DEFAULT;
 	turbo_pulse_width = TURBO_PULSE_WIDTH_DEFAULT;
 	turbo_counter     = 0;
+
+	update_av_info = false;
 }
 
 ///////////////////////////////////////////////////////////
@@ -922,14 +1045,13 @@ void retro_reset (void)
 
 void retro_run (void)
 {
-	static int16_t audiobuffer[612 * 2]; // 2 Channels -> MinxAudio_SamplesInBuffer() * 2
-	uint16_t audiosamples = 612;
+	size_t audio_samples_per_frame;
 	
 	// Check for core options updates
 	bool options_updated = false;
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &options_updated) && options_updated)
-   {
-		SyncCoreOptionsWithCommandLine();
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &options_updated) && options_updated)
+	{
+		SyncCoreOptionsWithCommandLine(false);
 		PokeMini_VideoPalette_Index(CommandLine.palette, NULL, CommandLine.lcdcontrast, CommandLine.lcdbright);
 		PokeMini_ApplyChanges();
 	}
@@ -937,22 +1059,81 @@ void retro_run (void)
 	poll_cb();
 	handlekeyevents();
 	
-	PokeMini_EmulateFrame();
+	// Must set audio_samples_per_frame after
+	// SyncCoreOptionsWithCommandLine(), since
+	// toggling 60Hz mode will reset
+	// retro_audio.per_frame_72hz_index
+	audio_samples_per_frame =
+			retro_audio.samples_per_frame_72hz[
+					retro_audio.per_frame_72hz_index];
 	
-	MinxAudio_GetSamplesS16Ch(audiobuffer, audiosamples, 2);
-	if (low_pass_enabled)
+	if (retro_60hz_enabled)
 	{
-		/* Note: We could be more efficient here by embedding
-		 * the low pass filter in MinxAudio_GetSamplesS16Ch().
-		 * This would be deeply invasive, however, requiring
-		 * many changes to MinxAudio and the 'command line'
-		 * interface. Since the performance overheads of the
-		 * ApplyLowPassFilter() function are very low, the
-		 * additional workload does not seem worthwhile... */
-		ApplyLowPassFilter(audiobuffer, audiosamples);
+		// If we are running in 60Hz mode, then:
+		// - Audio data must be buffered
+		// - On every 5th call of retro_run(), an
+		//   extra frame must be emulated */
+
+		/* Emulate 'force skipped frame' */
+		if (retro_60hz_counter == 0)
+		{
+			PokeMini_EmulateFrame();
+			
+			MinxAudio_GetSamplesS16Ch(retro_audio.samples_mono +
+							retro_audio.samples_pos,
+					audio_samples_per_frame, 1);
+			retro_audio.samples_pos += audio_samples_per_frame;
+			
+			retro_audio.per_frame_72hz_index =
+					(retro_audio.per_frame_72hz_index + 1) & 0x1;
+			audio_samples_per_frame =
+					retro_audio.samples_per_frame_72hz[
+							retro_audio.per_frame_72hz_index];
+		}
+
+		/* Run 'regular' frame */
+		PokeMini_EmulateFrame();
+
+		MinxAudio_GetSamplesS16Ch(retro_audio.samples_mono +
+						retro_audio.samples_pos,
+				audio_samples_per_frame, 1);
+		retro_audio.samples_pos += audio_samples_per_frame;
+		
+		retro_60hz_counter++;
 	}
-	audio_batch_cb(audiobuffer, audiosamples);
+	else
+	{
+		PokeMini_EmulateFrame();
+		
+		// - If low pass filter is enabled, read mono
+		//   samples and upmix in the filter
+		// - If low pass filter is disabled, let
+		//   MinxAudio_GetSamplesS16Ch() perform the
+		//   upmix
+		if (low_pass_enabled)
+		{
+			MinxAudio_GetSamplesS16Ch(retro_audio.samples_mono,
+					audio_samples_per_frame, 1);
+			
+			ApplyLowPassFilterUpmix(retro_audio.samples_mono,
+					retro_audio.samples_stereo,
+					audio_samples_per_frame);
+		}
+		else
+			MinxAudio_GetSamplesS16Ch(retro_audio.samples_stereo,
+					audio_samples_per_frame, 2);
+	}
 	
+	// Notify frontend of any timing changes
+	if (update_av_info)
+	{
+		struct retro_system_av_info system_av_info;
+		retro_get_system_av_info(&system_av_info);
+		environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &system_av_info);
+		update_av_info = false;
+	}
+	
+	// Fetch, process and output video
 	PokeMini_VideoBlit((uint16_t *)video_buffer, pix_pitch);
 	
 	if (PokeMini_Rumbling)
@@ -968,6 +1149,53 @@ void retro_run (void)
 	LCDDirty = 0;
 	
 	video_cb(video_buffer, video_width, video_height, video_width * 2/*Pitch*/);
+	
+	// Output audio
+	if (retro_60hz_enabled)
+	{
+		// If we are running in 60Hz mode, then
+		// read out the expected number of samples
+		// on each frame plus empty the buffer at
+		// the end of each 5/6 frame cycle
+		size_t samples_available = retro_audio.samples_pos;
+		size_t samples_to_read   = retro_audio.samples_per_frame_60hz;
+		
+		samples_to_read = (samples_to_read > samples_available) ?
+				samples_available : samples_to_read;
+		
+		if (retro_60hz_counter >= RETRO_60HZ_CYCLE_INDEX)
+		{
+			samples_to_read    = samples_available;
+			retro_60hz_counter = 0;
+		}
+		
+		// Cached samples are mono - upmix to stereo,
+		// applying low pass filter if required
+		if (low_pass_enabled)
+			ApplyLowPassFilterUpmix(retro_audio.samples_mono,
+					retro_audio.samples_stereo,
+					samples_to_read);
+		else
+			AudioUpmix(retro_audio.samples_mono,
+					retro_audio.samples_stereo, samples_to_read);
+
+		audio_batch_cb(retro_audio.samples_stereo,
+				samples_to_read);
+		
+		// Remove uploaded samples from the mono buffer
+		if (samples_to_read < samples_available)
+			memmove(retro_audio.samples_mono,
+					retro_audio.samples_mono + samples_to_read,
+					(retro_audio.samples_pos - samples_to_read) *
+							sizeof(int16_t));
+		retro_audio.samples_pos -= samples_to_read;
+	}
+	else
+		audio_batch_cb(retro_audio.samples_stereo,
+				audio_samples_per_frame);
+
+	retro_audio.per_frame_72hz_index =
+			(retro_audio.per_frame_72hz_index + 1) & 0x1;
 }
 
 ///////////////////////////////////////////////////////////
@@ -1031,7 +1259,8 @@ bool retro_load_game(const struct retro_game_info *game)
 	InitialiseRumbleInterface();
 	InitialiseCommandLine(game);
 	InitialiseVideo();
-	
+	InitialiseAudio();
+
 	passed = PokeMini_Create(0/*flags*/, PMSOUNDBUFF); // returns 1 on completion,0 on error
 	if (!passed)
 		abort();
@@ -1085,7 +1314,7 @@ static void SimulatePowerOff(void)
 	// 72 emulated frames (1 virtual second of runtime)
 	// to avoid hanging the emulator in the event of an
 	// unforeseen error
-	const size_t frames_max = 72;
+	const size_t frames_max = (size_t)(VIDEO_REFRESH_RATE + 0.5);
 	size_t frame_counter    = 0;
 
 	while ((MinxCPU.Status != MINX_STATUS_HALT) &&
@@ -1135,6 +1364,9 @@ void retro_unload_game(void)
 #endif
 	}
 	video_buffer = NULL;
+
+	// Deallocate audio buffers
+	DeinitialiseAudio();
 }
 
 // Useless (?) callbacks
