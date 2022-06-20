@@ -1047,15 +1047,13 @@ int MinxCPU_Exec(void)
 			JMPI(I16);
 			return 8;
 
-		case 0xFE: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0xFE);
-			return 4;
-
 		case 0xFF: // NOP
 			return 8;
 
+		case 0xFE: // CRASH
 		default:
-			MinxCPU_OnException(EXCEPTION_UNKNOWN_INSTRUCTION, MinxCPU.IR);
-			return 4;
+			break;
 	}
+
+	return 4;
 }

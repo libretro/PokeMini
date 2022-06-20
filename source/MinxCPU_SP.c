@@ -23,13 +23,7 @@ int MinxCPU_ExecSPCE(void)
 	// Read IR
 	MinxCPU.IR = Fetch8();
 
-	// Process instruction
-	switch(MinxCPU.IR) {
-		// TODO!
-		default:
-			MinxCPU_OnException(EXCEPTION_UNKNOWN_INSTRUCTION, (MinxCPU.IR << 16) + 0xCEFF);
-			return 64;
-	}
+	return 64;
 }
 
 int MinxCPU_ExecSPCF(void)
@@ -99,7 +93,6 @@ int MinxCPU_ExecSPCF(void)
 			MinxCPU.SP.W.L = DEC16(MinxCPU.SP.W.L);
 			return 16;
 		case 0x46: case 0x47: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, (MinxCPU.IR << 16) | 0xBFCF);
 			return 16;
 
 		case 0x48: case 0x49: // Increment X
@@ -112,7 +105,12 @@ int MinxCPU_ExecSPCF(void)
 			MinxCPU.SP.W.L = INC16(MinxCPU.SP.W.L);
 			return 16;
 		case 0x4E: case 0x4F: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, (MinxCPU.IR << 16) | 0xBFCF);
+		case 0x56: case 0x57: // CRASH
+		case 0x5E: case 0x5F: // CRASH
+		case 0x60: case 0x61: case 0x62: case 0x63: // CRASH
+		case 0x64: case 0x65: case 0x66: case 0x67:
+		case 0x68: case 0x69: case 0x6A: case 0x6B:
+		case 0x6C: case 0x6D: case 0x6E: case 0x6F:
 			return 16;
 
 		case 0x50: case 0x51: // Decrement X
@@ -124,9 +122,6 @@ int MinxCPU_ExecSPCF(void)
 		case 0x54: case 0x55: // Decrement SP
 			MinxCPU.SP.W.L = DEC16(MinxCPU.SP.W.L);
 			return 16;
-		case 0x56: case 0x57: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, (MinxCPU.IR << 16) | 0xBFCF);
-			return 16;
 
 		case 0x58: case 0x59: // Increment X
 			MinxCPU.X.W.L = INC16(MinxCPU.X.W.L);
@@ -137,16 +132,7 @@ int MinxCPU_ExecSPCF(void)
 		case 0x5C: case 0x5D: // Increment SP
 			MinxCPU.SP.W.L = INC16(MinxCPU.SP.W.L);
 			return 16;
-		case 0x5E: case 0x5F: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, (MinxCPU.IR << 16) | 0xBFCF);
-			return 16;
 
-		case 0x60: case 0x61: case 0x62: case 0x63: // CRASH
-		case 0x64: case 0x65: case 0x66: case 0x67:
-		case 0x68: case 0x69: case 0x6A: case 0x6B:
-		case 0x6C: case 0x6D: case 0x6E: case 0x6F:
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, (MinxCPU.IR << 16) | 0xBFCF);
-			return 16;
 
 		case 0x70: // BA = (0x4D << 8) | V
 			MinxCPU.BA.W.L = 0x4D00 | MinxCPU.PC.B.I;
@@ -178,7 +164,6 @@ int MinxCPU_ExecSPCF(void)
 		case 0xA4: case 0xA5: case 0xA6: case 0xA7:
 		case 0xA8: case 0xA9: case 0xAA: case 0xAB:
 		case 0xAC: case 0xAD: case 0xAE: case 0xAF:
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, (MinxCPU.IR << 16) | 0xBFCF);
 			return 24;
 
 		case 0xB0: case 0xB1: case 0xB2: case 0xB3: // NOTHING
@@ -187,7 +172,6 @@ int MinxCPU_ExecSPCF(void)
 		case 0xB4: case 0xB5: case 0xB6: case 0xB7: // CRASH
 		case 0xB8: case 0xB9: case 0xBA: case 0xBB:
 		case 0xBC: case 0xBD: case 0xBE: case 0xBF:
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, (MinxCPU.IR << 16) | 0xBFCF);
 			return 12;
 
 		case 0xC0: // BA = (0x20 << 8) | V
@@ -208,7 +192,6 @@ int MinxCPU_ExecSPCF(void)
 
 		case 0xC8: case 0xC9: case 0xCA: case 0xCB: // CRASH
 		case 0xCC: case 0xCD: case 0xCE: case 0xCF:
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, (MinxCPU.IR << 16) | 0xBFCF);
 			return 20;
 
 		case 0xD0: // BA = (0x20 << 8) | V
@@ -251,11 +234,11 @@ int MinxCPU_ExecSPCF(void)
 		case 0xF4: case 0xF5: case 0xF6: case 0xF7:
 		case 0xF8: case 0xF9: case 0xFA: case 0xFB:
 		case 0xFC: case 0xFD: case 0xFE: case 0xFF:
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, (MinxCPU.IR << 16) | 0xBFCF);
 			return 24;
 
 		default:
-			MinxCPU_OnException(EXCEPTION_UNKNOWN_INSTRUCTION, (MinxCPU.IR << 16) + 0xBFCF);
-			return 64;
+			break;
 	}
+
+	return 64;
 }

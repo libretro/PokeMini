@@ -731,13 +731,8 @@ int MinxCPU_ExecCE(void)
 			return 12;
 
 		case 0xAB: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0xABCE);
-			return 64;
 		case 0xAC: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0xACCE);
-			return 64;
 		case 0xAD: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0xACCE);
 			return 64;
 
 		case 0xAE: // HALT
@@ -917,7 +912,6 @@ int MinxCPU_ExecCE(void)
 		case 0xDB: // ??? #nn
 			return MinxCPU_ExecSPCE();
 		case 0xDC: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0xDCCE);
 			return 64;
 		case 0xDD: // NOTHING
 			return 16;
@@ -1126,7 +1120,8 @@ int MinxCPU_ExecCE(void)
 			return 12;
 
 		default:
-			MinxCPU_OnException(EXCEPTION_UNKNOWN_INSTRUCTION, (MinxCPU.IR << 8) + 0xCE);
-			return 4;
+			break;
 	}
+
+	return 4;
 }

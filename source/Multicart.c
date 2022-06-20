@@ -171,7 +171,6 @@ void Multicart_T1W(uint32_t addr, uint8_t data)
 uint8_t Multicart_T2R(uint32_t addr)
 {
 	if (!PM_MM_GetID) return PM_ROM[(addr + PM_MM_Offset) & PM_ROM_Mask];
-//	Add_InfoMessage("[DEBUG] Getting ID $%06X\n", addr);
 	switch (addr & 0xFF) {
 		case 0x00: return 0x80;	// Manufacturer ID
 		case 0x01: return 0xBA;	// Device ID
@@ -193,8 +192,6 @@ void Multicart_T2W(uint32_t addr, uint8_t data)
 			PM_MM_Offset = (((data ^ 0x04) & 0x07) << 16) | ((data & 0x38) << 10);
 		}
 	}
-
-//	Add_InfoMessage("[DEBUG] Write $%06X, $%02X\n", addr, data);
 
 	// Flash I/O
 	if (PM_MM_BusCycle == 5) {
@@ -266,8 +263,6 @@ void Multicart_T2W(uint32_t addr, uint8_t data)
 		} else if ((faddr == 0x555) && (data == 0x66)) PM_MM_BusCycle = 1;
 		PM_MM_Command = 0;
 	}
-
-//	Add_InfoMessage("[DEBUG] Bus Cycle %i, Command %i, Offset $%06X\n", PM_MM_BusCycle, PM_MM_Command, PM_MM_Offset);
 }
 
 void NewMulticart(void)

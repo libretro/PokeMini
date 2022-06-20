@@ -27,21 +27,10 @@
 
 // Common functions
 #include "PMCommon.h"
-#include "Endianess.h"
-
-// Version control
-#include "PokeMini_Version.h"
 
 // Configuration Flags
-// No sound support
-#define POKEMINI_NOSOUND	0x01
 // Generated sound only
 #define POKEMINI_GENSOUND	0x02
-// Auto battery support
-#define POKEMINI_AUTOBATT	0x04
-
-// Default cycles per frame
-#define POKEMINI_FRAME_CYC	55634
 
 extern int PokeMini_FreeBIOS;	// Using freebios?
 extern int PokeMini_Flags;	// Configuration flags
@@ -105,10 +94,9 @@ static INLINE uint8_t MinxPRC_OnRead(int cpu, uint32_t addr)
 
 static INLINE void MinxPRC_OnWrite(int cpu, uint32_t addr, uint8_t data)
 {
-	if ((addr >= 0x1000) && (addr < 0x2000)) {
-		// RAM Write
+	// RAM Write
+	if ((addr >= 0x1000) && (addr < 0x2000))
 		PM_RAM[addr-0x1000] = data;
-	}
 }
 
 #else
@@ -150,8 +138,10 @@ static INLINE void MinxPRC_OnWrite(int cpu, uint32_t addr, uint8_t data)
 	rsize += (uint32_t)memstream_read(stream, (void *)array, size);\
 }
 
+#define POKE_SEEK_CUR 1
+
 #define POKELOADSS_STREAM_X(size) {\
-	rsize += memstream_seek(stream, size, SEEK_CUR) ? 0 : size;\
+	rsize += memstream_seek(stream, size, POKE_SEEK_CUR) ? 0 : size;\
 }
 // -- Stream versions End
 
@@ -211,9 +201,6 @@ void PokeMini_Destroy(void);
 // Apply changes from command lines
 void PokeMini_ApplyChanges(void);
 
-// User press or release a Pokemon-Mini key
-void PokeMini_KeypadEvent(uint8_t key, int pressed);
-
 // Low power battery emulation
 void PokeMini_LowPower(int enable);
 
@@ -234,9 +221,6 @@ int PokeMini_FileExist(const char *filename);
 
 // New MIN ROM
 int PokeMini_NewMIN(uint32_t size);
-
-// Set MIN from memory
-int PokeMini_SetMINMem(uint8_t *mem, int size);
 
 // Synchronize host time
 int PokeMini_SyncHostTime(void);

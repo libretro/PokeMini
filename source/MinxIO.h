@@ -19,7 +19,6 @@
 #ifndef MINXHW_IO
 #define MINXHW_IO
 
-#include <stdio.h>
 #include <stdint.h>
 #include <streams/memory_stream.h>
 
@@ -81,7 +80,7 @@ enum {
 	MINX_INTR_19 = 0x19,     // Down key
 	MINX_INTR_1A = 0x1A,     // Left key
 	MINX_INTR_1B = 0x1B,     // Right key
-	MINX_INTR_1C = 0x1C,     // Power key
+	MINX_INTR_1C = 0x1C      // Power key
 };
 
 #define MINX_IO_PULL_UPS	0x40	// Pull-up when direction create a Z

@@ -79,33 +79,12 @@ typedef union {
 #define MINX_FLAG_SAVE_CO 	0xF6
 #define MINX_FLAG_SAVE_COS	0xFE
 
-// OnException() reasons
-enum {
-	EXCEPTION_UNKNOWN_INSTRUCTION,
-	EXCEPTION_CRASH_INSTRUCTION,
-	EXCEPTION_UNSTABLE_INSTRUCTION,
-	EXCEPTION_DIVISION_BY_ZERO
-};
-
-// OnSleep() reasons
-enum {
-	MINX_SLEEP_HALT,
-	MINX_SLEEP_STOP
-};
-
 // Status reasons
 enum {
 	MINX_STATUS_NORMAL = 0, // Normal operation
-	MINX_STATUS_HALT = 1,   // CPU during HALT
-	MINX_STATUS_STOP = 2,   // CPU during STOP
-	MINX_STATUS_IRQ = 3,    // Delay caused by hardware IRQ
-};
-
-// DebugHalt reasons
-enum {
-	MINX_DEBUGHALT_RECEIVE,
-	MINX_DEBUGHALT_SUSPEND,
-	MINX_DEBUGHALT_RESUME,
+	MINX_STATUS_HALT   = 1,   // CPU during HALT
+	MINX_STATUS_STOP   = 2,   // CPU during STOP
+	MINX_STATUS_IRQ    = 3    // Delay caused by hardware IRQ
 };
 
 // Signed 8-Bits to 16-Bits converter
@@ -140,7 +119,6 @@ extern TMinxCPU MinxCPU;
 // Callbacks (Must be coded by the user)
 uint8_t MinxCPU_OnRead(int cpu, uint32_t addr);
 void MinxCPU_OnWrite(int cpu, uint32_t addr, uint8_t data);
-void MinxCPU_OnException(int type, uint32_t opc);
 void MinxCPU_OnIRQHandle(uint8_t flag, uint8_t shift_u);
 void MinxCPU_OnIRQAct(uint8_t intr);
 
@@ -741,10 +719,8 @@ static INLINE void DIV(void)
 {
 	uint16_t RES;
 	MinxCPU.F &= MINX_FLAG_SAVE_NUL;
-	if (MinxCPU.BA.B.L == 0) {
-		MinxCPU_OnException(EXCEPTION_DIVISION_BY_ZERO, 0);
+	if (MinxCPU.BA.B.L == 0)
 		return;
-	}
 	RES = MinxCPU.HL.W.L / MinxCPU.BA.B.L;
 	if (RES < 256) {
 		MinxCPU.HL.B.H = MinxCPU.HL.W.L % MinxCPU.BA.B.L;

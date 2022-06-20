@@ -19,9 +19,6 @@
 #ifndef POKEMINI_JOYSTICK
 #define POKEMINI_JOYSTICK
 
-// Process joystick buttons packed in bits
-void JoystickBitsEvent(uint32_t pressbits);
-
 // Process joystick buttons
 void JoystickButtonsEvent(int button, int pressed);
 

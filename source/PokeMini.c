@@ -15,9 +15,11 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+// Savestate file ID
+//   Change only if savestate structure file changes!
+#define PokeMini_ID 0x006B4D50
 
 #include "PokeMini.h"
-#include "Endianess.h"
 #include <time.h>
 #include <streams/file_stream.h>
 
@@ -36,7 +38,6 @@ int PokeMini_LCDMode = 0;	// LCD Mode
 int PokeMini_ColorFormat = 0;	// Color Format (0 = 8x8, 1 = 4x4)
 int PokeMini_HostBattStatus = 0;// Host battery status
 int PokeMini_RumbleAnim = 0;	// Rumble animation
-
 
 int PokeMini_RumbleAmount[4] = { -2,  1, -1,  2 };
 const int PokeMini_RumbleAmountTable[16] = {
@@ -158,12 +159,6 @@ void PokeMini_ApplyChanges(void)
 	for (i=0; i<4; i++) PokeMini_RumbleAmount[i] = PokeMini_RumbleAmountTable[((CommandLine.rumblelvl & 3) << 2) | i];
 }
 
-// User press or release a Pokemon-Mini key
-void PokeMini_KeypadEvent(uint8_t key, int pressed)
-{
-	MinxIO_Keypad(key, pressed);
-}
-
 // Low power battery emulation
 void PokeMini_LowPower(int enable)
 {
@@ -194,10 +189,8 @@ int PokeMini_GenRumbleOffset(int pitch)
 int PokeMini_LoadBIOSFile(const char *filename)
 {
 	int64_t readbytes;
-	RFILE *fbios = NULL;
-
 	// Open file
-	fbios = filestream_open(filename,
+	RFILE *fbios = filestream_open(filename,
 			RETRO_VFS_FILE_ACCESS_READ,
 			RETRO_VFS_FILE_ACCESS_HINT_NONE);
 	if (!fbios)
@@ -214,7 +207,7 @@ int PokeMini_LoadBIOSFile(const char *filename)
 }
 
 // Load FreeBIOS
-int PokeMini_LoadFreeBIOS()
+int PokeMini_LoadFreeBIOS(void)
 {
 	PokeMini_FreeBIOS = 1;
 	memcpy(PM_BIOS, FreeBIOS, 4096);
@@ -238,18 +231,6 @@ int PokeMini_NewMIN(uint32_t size)
 	memset(PM_ROM, 0xFF, PM_ROM_Size);
 	PM_ROM_Alloc = 1;
 
-	return 1;
-}
-
-// Set MIN from memory
-int PokeMini_SetMINMem(uint8_t *mem, int size)
-{
-	if (PM_ROM_Alloc) { free(PM_ROM); PM_ROM = NULL; PM_ROM_Alloc = 0; }
-	PM_ROM_Mask = GetMultiple2Mask(size);
-	PM_ROM_Size = PM_ROM_Mask + 1;
-	PM_ROM = mem;
-	PM_ROM_Alloc = 0;
-	NewMulticart();
 	return 1;
 }
 
@@ -281,76 +262,12 @@ int PokeMini_SyncHostTime(void)
 	return 0;
 }
 
-#define DATAREADFROMFILE(var, size) {\
-	if (stream(var, size, stream_ptr) != size) {\
-		return 0;\
-	}\
-}
-
-const uint8_t RemapMINC10_11[16] = {
-	 0, 1, 2, 4, 5, 6, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 
-};
-
-/* Load color information from stream, note that PokeMini_OnLoadColorFile callback isn't called! */
-int PokeMini_LoadColorStream(TPokeMini_StreamIO stream, void *stream_ptr)
-{
-	uint8_t hdr[4], vcod[4], reserved[16];
-	uint32_t maptiles, mapoffset, bytespertile;
-	int i, readbytes;
-
-	/* Check header */
-	DATAREADFROMFILE(hdr, 4);		// ID
-	if ((hdr[0] != 'M') || (hdr[1] != 'I') || (hdr[2] != 'N') || (hdr[3] != 'c')) return 0;
-	DATAREADFROMFILE(vcod, 4);		// VCode
-	if (vcod[0] != 0x01) return 0;		// Only version 1 supported
-	if (vcod[1] > 0x01) return 0;		// Only color type 0 and 1 are valid
-	PRCColorFlags = vcod[2];
-	PokeMini_ColorFormat = vcod[1];
-	DATAREADFROMFILE(&maptiles, 4);		// Number of map tiles
-	maptiles = Endian32(maptiles);
-	DATAREADFROMFILE(&mapoffset, 4);	// Map offset in tiles
-	mapoffset = Endian32(mapoffset);
-	DATAREADFROMFILE(reserved, 16);		// Reserved area
-
-	// PM ROM Max is 2MB, that's 256K Map Tiles
-	if (maptiles > 262144) return 0;
-	if (mapoffset > 262144) return 0;
-
-	if (PokeMini_ColorFormat == 1) bytespertile = 8;
-	else bytespertile = 2;
-
-	// Free existing color information
-	PokeMini_FreeColorInfo();
-	PRCColorOffset = 0;
-	PRCColorTop = (uint8_t *)0;
-
-	// Create and load map
-	PRCColorMap = (uint8_t *)malloc(maptiles * bytespertile);
-	for (i=0; i<maptiles * bytespertile; i++) PRCColorMap[i] = 0x00;
-	readbytes = stream(PRCColorMap, maptiles * bytespertile, stream_ptr);
-
-	// Setup offset and top
-	PRCColorOffset = mapoffset * bytespertile;
-	PRCColorTop = (uint8_t *)PRCColorMap + (maptiles * bytespertile);
-
-	// Version 0.4.5 have old color palette, remap colors to the new one
-	if (!(PRCColorFlags & 1))
-	{
-		for (i=0; i<maptiles * bytespertile; i++)
-			PRCColorMap[i] = RemapMINC10_11[PRCColorMap[i] & 15] | (PRCColorMap[i] & 0xF0);
-	}
-
-	return (readbytes > 0);
-}
-
 // Load EEPROM
 int PokeMini_LoadEEPROMFile(const char *filename)
 {
 	int64_t readbytes;
-	RFILE *fi = NULL;
-
 	// Open file
-	fi = filestream_open(filename,
+	RFILE *fi = filestream_open(filename,
 			RETRO_VFS_FILE_ACCESS_READ,
 			RETRO_VFS_FILE_ACCESS_HINT_NONE);
 	if (!fi)
@@ -367,10 +284,8 @@ int PokeMini_LoadEEPROMFile(const char *filename)
 int PokeMini_SaveEEPROMFile(const char *filename)
 {
 	int64_t writebytes;
-	RFILE *fo = NULL;
-
 	// Open file
-	fo = filestream_open(filename,
+	RFILE *fo = filestream_open(filename,
 			RETRO_VFS_FILE_ACCESS_WRITE,
 			RETRO_VFS_FILE_ACCESS_HINT_NONE);
 	if (!fo)

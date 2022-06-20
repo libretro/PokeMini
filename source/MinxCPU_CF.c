@@ -257,10 +257,7 @@ int MinxCPU_ExecCF(void)
 			MinxCPU.SP.W.L = ADD16(MinxCPU.SP.W.L, MinxCPU.HL.W.L);
 			return 16;
 		case 0x46: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0x46CF);
-			return 16;
 		case 0x47: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0x47CF);
 			return 16;
 
 		case 0x48: // SUB X, BA
@@ -282,10 +279,7 @@ int MinxCPU_ExecCF(void)
 			MinxCPU.SP.W.L = SUB16(MinxCPU.SP.W.L, MinxCPU.HL.W.L);
 			return 16;
 		case 0x4E: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0x4ECF);
-			return 16;
 		case 0x4F: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0x4FCF);
 			return 16;
 
 		case 0x50: // *ADD X, BA
@@ -307,10 +301,7 @@ int MinxCPU_ExecCF(void)
 			MinxCPU.SP.W.L = ADD16(MinxCPU.SP.W.L, MinxCPU.HL.W.L);
 			return 16;
 		case 0x56: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0x56CF);
-			return 16;
 		case 0x57: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0x57CF);
 			return 16;
 
 		case 0x58: // *SUB X, BA
@@ -332,10 +323,7 @@ int MinxCPU_ExecCF(void)
 			SUB16(MinxCPU.SP.W.L, MinxCPU.HL.W.L);
 			return 16;
 		case 0x5E: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0x5ECF);
-			return 16;
 		case 0x5F: // CRASH
-			MinxCPU_OnException(EXCEPTION_CRASH_INSTRUCTION, 0x5FCF);
 			return 16;
 
 		case 0x60: // ADC BA, #nnnn
@@ -356,48 +344,34 @@ int MinxCPU_ExecCF(void)
 			return 16;
 
 		case 0x64: // UNSTABLE
-			MinxCPU_OnException(EXCEPTION_UNSTABLE_INSTRUCTION, 0x64CF);
-			return 16;
 		case 0x65: // UNSTABLE
-			MinxCPU_OnException(EXCEPTION_UNSTABLE_INSTRUCTION, 0x65CF);
-			return 16;
 		case 0x66: // UNSTABLE
-			MinxCPU_OnException(EXCEPTION_UNSTABLE_INSTRUCTION, 0x66CF);
-			return 16;
 		case 0x67: // UNSTABLE
-			MinxCPU_OnException(EXCEPTION_UNSTABLE_INSTRUCTION, 0x67CF);
 			return 16;
 
 		case 0x68: // ADD SP, #nnnn
 			I16 = Fetch16();
 			MinxCPU.SP.W.L = ADD16(MinxCPU.SP.W.L, I16);
 			return 16;
-		case 0x69: // UNSTABLE
-			MinxCPU_OnException(EXCEPTION_UNSTABLE_INSTRUCTION, 0x69CF);
-			return 16;
 
 		case 0x6A: // SUB SP, #nnnn
 			I16 = Fetch16();
 			MinxCPU.SP.W.L = SUB16(MinxCPU.SP.W.L, I16);
 			return 16;
+		case 0x69: // UNSTABLE
 		case 0x6B: // UNSTABLE
-			MinxCPU_OnException(EXCEPTION_UNSTABLE_INSTRUCTION, 0x6BCF);
+		case 0x6D: // UNSTABLE
+		case 0x6F: // UNSTABLE
 			return 16;
 
 		case 0x6C: // CMP SP, #nnnn
 			I16 = Fetch16();
 			SUB16(MinxCPU.SP.W.L, I16);
 			return 16;
-		case 0x6D: // UNSTABLE
-			MinxCPU_OnException(EXCEPTION_UNSTABLE_INSTRUCTION, 0x6DCF);
-			return 16;
 
 		case 0x6E: // MOV SP, #nnnn
 			I16 = Fetch16();
 			MinxCPU.SP.W.L = I16;
-			return 16;
-		case 0x6F: // UNSTABLE
-			MinxCPU_OnException(EXCEPTION_UNSTABLE_INSTRUCTION, 0x6FCF);
 			return 16;
 
 		case 0x70: // MOV BA, [SP+#ss]
@@ -798,7 +772,8 @@ int MinxCPU_ExecCF(void)
 			return 64;
 
 		default:
-			MinxCPU_OnException(EXCEPTION_UNKNOWN_INSTRUCTION, (MinxCPU.IR << 8) + 0xCF);
-			return 4;
+			break;
 	}
+
+	return 4;
 }

@@ -237,32 +237,7 @@ void MinxCPU_OnWrite(int cpu, uint32_t addr, uint8_t data)
 		PM_RAM[addr-0x1000] = data;
 		if (PRCColorMap) MinxColorPRC_WriteFramebuffer(addr-0x1000, data);
 		return;
-	} else {
-		// BIOS Write (Ignored)
-		return;
 	}
-}
-
-void MinxCPU_OnException(int type, uint32_t ir)
-{
-#ifdef DEBUG
-	switch (type) {
-		case EXCEPTION_UNKNOWN_INSTRUCTION:
-			log_cb(RETRO_LOG_ERROR, "Unknown instruction %08X before V=%02X,PC=%04X\n", (unsigned int)ir, (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
-			return;
-		case EXCEPTION_CRASH_INSTRUCTION:
-			log_cb(RETRO_LOG_ERROR, "Crash instruction %08X before V=%02X,PC=%04X\n", (unsigned int)ir, (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
-			return;
-		case EXCEPTION_UNSTABLE_INSTRUCTION:
-			log_cb(RETRO_LOG_ERROR, "Unstable instruction %08X before V=%02X,PC=%04X\n", (unsigned int)ir, (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
-			return;
-		case EXCEPTION_DIVISION_BY_ZERO:
-			log_cb(RETRO_LOG_ERROR, "Division by zero before V=%02X,PC=%04X\n", (int)MinxCPU.PC.B.I, (int)MinxCPU.PC.W.L);
-			return;
-		default:
-			return;
-	}
-#endif
 }
 
 void MinxCPU_OnIRQHandle(uint8_t cpuflag, uint8_t shift_u)

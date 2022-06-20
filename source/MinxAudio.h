@@ -21,7 +21,6 @@
 
 #include "MinxTimers.h"
 
-#include <stdio.h>
 #include <stdint.h>
 #include <streams/memory_stream.h>
 
@@ -52,8 +51,6 @@ extern int RequireSoundSync;
 enum {
 	MINX_AUDIO_DISABLED = 0,	// Disabled
 	MINX_AUDIO_GENERATED,		// Generated (Doesn't require sync)
-	MINX_AUDIO_DIRECT,		// Direct from Timer 3
-	MINX_AUDIO_EMULATED,		// Emulated
 	MINX_AUDIO_DIRECTPWM		// Direct from Timer 3 with PWM support
 };
 
@@ -76,7 +73,6 @@ enum {
 // Conversion for the generator counter
 #define MINX_AUDIOCONV	(2147483647/(MINX_AUDIOFREQ)*2)
 
-
 int MinxAudio_Create(int audioenable, int fifosize);
 
 void MinxAudio_Destroy(void);
@@ -97,16 +93,8 @@ uint8_t MinxAudio_ReadReg(uint8_t reg);
 
 void MinxAudio_WriteReg(uint8_t reg, uint8_t val);
 
-int16_t MinxAudio_AudioProcessDirect(void);
-
-int16_t MinxAudio_AudioProcessEmulated(void);
-
-int16_t MinxAudio_AudioProcessDirectPWM(void);
-
 int16_t MinxAudio_PiezoFilter(int32_t Sample);
 
 void MinxAudio_GetSamplesS16Ch(int16_t *soundout, int numsamples, int channels);
-
-int MinxAudio_SyncWithAudio(void);
 
 #endif

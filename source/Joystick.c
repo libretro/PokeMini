@@ -21,44 +21,27 @@
 
 #include "Joystick.h"
 
-static void KeyEvent(int key, int press)
-{
-	if (press)
-		PokeMini_KeypadEvent(key, 1);
-	else
-		PokeMini_KeypadEvent(key, 0);
-}
-
-// Process joystick buttons packed in bits
-void JoystickBitsEvent(uint32_t pressbits)
-{
-	static uint32_t lastpressbits;
-	uint32_t togglebits = pressbits ^ lastpressbits;
-	int index;
-
-	for (index=0; index<10; index++) {
-		int joybutton = CommandLine.joybutton[index];
-		if (joybutton >= 0) {
-			uint32_t maskbit = (1 << joybutton);
-			if (togglebits & maskbit) {
-				if (index)
-					KeyEvent(index, (pressbits & maskbit) ? 1 : 0);
-			}
-		}
-	}
-
-	lastpressbits = pressbits;
-}
-
 // Process joystick buttons
 void JoystickButtonsEvent(int button, int pressed)
 {
 	int index;
 
-	for (index=0; index<10; index++) {
-		if (CommandLine.joybutton[index] == button) {
-			if (index)
-				KeyEvent(index, pressed);
+        if (pressed)
+        {
+		for (index=0; index<10; index++) {
+			if (CommandLine.joybutton[index] == button) {
+				if (index)
+					MinxIO_Keypad(index, 1);
+			}
+		}
+        }
+        else
+	{
+		for (index=0; index<10; index++) {
+			if (CommandLine.joybutton[index] == button) {
+				if (index)
+					MinxIO_Keypad(index, 0);
+			}
 		}
 	}
 }

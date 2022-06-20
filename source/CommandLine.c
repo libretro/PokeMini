@@ -30,7 +30,6 @@ void CommandLineInit(void)
 	// Default strings
 	strcpy(CommandLine.bios_file, "bios.min");
 	strcpy(CommandLine.eeprom_file, "PokeMini.eep");
-	strcpy(CommandLine.joyplatform, "default");
 
 	// Default booleans / integers
 	CommandLine.forcefreebios = 0;	// Force FreeBIOS

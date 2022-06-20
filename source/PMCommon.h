@@ -19,7 +19,6 @@
 #ifndef PMCOMMON_H
 #define PMCOMMON_H
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -33,24 +32,6 @@
 #ifndef PMTMPV
 #define PMTMPV	512
 #endif
-
-#ifdef _WIN32
-#define PATH_SLASH_CHR '\\'
-#define PATH_SLASH_STR "\\"
-#else
-#define PATH_SLASH_CHR '/'
-#define PATH_SLASH_STR "/"
-#endif
-
-#define PATH_SLASH_OS    0
-#define PATH_SLASH_UNIX  1
-#define PATH_SLASH_WIN   2
-
-// Return a number between min and max
-static INLINE int BetweenNum(int num, int min, int max)
-{
-   return (num < min) ? min : (num > max) ? max : num;
-}
 
 // Return true if the string is valid and non-empty
 int StringIsSet(char *str);

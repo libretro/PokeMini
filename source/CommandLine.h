@@ -19,7 +19,6 @@
 #ifndef COMMAND_LINE
 #define COMMAND_LINE
 
-#include <stdio.h>
 #include <stdint.h>
 
 typedef struct {
@@ -35,7 +34,6 @@ typedef struct {
 	int low_battery;
 	int palette;
 	int rumblelvl;
-	char joyplatform[32];
 	int joybutton[10];
 	int multicart;
 	int synccycles;

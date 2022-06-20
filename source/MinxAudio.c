@@ -151,28 +151,38 @@ int MinxAudio_SaveStateStream(memstream_t *stream)
 	POKESAVESS_END(32);
 }
 
+static int16_t MinxAudio_AudioProcessDirectPWM(void)
+{
+	uint32_t Pwm    = 0;
+	uint16_t TmrCnt = (MinxTimers.Tmr3CntA >> 24) | ((MinxTimers.Tmr3CntB >> 24) << 8);
+	uint16_t TmrPre = (MinxTimers.Tmr3PreA >> 24) | ((MinxTimers.Tmr3PreB >> 24) << 8);
+
+	// Affect sound based of PWM
+	if (TmrPre)
+		Pwm = MinxTimers.Timer3Piv * MINX_AUDIO_PWM_RAG / TmrPre;
+	if (Pwm > MINX_AUDIO_PWM_RAG)
+		Pwm = MINX_AUDIO_PWM_RAG-1;	// Avoid clipping
+	if (TmrPre < 128)
+		TmrCnt = 0;			// Avoid high hizz
+
+	// Output
+	if (TmrCnt <= MinxTimers.Timer3Piv)
+		return MinxAudio.Volume + Pwm * MinxAudio.PWMMul;
+	return MINX_AUDIO_SILENCE + Pwm * MinxAudio.PWMMul;
+}
+
+
 void MinxAudio_ChangeEngine(int engine)
 {
 	if (PokeMini_Flags & POKEMINI_GENSOUND)
 		engine = engine ? 1 : 0;
 	SoundEngine = engine;
 	switch (engine) {
-		case MINX_AUDIO_GENERATED:
-			RequireSoundSync       = 0;
-			MinxAudio_AudioProcess = NULL;
-			break;
-		case MINX_AUDIO_DIRECT:
-			RequireSoundSync       = 1;
-			MinxAudio_AudioProcess = MinxAudio_AudioProcessDirect;
-			break;
-		case MINX_AUDIO_EMULATED:
-			RequireSoundSync       = 1;
-			MinxAudio_AudioProcess = MinxAudio_AudioProcessEmulated;
-			break;
 		case MINX_AUDIO_DIRECTPWM:
 			RequireSoundSync       = 1;
 			MinxAudio_AudioProcess = MinxAudio_AudioProcessDirectPWM;
 			break;
+		case MINX_AUDIO_GENERATED:
 		default:
 			RequireSoundSync       = 0;
 			MinxAudio_AudioProcess = NULL;
@@ -302,57 +312,6 @@ static void MinxAudio_GetEmulated(int *Sound_Frequency, int *Pulse_Width)
 		*Sound_Frequency = 0;
 		*Pulse_Width = 0;
 	}
-}
-
-int16_t MinxAudio_AudioProcessDirect(void)
-{
-	uint16_t TmrCnt = (MinxTimers.Tmr3CntA >> 24) | ((MinxTimers.Tmr3CntB >> 24) << 8);
-
-	if (TmrCnt <= MinxTimers.Timer3Piv)
-		return MinxAudio.Volume;
-	return MINX_AUDIO_SILENCE;
-}
-
-int16_t MinxAudio_AudioProcessEmulated(void)
-{
-	int Sound_Frequency, Pulse_Width;
-	MinxAudio_GetEmulated(&Sound_Frequency, &Pulse_Width);
-	// Silence
-	if (Sound_Frequency < 50)
-		return MINX_AUDIO_SILENCE;
-	else if (Sound_Frequency < 20000)
-	{
-		// Normal
-		MinxAudio.AudioSCnt -= Sound_Frequency * MINX_AUDIOCONV;
-		if ((MinxAudio.AudioSCnt & 0xFFF00000) 
-				>= (Pulse_Width << 20))
-			return MinxAudio.Volume;
-		return MINX_AUDIO_SILENCE;
-	}
-	// PWM
-	if (Pulse_Width > 4095)
-		Pulse_Width = 4095;
-	return MINX_AUDIO_SILENCE + (Pulse_Width << 2) * MinxAudio.PWMMul;
-}
-
-int16_t MinxAudio_AudioProcessDirectPWM(void)
-{
-	uint32_t Pwm    = 0;
-	uint16_t TmrCnt = (MinxTimers.Tmr3CntA >> 24) | ((MinxTimers.Tmr3CntB >> 24) << 8);
-	uint16_t TmrPre = (MinxTimers.Tmr3PreA >> 24) | ((MinxTimers.Tmr3PreB >> 24) << 8);
-
-	// Affect sound based of PWM
-	if (TmrPre)
-		Pwm = MinxTimers.Timer3Piv * MINX_AUDIO_PWM_RAG / TmrPre;
-	if (Pwm > MINX_AUDIO_PWM_RAG)
-		Pwm = MINX_AUDIO_PWM_RAG-1;	// Avoid clipping
-	if (TmrPre < 128)
-		TmrCnt = 0;			// Avoid high hizz
-
-	// Output
-	if (TmrCnt <= MinxTimers.Timer3Piv)
-		return MinxAudio.Volume + Pwm * MinxAudio.PWMMul;
-	return MINX_AUDIO_SILENCE + Pwm * MinxAudio.PWMMul;
 }
 
 int16_t MinxAudio_PiezoFilter(int32_t Sample)
@@ -502,11 +461,3 @@ void MinxAudio_GetSamplesS16Ch(int16_t *soundout,
 		}
 	}
 }
-
-int MinxAudio_SyncWithAudio(void)
-{
-	if (!RequireSoundSync)
-		return 0;
-	return MinxAudio_iSamplesInBuffer() >= MinxAudio_FIFOThreshold;
-}
-

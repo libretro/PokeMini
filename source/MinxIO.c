@@ -239,8 +239,10 @@ uint8_t MinxIO_ReadReg(int cpu, uint8_t reg)
 		case 0x62: // Unknown
 			return PMR_REG_62;
 		default:   // Unused
-			return 0;
+			break;
 	}
+
+	return 0;
 }
 
 void MinxIO_WriteReg(int cpu, uint8_t reg, uint8_t val)
@@ -249,47 +251,47 @@ void MinxIO_WriteReg(int cpu, uint8_t reg, uint8_t val)
 	switch(reg) {
 		case 0x10: // Low Battery
 			PMR_SYS_BATT = (PMR_SYS_BATT & 0x20) | (val & 0x1F);
-			return;
+			break;
 		case 0x44: // Unknown
 			PMR_REG_44 = val & 0xF7;
-			return;
+			break;
 		case 0x45: // Unknown
 			PMR_REG_45 = val & 0x0F;
-			return;
+			break;
 		case 0x46: // Unknown
 			PMR_REG_46 = val;
-			return;
+			break;
 		case 0x47: // Unknown
 			PMR_REG_47 = val & 0x0F;
-			return;
+			break;
 		case 0x50: // Unknown (related to power management?)
 			PMR_REG_50 = val;
-			return;
+			break;
 		case 0x51: // Unknown (related to power management?)
 			PMR_REG_51 = val & 0x03;
-			return;
+			break;
 		case 0x52: // Keypad
-			return;
+			break;
 		case 0x53: // Unknown
 			PMR_REG_53 = 0x00;
-         /* TODO/FIXME - is fallthrough intentional ?*/
+			/* TODO/FIXME - is fallthrough intentional ?*/
 		case 0x54: // Unknown
 			PMR_REG_54 = val & 0x77;
-         /* TODO/FIXME - is fallthrough intentional ?*/
+			/* TODO/FIXME - is fallthrough intentional ?*/
 		case 0x55: // Unknown
 			PMR_REG_55 = val & 0x07;
-         /* TODO/FIXME - is fallthrough intentional ?*/
+			/* TODO/FIXME - is fallthrough intentional ?*/
 		case 0x60: // I/O Direction Select ( 0 = Input, 1 = Output )
 			PMR_IO_DIR = val;
 			MinxIO_IODataWrite();
-			return;
+			break;
 		case 0x61: // I/O Data Register
 			PMR_IO_DATA = val;
 			MinxIO_IODataWrite();
-			return;
+			break;
 		case 0x62: // Unknown
 			PMR_REG_62 = val & 0xF0;
-			return;
+			break;
 	}
 }
 
@@ -299,18 +301,15 @@ void MinxIO_WriteReg(int cpu, uint8_t reg, uint8_t val)
 
 uint8_t MinxIO_IODataRead(void)
 {
-	uint8_t Input = MINX_IO_PULL_UPS;
-
 	/* Update all I/Os */
-	Input = MinxIO_EEPROM_REvent() ? MINX_EEPROM_DAT : 0;
+	uint8_t Input = MinxIO_EEPROM_REvent() ? MINX_EEPROM_DAT : 0;
 
 	return (PMR_IO_DATA & PMR_IO_DIR) | (Input & ~PMR_IO_DIR);
 }
 
 void MinxIO_IODataWrite(void)
 {
-	uint8_t Output;
-	Output = (MINX_IO_PULL_UPS & ~PMR_IO_DIR) | (PMR_IO_DATA & PMR_IO_DIR);
+	uint8_t Output = (MINX_IO_PULL_UPS & ~PMR_IO_DIR) | (PMR_IO_DATA & PMR_IO_DIR);
 
 	// Update all I/Os
 	PokeMini_Rumbling = Output & 0x10;
@@ -360,12 +359,15 @@ int MinxIO_EEPROM_REvent(void)
 	int valid = (MinxIO.EEPBit >= 0) && (MinxIO.EEPBit < 8);
 	
 	// If it's Idle, return high...
-	if (MinxIO.ListenState == MINX_EEPROM_IDLE) return 1;
+	if (MinxIO.ListenState == MINX_EEPROM_IDLE)
+		return 1;
 
 	// Process read
-	if (MinxIO.OperState == MINX_EEPROM_RBYTE) {
-		if (valid) return (EEPROM[MinxIO.EEPAddress & 0x1FFF] >> MinxIO.EEPBit) & 1;
-		else return 0;
+	if (MinxIO.OperState == MINX_EEPROM_RBYTE)
+	{
+		if (valid)
+			return (EEPROM[MinxIO.EEPAddress & 0x1FFF] >> MinxIO.EEPBit) & 1;
+		return 0;
 	}
 
 	return valid;
@@ -375,13 +377,9 @@ void MinxIO_EEPROM_Write(uint8_t data)
 {
 	switch (MinxIO.OperState) {
 	case MINX_EEPROM_DEVICE:
-		if ((data & 0xF0) == 0xA0) {
-			// EEPROM Device
+		// EEPROM Device
+		if ((data & 0xF0) == 0xA0)
 			MinxIO.OperState = data & 0x01 ? MINX_EEPROM_RBYTE : MINX_EEPROM_ADDRHI;
-		} else {
-			// Unknown Devide
-			log_cb(RETRO_LOG_ERROR, "Error: Accessing unknown I2C device: 0x%02X\n", (int)data);
-		}
 		break;
 	case MINX_EEPROM_ADDRHI:
 		MinxIO.EEPAddress = (MinxIO.EEPAddress & 0x00FF) | (data << 8);
