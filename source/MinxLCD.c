@@ -108,7 +108,6 @@ int MinxLCD_LoadStateStream(memstream_t *stream, uint32_t bsize)
 	POKELOADSS_STREAM_8(MinxLCD.RMWColumn);
 	POKELOADSS_STREAM_X(42);
 	POKELOADSS_END(256*9 + 96*64 + 96*64 + 64);
-	return 1;
 }
 
 int MinxLCD_SaveStateStream(memstream_t *stream)
