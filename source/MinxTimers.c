@@ -127,7 +127,6 @@ int MinxTimers_LoadStateStream(memstream_t *stream, uint32_t bsize)
 	POKELOADSS_STREAM_8(MinxTimers.TmrXEna2);
 	POKELOADSS_STREAM_8(MinxTimers.TmrXEna1);
 	POKELOADSS_STREAM_X(34);
-	POKELOADSS_END(128);
 	MinxTimers.Tmr1WMode = PMR_TMR1_CTRL_L & 0x80;
 	MinxTimers.Tmr1LEna = PMR_TMR1_CTRL_L & 0x04;
 	MinxTimers.Tmr1HEna = PMR_TMR1_CTRL_H & 0x04;
@@ -137,6 +136,7 @@ int MinxTimers_LoadStateStream(memstream_t *stream, uint32_t bsize)
 	MinxTimers.Tmr3WMode = PMR_TMR3_CTRL_L & 0x80;
 	MinxTimers.Tmr3LEna = PMR_TMR3_CTRL_L & 0x04;
 	MinxTimers.Tmr3HEna = PMR_TMR3_CTRL_H & 0x04;
+	POKELOADSS_END(128);
 }
 
 int MinxTimers_SaveStateStream(memstream_t *stream)

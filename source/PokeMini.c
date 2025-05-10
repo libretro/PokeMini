@@ -404,7 +404,7 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
 				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
-		} else if (!strcmp(PMiniStr, "LCD-")) {		// Audio
+		} else if (!strcmp(PMiniStr, "AUD-")) {		// Audio
 			if (!MinxAudio_LoadStateStream(stream, BSize)) {
 				memstream_close(stream);
 				memstream_set_buffer(NULL, 0);

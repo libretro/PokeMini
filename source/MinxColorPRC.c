@@ -89,9 +89,9 @@ int MinxColorPRC_LoadStateStream(memstream_t *stream, uint32_t bsize)
 	POKELOADSS_STREAM_8(MinxColorPRC.LNColor1);
 	POKELOADSS_STREAM_8(MinxColorPRC.HNColor1);
 	POKELOADSS_STREAM_X(20);
-	POKELOADSS_END(16384+32);
 	MinxColorPRC.Address &= 0x3FFF;
 	PRCColorPixels = PRCColorVMem + (MinxColorPRC.ActivePage ? 0x2000 : 0);
+	POKELOADSS_END(16384+32);
 }
 
 int MinxColorPRC_SaveStateStream(memstream_t *stream)
