@@ -307,8 +307,9 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
 	uint32_t PMiniID, StatTime, BSize;
 
 	// Open memory stream
-	memstream_set_buffer(buffer, size);
-	stream = memstream_open(0);
+	if (!buffer || !size)
+		return 0;
+	stream = memstream_open(buffer, size, 0);
 	if (stream == NULL)
 		return 0;
 
@@ -317,19 +318,16 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
 	readbytes = memstream_read(stream, PMiniStr, 12);	// Read File ID
 	if ((readbytes != 12) || strcmp(PMiniStr, "PokeMiniStat")) {
 		memstream_close(stream);
-		memstream_set_buffer(NULL, 0);
 		return 0;
 	}
 	readbytes = memstream_read(stream, &PMiniID, 4);	// Read State ID
 	if ((readbytes != 4) || (PMiniID != PokeMini_ID)) {
 		memstream_close(stream);
-		memstream_set_buffer(NULL, 0);
 		return 0;
 	}
 	readbytes = memstream_read(stream, &StatTime, 4);	// Read Time
 	if (readbytes != 4) {
 		memstream_close(stream);
-		memstream_set_buffer(NULL, 0);
 		return 0;
 	}
 
@@ -339,75 +337,63 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
 		readbytes = memstream_read(stream, PMiniStr, 4);
 		if (readbytes != 4) {
 			memstream_close(stream);
-			memstream_set_buffer(NULL, 0);
 			return 0;
 		}
 		readbytes = memstream_read(stream, &BSize, 4);
 		if (readbytes != 4) {
 			memstream_close(stream);
-			memstream_set_buffer(NULL, 0);
 			return 0;
 		}
 		if (!strcmp(PMiniStr, "RAM-")) {		// RAM
 			readbytes = memstream_read(stream, PM_RAM, 0x1000);
 			if ((BSize != 0x1000) || (readbytes != 0x1000)) {
 				memstream_close(stream);
-				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
 		} else if (!strcmp(PMiniStr, "REG-")) {		// Register I/O
 			readbytes = memstream_read(stream, PM_IO, 256);
 			if ((BSize != 256) || (readbytes != 256)) {
 				memstream_close(stream);
-				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
 		} else if (!strcmp(PMiniStr, "CPU-")) {		// CPU
 			if (!MinxCPU_LoadStateStream(stream, BSize)) {
 				memstream_close(stream);
-				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
 		} else if (!strcmp(PMiniStr, "IRQ-")) {		// IRQ
 			if (!MinxIRQ_LoadStateStream(stream, BSize)) {
 				memstream_close(stream);
-				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
 		} else if (!strcmp(PMiniStr, "TMR-")) {		// Timers
 			if (!MinxTimers_LoadStateStream(stream, BSize)) {
 				memstream_close(stream);
-				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
 		} else if (!strcmp(PMiniStr, "PIO-")) {		// Parallel IO
 			if (!MinxIO_LoadStateStream(stream, BSize)) {
 				memstream_close(stream);
-				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
 		} else if (!strcmp(PMiniStr, "PRC-")) {		// PRC
 			if (!MinxPRC_LoadStateStream(stream, BSize)) {
 				memstream_close(stream);
-				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
 		} else if (!strcmp(PMiniStr, "CPM-")) {		// Color PRC
 			if (!MinxColorPRC_LoadStateStream(stream, BSize)) {
 				memstream_close(stream);
-				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
 		} else if (!strcmp(PMiniStr, "LCD-")) {		// LCD
 			if (!MinxLCD_LoadStateStream(stream, BSize)) {
 				memstream_close(stream);
-				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
 		} else if (!strcmp(PMiniStr, "AUD-")) {		// Audio
 			if (!MinxAudio_LoadStateStream(stream, BSize)) {
 				memstream_close(stream);
-				memstream_set_buffer(NULL, 0);
 				return 0;
 			}
 		} else if (!strcmp(PMiniStr, "END-")) {
@@ -415,7 +401,6 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
 		}
 	}
 	memstream_close(stream);
-	memstream_set_buffer(NULL, 0);
 
 	// Update RTC if requested
 	if (CommandLine.updatertc == 1)
@@ -435,8 +420,9 @@ int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size)
 	uint32_t PMiniID, StatTime, BSize;
 
 	// Open memory stream
-	memstream_set_buffer(buffer, size);
-	stream = memstream_open(1);
+	if (!buffer || !size)
+		return 0;
+	stream = memstream_open(buffer, size, 1);
 	if (stream == NULL)
 		return 0;
 
@@ -487,7 +473,6 @@ int PokeMini_SaveSSStream(uint8_t *buffer, uint64_t size)
 	BSize = 0;
 	memstream_write(stream, &BSize, 4);
 	memstream_close(stream);
-	memstream_set_buffer(NULL, 0);
 
 	return 1;
 }
